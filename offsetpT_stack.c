@@ -1,5 +1,6 @@
 //Chad Harrington 6/14/2017
 //EXECUTE as root -l -b -q 'offsetpT_stack.c ("MC_R4.root", "Data_R4.root", "nPU", Id, ratio, "label")'
+// OR ./run_stack.sh <Run Era> <Luminosity>
 
 using namespace std;
 
