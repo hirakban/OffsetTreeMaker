@@ -29,7 +29,6 @@ step3:
     a) root -l -b -q 'offsetpT.c (10,30,30,30)'
       (pick all and chs)
     b) root -l -b -q 'scalefactor.c ("all",10,30)' and root -l -b -q 'scalefactor.c ("chs",10,30)' 
-    c) root -l -b -q 'l1fastjet.c("all")' and root -l -b -q 'l1fastjet.c("chs")'
+    c) root -l -b -q 'l1fastjet_adapted.c("all")' and root -l -b -q 'l1fastjet_adapted.c("chs")'
 step4:
  for stack plots use following macro: offsetpT_stack.c
- 
