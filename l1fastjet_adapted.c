@@ -37,18 +37,18 @@ void l1fastjet_adapted(TString pf_type="chs"){
   bool nPU_derived = true;
   bool rhoCentral = false;
 
-  string run_name; float luminosity;
-  cout << "Run: " << " lumi " << endl;
-  cin >> run_name >> luminosity;
+  string run_name; float luminosity; double R;
+  cout << "Run: " << " lumi: " << "Radius"<< endl;
+  cin >> run_name >> luminosity>> R;
+  const int Rlabel = R*10;
 
-  TFile* mc_root = TFile::Open(Form("root_files_R48/SingleNeutrino_MC_R%i.root",Rlabel));
-  TFile* data_root = TFile::Open( Form("root_files_R48/Legacy_%s_R%i.root",run_name.c_str(),Rlabel ) );
+  TFile* mc_root = TFile::Open(Form("Total_MC_Autumn2018%s_R%i.root",run_name.c_str(),Rlabel));
+  TFile* data_root = TFile::Open( Form("Total_Data17Sep2018%s_R%i.root",run_name.c_str(),Rlabel ) );
   //TFile* mc_root = TFile::Open(Form("Legacy_R8/SingleNeutrino_MC_R%i.root",Rlabel));
   //TFile* data_root = TFile::Open( Form("Legacy_R8/Legacy_%s_R%i.root",run_name.c_str(),Rlabel ) );
 
-  ifstream scale_file( Form("scales_Oct30_forMikko/Summer16_07Aug2017%s_V13_DataMcSF_L1RC_AK%iPF", run_name.c_str(), Rlabel) + pf_type + ".txt" );
-  ifstream mc_file( Form("Summer16_07Aug2017_V15_MC_L1FastJet_AK%iPF", Rlabel) + pf_type + ".txt" );
-
+  ifstream scale_file( Form("plots/scalefactor/Run%s/R%i/%s/Fall18_17Sep2018%s_V1_DataMcSF_L1RC_AK%iPF", run_name.c_str(), Rlabel, pf_type.Data(), run_name.c_str(), Rlabel) + pf_type + ".txt" );
+  ifstream mc_file( Form("Autumn18_V2_MC_L1FastJet_AK%iPF", Rlabel) + pf_type + ".txt" );
   string scale_line, mc_line, mcheader_line;
 
 
