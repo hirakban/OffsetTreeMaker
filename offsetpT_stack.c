@@ -19,7 +19,7 @@ enum Id{
 };
 
 void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TString dataName="/root_files_R48/Legacy_BCD_R4.root", TString bin_var="nPU", Id id = all, bool ratio=true,
-                     TString label="Run 2016BCD - 10.28 fb^{-1} (13 TeV") {
+                     TString label="Run 2018D - 10.28 fb^{-1} (13 TeV") {
 
   TFile* mcFile = TFile::Open(mcName);
   TFile* dataFile = TFile::Open(dataName);
@@ -244,7 +244,7 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
   h2->GetXaxis()->SetTitleSize(0.05/b_scale);
   h2->GetXaxis()->SetTitleOffset(0.8);
   h2->GetXaxis()->SetTitle("#eta");
-  h2->GetYaxis()->SetRangeUser(0.5, 2); //chs_Data->GetMaximum()*1.1 );
+  h2->GetYaxis()->SetRangeUser(0, 1.6); //chs_Data->GetMaximum()*1.1 );
   h2->GetYaxis()->SetNdivisions(5, 3, 0);
   h2->GetYaxis()->SetLabelSize(0.04/b_scale);
   h2->GetYaxis()->SetTitle("Data/MC");
@@ -332,8 +332,8 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
     v_Data[untrk]->SetAxisRange(-2.9,2.9);
 
     h1->GetYaxis()->SetRangeUser( 0, 0.8 ); //dataStack->GetMaximum()*1.7 );
-
-    h1->GetYaxis()->SetTitle(yTitle_Mikko);
+    
+    h1->GetYaxis()->SetTitle(yTitle);
     h1->GetYaxis()->SetTitleOffset(1.1);
 
     mcStack->Draw("samehist");
@@ -395,6 +395,18 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
       chs_Data->SetMarkerStyle(24);
       chs_Data->SetMarkerColor(2);
       all_Data->SetMarkerStyle(24);
+      double Ymin = 0.5, Ymax =1.5;
+      if ((chs_Data->GetMaximum()) > (all_Data->GetMaximum())){
+        Ymax = chs_Data->GetMaximum();}
+      else{
+        Ymax = all_Data->GetMaximum();}
+
+      if ((chs_Data->GetMinimum()) < (all_Data->GetMinimum())){
+        Ymin = chs_Data->GetMinimum();}
+      else{
+        Ymin = all_Data->GetMinimum();}
+
+      h2->GetYaxis()->SetRangeUser(0.8*Ymin, 1.1*Ymax);
       h2->Draw();
       chs_Data->Draw("samePE");
       all_Data->Draw("samePE");
@@ -431,6 +443,7 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
 
 
     h1->GetYaxis()->SetTitleOffset(1.1);
+    h1->GetYaxis()->SetTitle(yTitle_Mikko);
 
 
     mcStack_Mikko->Draw("samehist");
@@ -480,13 +493,21 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
 
     if (ratio){
       bottom->cd();
+      h2->GetYaxis()->SetRangeUser(0,1.6);
       h2->Draw();
       vector<TH1D*> v_ratio_Mikko (numId);
+      //double Ymax_mikko = 1.5, Ymin_mikko = 0.;
       for (int i=0; i<untrk; i++) {
 
         v_ratio_Mikko[i] = (TH1D*) v_Data_Mikko[i]->Clone("v_ratio_Mikko[i]");
         v_ratio_Mikko[i]->Divide(v_MC_Mikko[i]);
         v_ratio_Mikko[i]->SetMarkerSize(0.65);
+	//if(v_ratio_mikko[i]->GetMinimum()<Ymin_mikko){
+        //  Ymin_mikko = v_ratio_mikko[i]->GetMinimum();
+        //if(v_ratio_mikko[i]->GetMinimum()>Ymax_mikko)
+        //  Ymax_mikko = v_ratio_mikko[i]->GetMaximum();
+        //v_ratio_Mikko[i]->GetYaxis()->//(0.8*(v_ratio_mikko[i]->GetMinimum()),1.1*(v_ratio_mikko[i]->GetMaximum()));
+        //v_ratio_Mikko[i]->GetYaxis()->SetRangeUser(0,1.6);
         v_ratio_Mikko[i]->Draw("sameP");
       }
       v_ratio_Mikko[ne]   ->SetMarkerColor(kBlue);
@@ -512,6 +533,8 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
       v_ratio_Mikko[chu]  ->SetAxisRange(-3.1, 3.1);
       v_ratio_Mikko[chm]  ->SetAxisRange(-2.6, 2.6);
       //v_ratio[untrk]->SetAxisRange(-2.9, 2.9);
+      //h2->GetYaxis()->SetRangeUser(0,1.6);
+      //h2->Draw();
 
     }
     c_Mikko->Print("plots/stack_Mikko_" + ids[id] + "_" + bin_var + to_string(n1) + ".pdf");
@@ -601,7 +624,7 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
     text.SetTextFont(42);
     if (ratio)     text.SetTextSize(0.035);
     text.SetTextFont(42);
-    text.DrawLatex(0.6, 0.89, "2016MC: SingleNeutrino");
+    text.DrawLatex(0.6, 0.89, "2018MC: SingleNeutrino");
     if (ratio) text.DrawLatex(0.6, 0.96, label);
     else       text.DrawLatex(0.6, 0.96, label);
 
@@ -615,10 +638,17 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
       TH1D* ratio_MC = (TH1D*) hist_MC->Clone("ratio_MC");
       TH1D* ratio_Data = (TH1D*) hist_Data->Clone("ratio_Data");
       ratio_Data->Divide(ratio_MC);
+      double Ymax_ratio = 1.5, Ymin_ratio = 0.5;
+      if(ratio_Data->GetMaximum() > Ymax_ratio){
+         Ymax_ratio = ratio_Data->GetMaximum();}
+
+      if(ratio_Data->GetMinimum() < Ymin_ratio){
+         Ymin_ratio = ratio_Data->GetMinimum();}
        
       if (id == untrk){
           Int_t nbins = ratio_Data->GetSize();
-          double *error;          error = new double[nbins];
+          double *error;
+          error = new double[nbins];
           for( int i=0 ; i< nbins-2 ; i++){
             error[i] = ratio_Data->GetBinError(i);
             error[i] *= 0.4 ;
@@ -633,11 +663,12 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
       else if (id == chu) ratio_Data->SetAxisRange(-2.9, 2.9);
       else if (id == chm) ratio_Data->SetAxisRange(-2.9, 2.9);
       else if (id == untrk) ratio_Data->SetAxisRange(-2.9, 2.9);
-      else if (id == hf_dep) ratio_Data->SetAxisRange(-3, 3);
+      else if (id == hf_dep) ratio_Data->SetAxisRange(-5.19, 5.19);
       //else
 
 
       ratio_Data->SetMarkerStyle(24);
+      h2->GetYaxis()->SetRangeUser(0.8*Ymin_ratio, Ymax_ratio*1.1);
       h2->Draw();
       ratio_Data->Draw("sameP");
     }
@@ -676,7 +707,7 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
     text.SetTextFont(42);
     if (ratio)     text.SetTextSize(0.035);
     text.SetTextFont(42);
-    text.DrawLatex(0.6, 0.89, "2016MC: SingleNeutrino");
+    text.DrawLatex(0.6, 0.89, "2018MC: SingleNeutrino");
 
     if (ratio) text.DrawLatex(0.6, 0.96, label);
     else       text.DrawLatex(0.6, 0.96, label);
@@ -691,10 +722,17 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
       TH1D* ratio_MC_Mikko = (TH1D*) hist_MC_Mikko->Clone("ratio_MC_Mikko");
       TH1D* ratio_Data_Mikko = (TH1D*) hist_Data_Mikko->Clone("ratio_Data_Mikko");
       ratio_Data_Mikko->Divide(ratio_MC_Mikko);
+      double Ymax_ratio_mikko = 1.5, Ymin_ratio_mikko = 0.5;
+      if(ratio_Data_Mikko->GetMaximum() > Ymax_ratio_mikko){
+         Ymax_ratio_mikko = ratio_Data_Mikko->GetMaximum();}
+
+      if(ratio_Data_Mikko->GetMinimum() < Ymin_ratio_mikko){
+         Ymin_ratio_mikko = ratio_Data_Mikko->GetMinimum();}
        
       if (id == untrk){
           Int_t nbins = ratio_Data_Mikko->GetSize();
-          double *error;          error = new double[nbins];
+          double *error;
+          error = new double[nbins];
           for( int i=0 ; i< nbins-2 ; i++){
             error[i] = ratio_Data_Mikko->GetBinError(i);
             error[i] *= 0.4 ;
@@ -709,20 +747,18 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
       else if (id == chu) ratio_Data_Mikko->SetAxisRange(-2.9, 2.9);
       else if (id == chm) ratio_Data_Mikko->SetAxisRange(-2.9, 2.9);
       else if (id == untrk) ratio_Data_Mikko->SetAxisRange(-2.9, 2.9);
-      else if (id == hf_dep) ratio_Data_Mikko->SetAxisRange(-3, 3);
+      else if (id == hf_dep) ratio_Data_Mikko->SetAxisRange(-5.19, 5.19);
       //else
 
 
 
       ratio_Data_Mikko->SetMarkerStyle(24);
+      h2->GetYaxis()->SetRangeUser(0.8*Ymin_ratio_mikko, Ymax_ratio_mikko*1.1);
       h2->Draw();
       ratio_Data_Mikko->Draw("sameP");
     }
     c_Mikko->Print("plots/stack_Mikko" + ids[id] + "_" + bin_var + to_string(n1) + ".pdf");
   }
-
-
-
 
 
 }
