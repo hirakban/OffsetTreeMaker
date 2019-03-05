@@ -259,7 +259,7 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     pv_z[i] = pv.z();
     pv_rho[i] = pv.position().rho();
 
-    if( !pv.isFake() && pv_ndof[i] > 4 && pv_z[i] <= 24 && pv_rho[i] <= 2 )
+    if( !pv.isFake() && pv_ndof[i] >= 4.0 && fabs(pv_z[i]) <= 24.0 && fabs(pv_rho[i]) <= 2.0 )
       nPV++;
   }
 
@@ -318,7 +318,7 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       vector<reco::Vertex>::const_iterator i_pv, endpv = primaryVertices->end();
       for (i_pv = primaryVertices->begin(); i_pv != endpv && !attached; ++i_pv) {
         
-        if ( !i_pv->isFake() && i_pv->ndof() >= 4 && fabs(i_pv->z()) < 24 ) {
+        if ( !i_pv->isFake() && i_pv->ndof() >= 4.0 && fabs(i_pv->z()) <= 24.0 && fabs(i_pv->position().rho())<=2.0 ) {
 
           reco::Vertex::trackRef_iterator i_vtxTrk, endvtxTrk = i_pv->tracks_end();
           for(i_vtxTrk = i_pv->tracks_begin(); i_vtxTrk != endvtxTrk && !attached; ++i_vtxTrk) {
