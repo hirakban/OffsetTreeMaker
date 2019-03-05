@@ -23,15 +23,24 @@ void scalefactor(TString pf_type="all", int n1=1, int n2=25){
 
   setStyle();
 
-  int Rlabel = 4;
-  TFile* data_root = TFile::Open( Form("Data_R%i.root", Rlabel) );
-  TFile* mc_root = TFile::Open( Form("MC_R%i.root", Rlabel) );
+  double Rin;
+  cout << "Enter R: "<<endl;
+  cin >> Rin;
+  const double R = Rin;
+  int Rlabel = R*10;
+  TString run_name;
+  cout<< "Enter the run name:"<<endl;
+  cin>>run_name;
+
+
+  TFile* mc_root = TFile::Open( Form("Total_MC_Autumn2018%s_R%i.root", run_name.Data(), Rlabel) );
+  TFile* data_root = TFile::Open( Form("Total_Data17Sep2018%s_R%i.root", run_name.Data(), Rlabel) );
 
   bool nPU_derived = true;
   bool rhoCentral = false;
 
-  ifstream data_file("./plots/indirectRho/" + pf_type + Form("/Spring16_25nsV1_DATA_L1RC_AK%iPF", Rlabel) + pf_type + ".txt");
-  ifstream mc_file("./plots/indirectRho/" + pf_type + Form("/Spring16_25nsV1_MC_L1RC_AK%iPF", Rlabel) + pf_type + ".txt");
+  ifstream mc_file( "./plots/indirectRho/Run"+run_name +Form("/R%i/",Rlabel) + pf_type + Form("/Fall18_17Sep2018%s_V1_MC_L1RC_AK%iPF", run_name.Data(), Rlabel) + pf_type + ".txt");
+  ifstream data_file( "./plots/indirectRho/Run"+run_name +Form("/R%i/",Rlabel) + pf_type + Form("/Fall18_17Sep2018%s_V1_DATA_L1RC_AK%iPF",run_name.Data(), Rlabel) + pf_type + ".txt");
   string data_line, mc_line;
 
   //read first line
