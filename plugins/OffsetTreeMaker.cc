@@ -84,6 +84,10 @@ class OffsetTreeMaker : public edm::EDAnalyzer {
     TH2F* h2_finnereta;
     TRandom3* rand;
 
+    TH1F* h_nFoundVertex;
+    TH1F* h_bestweight;
+    TH1F* h_bestweight1;
+
     int nEta;
     float energy[ETA_BINS], eRMS[ETA_BINS], et[ETA_BINS], etMED[ETA_BINS], etMEAN[ETA_BINS];
     float et_gme[ETA_BINS_GME][PHI_BINS_GME];
@@ -152,7 +156,10 @@ void  OffsetTreeMaker::beginJob() {
   rand = new TRandom3;
   h2_GME = new TH2F("GME_2D", "GME_2D_yPhi_xEta", ETA_BINS_GME, -5.0, 5.0, PHI_BINS_GME , -1*M_PI , M_PI);
   h2_finnereta = new TH2F("finnereta_ET", "yPhi_xEta", ETA_BINS, etabins, PHI_BINS_GME, phibins);
-
+  //Histos for checking CHS
+  h_nFoundVertex = new TH1F ("nFoundVertex", "nFoundVertex", 3, -0.5, 2.5);
+  h_bestweight = new TH1F ("bestweight", "bestweight", 50, 0., 1.);
+  h_bestweight1 = new TH1F ("bestweight1", "bestweight1", 50, 0., 1.);
   if (!isMC_){
     parsePileUpJSON2( puFileName_ );
 
@@ -310,26 +317,51 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
     if (etaIndex == -1 || flavor == X) continue;
 
+    bool attached1 = false;
     bool attached = false;
+
     reco::TrackRef pftrack( i_pf->trackRef() );
 
     if (flavor == chm && !pftrack.isNull() ) { //check charged hadrons ONLY
-      
+     // unsigned int iVertex = 0;
+      unsigned int index=0;
+      unsigned int nFoundVertex = 0;
+      float bestweight=0;
+
       vector<reco::Vertex>::const_iterator i_pv, endpv = primaryVertices->end();
-      for (i_pv = primaryVertices->begin(); i_pv != endpv && !attached; ++i_pv) {
+      for (i_pv = primaryVertices->begin(); i_pv != endpv && !attached1; ++i_pv) {
         
         if ( !i_pv->isFake() && i_pv->ndof() >= 4.0 && fabs(i_pv->z()) <= 24.0 && fabs(i_pv->position().rho())<=2.0 ) {
 
+          float w = i_pv->trackWeight(pftrack);
+          //cout << " weight = " << w <<endl;
+
+          if (w > bestweight){
+	    bestweight=w;
+	//    iVertex=index;
+	    nFoundVertex++;
+          }
+          ++index;
+
           reco::Vertex::trackRef_iterator i_vtxTrk, endvtxTrk = i_pv->tracks_end();
-          for(i_vtxTrk = i_pv->tracks_begin(); i_vtxTrk != endvtxTrk && !attached; ++i_vtxTrk) {
+          for(i_vtxTrk = i_pv->tracks_begin(); i_vtxTrk != endvtxTrk && !attached1; ++i_vtxTrk) {
               
             reco::TrackRef vtxTrk(i_vtxTrk->castTo<reco::TrackRef>());
             if (vtxTrk == pftrack)
-              attached = true;
+              attached1 = true;
           } 
         }
       }
-      if (!attached) flavor = chu; //unmatched charged hadron
+      if (nFoundVertex > 0) attached = true;
+      
+      cout << endl;
+      cout << "Best Weight, nFoundVertex, attached = "<< bestweight << "\t" << nFoundVertex << "\t" << attached1 << endl;
+      if(nFoundVertex != int(attached1)) cout << "  =======> Different decision " << endl ;
+      if (!attached1) flavor = chu; //unmatched charged hadron
+
+      h_nFoundVertex->Fill(nFoundVertex);
+      h_bestweight->Fill(bestweight);
+      if (attached1) h_bestweight1->Fill(bestweight);
     }
     float e = i_pf->energy();
 
