@@ -101,6 +101,9 @@ class OffsetTreeMaker : public edm::EDAnalyzer {
     int run, lumi, bx;
     float mu;
     float rho, rhoC0, rhoCC;
+//-------------------------------------->>>>>>>>>>
+    int mua[16];
+    float puz[16][50];
 
     int nPVall, nPV;
     float pv_ndof[MAXNPV], pv_z[MAXNPV], pv_rho[MAXNPV];
@@ -178,6 +181,8 @@ void  OffsetTreeMaker::beginJob() {
   }
 
   tree->Branch("mu", &mu, "mu/F");
+  tree->Branch("mua", mua, "mua[16]/I");
+  tree->Branch("puz", puz, "puz[16][50]/F");
 
   tree->Branch("rho",   &rho,   "rho/F");
   tree->Branch("rhoC0", &rhoC0, "rhoC0/F");
@@ -234,12 +239,33 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   if (counter%numSkip_ != 0) return;
 
 //------------ Pileup ------------//
-
+  cout <<"\n\nEvent # :" << counter << endl;
   if (isMC_){
     edm::Handle< vector<PileupSummaryInfo> > pileups;
     iEvent.getByToken(muTag_, pileups);
 
     mu = pileups->at(1).getTrueNumInteractions();
+
+    int j = 0;
+    std::vector<PileupSummaryInfo>::const_iterator pileupinfo;
+    for(pileupinfo = pileups->begin(); pileupinfo != pileups->end(); ++pileupinfo){
+      mua[j] = pileupinfo->getPU_NumInteractions();
+      /*cout << "index = "<< j << endl;
+      cout << "BX = "<< pileupinfo->getBunchCrossing()<<endl;
+      cout << "mu = "<<pileupinfo->getTrueNumInteractions() <<endl;
+      cout << "muactual = "<< pileupinfo->getPU_NumInteractions()<<endl;*/
+
+      for(int i = 0; i != pileupinfo->getPU_NumInteractions(); ++i){
+        puz[j][i] = (pileupinfo->getPU_zpositions())[i];
+        /*cout << "\tInteraction # = " << i <<endl;
+        cout << "\tzposition "<< (pileupinfo->getPU_zpositions())[i]<<endl;
+        cout << "\tsumpT_low "<< (pileupinfo->getPU_sumpT_lowpT())[i]<<endl;
+        cout << "\tsumpT_high "<< (pileupinfo->getPU_sumpT_highpT())[i]<<endl;
+        cout << "\ttrks_low "<< (pileupinfo->getPU_ntrks_lowpT())[i]<<endl;
+        cout << "\ttrks_high "<< (pileupinfo->getPU_ntrks_highpT())[i]<<endl;*/
+      }
+      ++j;
+    }
   }
   else{
     run = int(iEvent.id().run());
@@ -324,12 +350,12 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
     if (flavor == chm && !pftrack.isNull() ) { //check charged hadrons ONLY
      // unsigned int iVertex = 0;
-      unsigned int index=0;
+      //unsigned int index=0;
       unsigned int nFoundVertex = 0;
-      float bestweight=0;
+      float bestweight = 0;
 
       vector<reco::Vertex>::const_iterator i_pv, endpv = primaryVertices->end();
-      for (i_pv = primaryVertices->begin(); i_pv != endpv && !attached1; ++i_pv) {
+      for (i_pv = primaryVertices->begin(); i_pv != endpv ; ++i_pv) {
         
         if ( !i_pv->isFake() && i_pv->ndof() >= 4.0 && fabs(i_pv->z()) <= 24.0 && fabs(i_pv->position().rho())<=2.0 ) {
 
@@ -341,7 +367,7 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 	//    iVertex=index;
 	    nFoundVertex++;
           }
-          ++index;
+        //  ++index;
 
           reco::Vertex::trackRef_iterator i_vtxTrk, endvtxTrk = i_pv->tracks_end();
           for(i_vtxTrk = i_pv->tracks_begin(); i_vtxTrk != endvtxTrk && !attached1; ++i_vtxTrk) {
@@ -354,10 +380,10 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       }
       if (nFoundVertex > 0) attached = true;
       
-      cout << endl;
-      cout << "Best Weight, nFoundVertex, attached = "<< bestweight << "\t" << nFoundVertex << "\t" << attached1 << endl;
-      if(nFoundVertex != int(attached1)) cout << "  =======> Different decision " << endl ;
-      if (!attached1) flavor = chu; //unmatched charged hadron
+      //cout << endl;
+      //cout << "Best Weight, nFoundVertex, attached = "<< bestweight << "\t" << nFoundVertex << "\t" << attached1 << endl;
+      //if(nFoundVertex != int(attached1)) cout << "  =======> Different decision " << endl ;
+      if (!attached) flavor = chu; //unmatched charged hadron
 
       h_nFoundVertex->Fill(nFoundVertex);
       h_bestweight->Fill(bestweight);
@@ -488,9 +514,12 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
 // ------------ method called once each job just after ending the event loop  ------------
 void OffsetTreeMaker::endJob() {
-
+  
   if (root_file !=0) {
-
+    h_nFoundVertex->Write();
+    h_bestweight->Write();
+    h_bestweight1->Write();
+    
     root_file->Write();
     delete root_file;
     root_file = 0;
