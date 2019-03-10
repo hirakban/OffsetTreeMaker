@@ -258,8 +258,8 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       if (pileupinfo->getBunchCrossing() == 0){
         for(int i = 0; i != pileupinfo->getPU_NumInteractions() && i < 50 ; ++i){
           puz[i] = (pileupinfo->getPU_zpositions())[i]; 
-   }
-} 
+        }
+      } 
       ++j;
     }
   }
