@@ -103,7 +103,7 @@ class OffsetTreeMaker : public edm::EDAnalyzer {
     float rho, rhoC0, rhoCC;
 //-------------------------------------->>>>>>>>>>
     int mua[16];
-    float puz[16][50];
+    float puz[50];
 
     int nPVall, nPV;
     float pv_ndof[MAXNPV], pv_z[MAXNPV], pv_rho[MAXNPV];
@@ -182,7 +182,7 @@ void  OffsetTreeMaker::beginJob() {
 
   tree->Branch("mu", &mu, "mu/F");
   tree->Branch("mua", mua, "mua[16]/I");
-  tree->Branch("puz", puz, "puz[16][50]/F");
+  tree->Branch("puz", puz, "puz[50]/F");
 
   tree->Branch("rho",   &rho,   "rho/F");
   tree->Branch("rhoC0", &rhoC0, "rhoC0/F");
@@ -255,15 +255,11 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       cout << "mu = "<<pileupinfo->getTrueNumInteractions() <<endl;
       cout << "muactual = "<< pileupinfo->getPU_NumInteractions()<<endl;*/
 
-      for(int i = 0; i != pileupinfo->getPU_NumInteractions(); ++i){
-        puz[j][i] = (pileupinfo->getPU_zpositions())[i];
-        /*cout << "\tInteraction # = " << i <<endl;
-        cout << "\tzposition "<< (pileupinfo->getPU_zpositions())[i]<<endl;
-        cout << "\tsumpT_low "<< (pileupinfo->getPU_sumpT_lowpT())[i]<<endl;
-        cout << "\tsumpT_high "<< (pileupinfo->getPU_sumpT_highpT())[i]<<endl;
-        cout << "\ttrks_low "<< (pileupinfo->getPU_ntrks_lowpT())[i]<<endl;
-        cout << "\ttrks_high "<< (pileupinfo->getPU_ntrks_highpT())[i]<<endl;*/
-      }
+      if (pileupinfo->getBunchCrossing() == 0){
+        for(int i = 0; i != pileupinfo->getPU_NumInteractions() && i < 50 ; ++i){
+          puz[i] = (pileupinfo->getPU_zpositions())[i]; 
+   }
+} 
       ++j;
     }
   }
