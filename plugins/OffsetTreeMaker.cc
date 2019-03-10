@@ -239,7 +239,7 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   if (counter%numSkip_ != 0) return;
 
 //------------ Pileup ------------//
-  cout <<"\n\nEvent # :" << counter << endl;
+  //cout <<"\n\nEvent # :" << counter << endl;
   if (isMC_){
     edm::Handle< vector<PileupSummaryInfo> > pileups;
     iEvent.getByToken(muTag_, pileups);
@@ -258,8 +258,8 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       if (pileupinfo->getBunchCrossing() == 0){
         for(int i = 0; i != pileupinfo->getPU_NumInteractions() && i < 50 ; ++i){
           puz[i] = (pileupinfo->getPU_zpositions())[i]; 
-   }
-} 
+        }
+      } 
       ++j;
     }
   }
