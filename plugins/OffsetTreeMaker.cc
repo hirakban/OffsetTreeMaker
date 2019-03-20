@@ -11,7 +11,7 @@
      [Notes on implementation]
 */
 //
-// Original Author:  charles harrington
+// Original Author:  Charles Harrington and Bahareh Roozbahani
 //         Created:  Mon, 09 Nov 2015 17:09:43 GMT
 //
 //
@@ -88,14 +88,13 @@ class OffsetTreeMaker : public edm::EDAnalyzer {
     TH1F* h_bestweight;
     TH1F* h_bestweight1;
 
-    int nEta;
+    int nEta, maxnh;
     float energy[ETA_BINS], eRMS[ETA_BINS], et[ETA_BINS], etMED[ETA_BINS], etMEAN[ETA_BINS];
     float et_gme[ETA_BINS_GME][PHI_BINS_GME];
     float et_gme_gen[ETA_BINS_GME][PHI_BINS_GME];
     UChar_t ch_et_gme[ETA_BINS_GME][PHI_BINS_GME];
     UChar_t ch_et_gme_gen[ETA_BINS_GME][PHI_BINS_GME];
     UChar_t f[numFlavors][ETA_BINS];  //energy fraction by flavor
-
 
     ULong64_t event;
     int run, lumi, bx;
@@ -116,10 +115,28 @@ class OffsetTreeMaker : public edm::EDAnalyzer {
     vector<int> pf_type;
     vector<float> pf_pt, pf_eta, pf_phi, pf_et;
 
+    vector<double>  nh_eta, nh_energy;
+    vector<double>  nh_ECAL, nh_HCAL, nh_HO;
+    vector<double>  nh_rawECAL, nh_rawHCAL, nh_rawHO;
+    vector<double> nh_HCAL_depth1_fraction, nh_HCAL_depth2_fraction, nh_HCAL_depth3_fraction, nh_HCAL_depth4_fraction,
+                   nh_HCAL_depth5_fraction, nh_HCAL_depth6_fraction, nh_HCAL_depth7_fraction;
+
+    vector<double>  ne_eta, ne_energy;
+    vector<double>  ne_ECAL, ne_HCAL, ne_HO;
+    vector<double>  ne_rawECAL, ne_rawHCAL, ne_rawHO;
+
+    float nh_sum_HCAL[ETA_BINS], nh_sum_ECAL[ETA_BINS], nh_sum_HO[ETA_BINS];
+    float nh_sum_rawHCAL[ETA_BINS], nh_sum_rawECAL[ETA_BINS], nh_sum_rawHO[ETA_BINS];
+
+    float nh_HCAL_depth1_fraction_SUM[ETA_BINS], nh_HCAL_depth2_fraction_SUM[ETA_BINS], nh_HCAL_depth3_fraction_SUM[ETA_BINS], nh_HCAL_depth4_fraction_SUM[ETA_BINS], nh_HCAL_depth5_fraction_SUM[ETA_BINS], nh_HCAL_depth6_fraction_SUM[ETA_BINS], nh_HCAL_depth7_fraction_SUM[ETA_BINS];
+
+    float ne_sum_HCAL[ETA_BINS], ne_sum_ECAL[ETA_BINS], ne_sum_HO[ETA_BINS];
+    float ne_sum_rawHCAL[ETA_BINS], ne_sum_rawECAL[ETA_BINS], ne_sum_rawHO[ETA_BINS];
+
     TString RootFileName_;
     string puFileName_;
     int numSkip_;
-    bool isMC_, writeCands_;
+    bool isMC_, writeCands_, writeEnergyDeposition_;
 
     edm::EDGetTokenT< vector<reco::Vertex> > pvTag_;
     edm::EDGetTokenT< vector<reco::Track> > trackTag_;
@@ -138,6 +155,7 @@ OffsetTreeMaker::OffsetTreeMaker(const edm::ParameterSet& iConfig)
   puFileName_ = iConfig.getParameter<string>("puFileName");
   isMC_ = iConfig.getParameter<bool>("isMC");
   writeCands_ = iConfig.getParameter<bool>("writeCands");
+  writeEnergyDeposition_ = iConfig.getParameter<bool>("writeEnergyDeposition");
   pvTag_ = consumes< vector<reco::Vertex> >( iConfig.getParameter<edm::InputTag>("pvTag") );
   trackTag_ = consumes< vector<reco::Track> >( iConfig.getParameter<edm::InputTag>("trackTag") );
   muTag_ = consumes< vector<PileupSummaryInfo> >( iConfig.getParameter<edm::InputTag>("muTag") );
@@ -180,6 +198,56 @@ void  OffsetTreeMaker::beginJob() {
     tree->Branch("pf_et",  "std::vector<float>", &pf_et);
   }
 
+  if (writeEnergyDeposition_){
+    tree->Branch("nh_eta", "std::vector<double>", &nh_eta);
+    tree->Branch("nh_energy", "std::vector<double>", &nh_energy);
+    tree->Branch("nh_ECAL", "std::vector<double>", &nh_ECAL);
+    tree->Branch("nh_HCAL", "std::vector<double>", &nh_HCAL);
+    tree->Branch("nh_rawECAL", "std::vector<double>", &nh_rawECAL);
+    tree->Branch("nh_rawHCAL", "std::vector<double>", &nh_rawHCAL);
+    tree->Branch("nh_HO", "std::vector<double>", &nh_HO);
+    tree->Branch("nh_rawHO", "std::vector<double>", &nh_rawHO);
+
+    tree->Branch("nh_HCAL_depth1_fraction", "std::vector<double>", &nh_HCAL_depth1_fraction);
+    tree->Branch("nh_HCAL_depth2_fraction", "std::vector<double>", &nh_HCAL_depth2_fraction);
+    tree->Branch("nh_HCAL_depth3_fraction", "std::vector<double>", &nh_HCAL_depth3_fraction);
+    tree->Branch("nh_HCAL_depth4_fraction", "std::vector<double>", &nh_HCAL_depth4_fraction);
+    tree->Branch("nh_HCAL_depth5_fraction", "std::vector<double>", &nh_HCAL_depth5_fraction);
+    tree->Branch("nh_HCAL_depth6_fraction", "std::vector<double>", &nh_HCAL_depth6_fraction);
+    tree->Branch("nh_HCAL_depth7_fraction", "std::vector<double>", &nh_HCAL_depth7_fraction);
+
+    tree->Branch("ne_eta", "std::vector<double>", &ne_eta);
+    tree->Branch("ne_energy", "std::vector<double>", &ne_energy);
+    tree->Branch("ne_ECAL", "std::vector<double>", &ne_ECAL);
+    tree->Branch("ne_HCAL", "std::vector<double>", &ne_HCAL);
+    tree->Branch("ne_rawECAL", "std::vector<double>", &ne_rawECAL);
+    tree->Branch("ne_rawHCAL", "std::vector<double>", &ne_rawHCAL);
+    tree->Branch("ne_HO", "std::vector<double>", &ne_HO);
+    tree->Branch("ne_rawHO", "std::vector<double>", &ne_rawHO);
+
+    tree->Branch("nh_sum_HCAL", nh_sum_HCAL, "nh_sum_HCAL[nEta]/F");
+    tree->Branch("nh_sum_ECAL", nh_sum_ECAL, "nh_sum_ECAL[nEta]/F");
+    tree->Branch("nh_sum_HO", nh_sum_HO, "nh_sum_HO[nEta]/F");
+    tree->Branch("nh_sum_rawHCAL", nh_sum_rawHCAL, "nh_sum_rawHCAL[nEta]/F");
+    tree->Branch("nh_sum_rawECAL", nh_sum_rawECAL, "nh_sum_rawECAL[nEta]/F");
+    tree->Branch("nh_sum_rawHO", nh_sum_rawHO, "nh_sum_rawHO[nEta]/F");
+
+    tree->Branch("nh_HCAL_depth1_fraction_SUM", nh_HCAL_depth1_fraction_SUM, "nh_HCAL_depth1_fraction_SUM[nEta]/F");
+    tree->Branch("nh_HCAL_depth2_fraction_SUM", nh_HCAL_depth2_fraction_SUM, "nh_HCAL_depth2_fraction_SUM[nEta]/F");
+    tree->Branch("nh_HCAL_depth3_fraction_SUM", nh_HCAL_depth3_fraction_SUM, "nh_HCAL_depth3_fraction_SUM[nEta]/F");
+    tree->Branch("nh_HCAL_depth4_fraction_SUM", nh_HCAL_depth4_fraction_SUM, "nh_HCAL_depth4_fraction_SUM[nEta]/F");
+    tree->Branch("nh_HCAL_depth5_fraction_SUM", nh_HCAL_depth5_fraction_SUM, "nh_HCAL_depth5_fraction_SUM[nEta]/F");
+    tree->Branch("nh_HCAL_depth6_fraction_SUM", nh_HCAL_depth6_fraction_SUM, "nh_HCAL_depth6_fraction_SUM[nEta]/F");
+    tree->Branch("nh_HCAL_depth7_fraction_SUM", nh_HCAL_depth7_fraction_SUM, "nh_HCAL_depth7_fraction_SUM[nEta]/F");
+
+    tree->Branch("ne_sum_HCAL", ne_sum_HCAL, "ne_sum_HCAL[nEta]/F");
+    tree->Branch("ne_sum_ECAL", ne_sum_ECAL, "ne_sum_ECAL[nEta]/F");
+    tree->Branch("ne_sum_HO", ne_sum_HO, "ne_sum_HO[nEta]/F");
+    tree->Branch("ne_sum_rawHCAL", ne_sum_rawHCAL, "ne_sum_rawHCAL[nEta]/F");
+    tree->Branch("ne_sum_rawECAL", ne_sum_rawECAL, "ne_sum_rawECAL[nEta]/F");
+    tree->Branch("ne_sum_rawHO", ne_sum_rawHO, "ne_sum_rawHO[nEta]/F");
+  }
+
   tree->Branch("mu", &mu, "mu/F");
   tree->Branch("mua", mua, "mua[16]/I");
   tree->Branch("puz", puz, "puz[50]/F");
@@ -216,7 +284,6 @@ void  OffsetTreeMaker::beginJob() {
   tree->Branch("flep",   f[lep],   "flep[nEta]/b");
   tree->Branch("funtrk", f[untrk], "funtrk[nEta]/b");
 
-
   tree->Branch("ht", &ht, "ht/F");
   tree->Branch("nJets",    &nJets,   "nJets/I");
   tree->Branch("jet_eta",  jet_eta,  "jet_eta[nJets]/F");
@@ -231,10 +298,10 @@ void  OffsetTreeMaker::beginJob() {
   tree->Branch("jet_hfe", jet_hfe, "jet_hfe[nJets]/F");
   tree->Branch("jet_lep", jet_lep, "jet_lep[nJets]/F");
 }
+int iecal =0;
 
 // ------------ method called for each event  ------------
 void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
-
   counter++;
   if (counter%numSkip_ != 0) return;
 
@@ -311,6 +378,29 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   edm::Handle< vector<reco::PFCandidate> > pfCandidates;
   iEvent.getByToken(pfTag_, pfCandidates);
 
+  memset(nh_sum_HCAL, 0, sizeof(nh_sum_HCAL));
+  memset(nh_sum_ECAL, 0, sizeof(nh_sum_ECAL));
+  memset(nh_sum_HO, 0, sizeof(nh_sum_HO));
+  memset(nh_sum_rawHCAL, 0, sizeof(nh_sum_rawHCAL));
+  memset(nh_sum_rawECAL, 0, sizeof(nh_sum_rawECAL));
+  memset(nh_sum_rawHO, 0, sizeof(nh_sum_rawHO));
+
+
+  memset(nh_HCAL_depth1_fraction_SUM, 0, sizeof(nh_HCAL_depth1_fraction_SUM));
+  memset(nh_HCAL_depth2_fraction_SUM, 0, sizeof(nh_HCAL_depth2_fraction_SUM));
+  memset(nh_HCAL_depth3_fraction_SUM, 0, sizeof(nh_HCAL_depth3_fraction_SUM));
+  memset(nh_HCAL_depth4_fraction_SUM, 0, sizeof(nh_HCAL_depth4_fraction_SUM));
+  memset(nh_HCAL_depth5_fraction_SUM, 0, sizeof(nh_HCAL_depth5_fraction_SUM));
+  memset(nh_HCAL_depth6_fraction_SUM, 0, sizeof(nh_HCAL_depth6_fraction_SUM));
+  memset(nh_HCAL_depth7_fraction_SUM, 0, sizeof(nh_HCAL_depth7_fraction_SUM));
+
+  memset(ne_sum_HCAL, 0, sizeof(ne_sum_HCAL));
+  memset(ne_sum_ECAL, 0, sizeof(ne_sum_ECAL));
+  memset(ne_sum_HO, 0, sizeof(ne_sum_HO));
+  memset(ne_sum_rawHCAL, 0, sizeof(ne_sum_rawHCAL));
+  memset(ne_sum_rawECAL, 0, sizeof(ne_sum_rawECAL));
+  memset(ne_sum_rawHO, 0, sizeof(ne_sum_rawHO));
+
   memset(energy, 0, sizeof(energy));    //reset arrays to zero
   memset(et, 0, sizeof(et));
   memset(etMED, 0, sizeof(etMED));
@@ -328,6 +418,16 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   memset(ch_et_gme_gen, 0, sizeof(ch_et_gme_gen));
 
   pf_type.clear(); pf_pt.clear(); pf_eta.clear(); pf_phi.clear(); pf_et.clear();
+  nh_eta.clear(); nh_energy.clear(); nh_ECAL.clear(); nh_HCAL.clear();
+  nh_rawECAL.clear(); nh_rawHCAL.clear();
+  nh_HO.clear(); nh_rawHO.clear();
+  nh_HCAL_depth1_fraction.clear();  nh_HCAL_depth2_fraction.clear();  nh_HCAL_depth3_fraction.clear();  nh_HCAL_depth4_fraction.clear();
+  nh_HCAL_depth5_fraction.clear();  nh_HCAL_depth6_fraction.clear();  nh_HCAL_depth7_fraction.clear(); 
+
+  ne_eta.clear(); ne_energy.clear(); ne_ECAL.clear(); ne_HCAL.clear();
+  ne_rawECAL.clear(); ne_rawHCAL.clear();
+  ne_HO.clear(); ne_rawHO.clear();
+
   h2_GME->Reset();
   h2_finnereta->Reset();
 
@@ -402,6 +502,69 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       pf_eta.push_back( i_pf->eta() );
       pf_phi.push_back( i_pf->phi() );
       pf_et.push_back( i_pf->et() );
+    }
+
+    if (writeEnergyDeposition_){
+      if (flavor == nh){ 
+        // per PF candidate quantities
+        nh_eta.push_back(i_pf->eta());
+        nh_energy.push_back(i_pf->energy());
+        nh_ECAL.push_back(i_pf->ecalEnergy());
+        nh_HCAL.push_back(i_pf->hcalEnergy());
+        nh_HO.push_back(i_pf->hoEnergy());
+        nh_rawECAL.push_back(i_pf->rawEcalEnergy());
+        nh_rawHCAL.push_back(i_pf->rawHcalEnergy());
+        nh_rawHO.push_back(i_pf->rawHoEnergy());
+
+        nh_HCAL_depth1_fraction.push_back(i_pf->hcalDepthEnergyFraction(1)); 
+        nh_HCAL_depth2_fraction.push_back(i_pf->hcalDepthEnergyFraction(2)); 
+        nh_HCAL_depth3_fraction.push_back(i_pf->hcalDepthEnergyFraction(3)); 
+        nh_HCAL_depth4_fraction.push_back(i_pf->hcalDepthEnergyFraction(4)); 
+        nh_HCAL_depth5_fraction.push_back(i_pf->hcalDepthEnergyFraction(5)); 
+        nh_HCAL_depth6_fraction.push_back(i_pf->hcalDepthEnergyFraction(6)); 
+        nh_HCAL_depth7_fraction.push_back(i_pf->hcalDepthEnergyFraction(7)); 
+
+        //per eta slice quantities
+        int etaIndex = getEtaIndex( i_pf->eta() );
+        if (etaIndex == -1) continue;
+        nh_sum_HCAL[etaIndex] += i_pf->hcalEnergy();
+        nh_sum_ECAL[etaIndex] += i_pf->ecalEnergy();
+        nh_sum_HO[etaIndex] += i_pf->hoEnergy();
+        nh_sum_rawHCAL[etaIndex] += i_pf->rawHcalEnergy();
+        nh_sum_rawECAL[etaIndex] += i_pf->rawEcalEnergy();
+        nh_sum_rawHO[etaIndex] += i_pf->rawHoEnergy();
+
+        nh_HCAL_depth1_fraction_SUM[etaIndex] += i_pf->hcalEnergy() * i_pf->hcalDepthEnergyFraction(1); 
+        nh_HCAL_depth2_fraction_SUM[etaIndex] += i_pf->hcalEnergy() * i_pf->hcalDepthEnergyFraction(2); 
+        nh_HCAL_depth3_fraction_SUM[etaIndex] += i_pf->hcalEnergy() * i_pf->hcalDepthEnergyFraction(3); 
+        nh_HCAL_depth4_fraction_SUM[etaIndex] += i_pf->hcalEnergy() * i_pf->hcalDepthEnergyFraction(4); 
+        nh_HCAL_depth5_fraction_SUM[etaIndex] += i_pf->hcalEnergy() * i_pf->hcalDepthEnergyFraction(5); 
+        nh_HCAL_depth6_fraction_SUM[etaIndex] += i_pf->hcalEnergy() * i_pf->hcalDepthEnergyFraction(6); 
+        nh_HCAL_depth7_fraction_SUM[etaIndex] += i_pf->hcalEnergy() * i_pf->hcalDepthEnergyFraction(7); 
+      }
+
+      if (flavor == ne){
+        // per PF candidate quantities
+        ne_eta.push_back(i_pf->eta());
+        ne_energy.push_back(i_pf->energy());
+        ne_ECAL.push_back(i_pf->ecalEnergy());
+        ne_HCAL.push_back(i_pf->hcalEnergy());
+        ne_HO.push_back(i_pf->hoEnergy());
+        ne_rawECAL.push_back(i_pf->rawEcalEnergy());
+        ne_rawHCAL.push_back(i_pf->rawHcalEnergy());
+        ne_rawHO.push_back(i_pf->rawHoEnergy());
+
+        //per eta slice quantities
+        int etaIndex = getEtaIndex( i_pf->eta() );
+        if (etaIndex == -1) continue;
+        ne_sum_HCAL[etaIndex] += i_pf->hcalEnergy();
+        ne_sum_ECAL[etaIndex] += i_pf->ecalEnergy();
+        ne_sum_HO[etaIndex] += i_pf->hoEnergy();
+        ne_sum_rawHCAL[etaIndex] += i_pf->rawHcalEnergy();
+        ne_sum_rawECAL[etaIndex] += i_pf->rawEcalEnergy();
+        ne_sum_rawHO[etaIndex] += i_pf->rawHoEnergy();
+
+      }
     }
   }
 
