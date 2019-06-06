@@ -35,6 +35,8 @@
 #include "parsePileUpJSON2.h"
 #include <vector>
 #include "TMath.h"
+#include "CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h"
+#include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
 //root files
 #include <TFile.h>
 #include <TTree.h>
@@ -61,6 +63,9 @@ float etabins[ETA_BINS+1] =
 
 float phibins[PHI_BINS_GME+1] = 
   {-3.142, -2.57, -1.999, -1.428, -0.8568, -0.2856, 0.2856, 0.8568, 1.428, 1.999, 2.57, 3.142};
+
+bool sortJetPt(const pair<int, float>& jet1, const pair<int, float>& jet2){ return jet1.second > jet2.second; }
+
 class OffsetTreeMaker : public edm::EDAnalyzer {
   public:
     explicit OffsetTreeMaker(const edm::ParameterSet&);
@@ -110,16 +115,19 @@ class OffsetTreeMaker : public edm::EDAnalyzer {
 
     float ht;
     int nJets;
-    float jet_eta[MAXJETS], jet_phi[MAXJETS], jet_pt[MAXJETS], jet_area[MAXJETS];
+    float jet_eta[MAXJETS], jet_phi[MAXJETS], jet_pt[MAXJETS], jet_area[MAXJETS], jet_mass[MAXJETS];
     float jet_ch[MAXJETS], jet_nh[MAXJETS], jet_ne[MAXJETS], jet_hfh[MAXJETS], jet_hfe[MAXJETS], jet_lep[MAXJETS];
 
     vector<int> pf_type;
     vector<float> pf_pt, pf_eta, pf_phi, pf_et;
+    vector<string> eras;
 
     TString RootFileName_;
     string puFileName_;
     int numSkip_;
     bool isMC_, writeCands_;
+
+    string jet_type;
 
     edm::EDGetTokenT< vector<reco::Vertex> > pvTag_;
     edm::EDGetTokenT< vector<reco::Track> > trackTag_;
@@ -129,6 +137,7 @@ class OffsetTreeMaker : public edm::EDAnalyzer {
     edm::EDGetTokenT<double> rhoC0Tag_;
     edm::EDGetTokenT<double> rhoCCTag_;
     edm::EDGetTokenT< vector<reco::PFJet> > pfJetTag_;
+
 };
 
 OffsetTreeMaker::OffsetTreeMaker(const edm::ParameterSet& iConfig)
@@ -476,6 +485,22 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
   edm::Handle< vector<reco::PFJet> > pfJets;
   iEvent.getByToken(pfJetTag_, pfJets);
+  
+  // Correcteing jets for pileup and sorting them as per pT
+
+  map<string, JetCorrectorParameters*> L1JetPars;
+  map<string, vector<JetCorrectorParameters> > jetPars, jetL1Pars;
+  map<string, FactorizedJetCorrector*> jetL1Correctors;
+
+  for(vector<string>::iterator i_era = eras.begin(); i_era != eras.end(); ++i_era) {
+    string era = *i_era;
+    L1JetPars[era] = new JetCorrectorParameters(era + "/" + era + "_L1FastJet_" + jet_type + ".txt");
+
+    jetPars[era].push_back( *L1JetPars[era] );
+
+    jetL1Pars[era].push_back( *L1JetPars[era] );
+    jetL1Correctors[era] = new FactorizedJetCorrector( jetL1Pars[era] );
+  }
 
   ht = 0;
   vector<reco::PFJet>::const_iterator i_jet, endjet = pfJets->end();
@@ -483,16 +508,33 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
     float pt = i_jet->pt();
     if (pt > 10) ht += pt;
+
   }
 
+  vector<pair<int, double> > jet_index_corrpt; // Pair of jet index and corrected jet pT
+  string era = eras[0];
+
   pfJets->size()<MAXJETS ? nJets = pfJets->size() : nJets = MAXJETS;
-  for (int i=0; i != nJets; ++i){
+  for (int i=0; i != nJets; ++i){ // Looping through the jets
     reco::PFJet jet = pfJets->at(i);
 
     jet_eta[i] = jet.eta();
     jet_phi[i] = jet.phi();
     jet_pt[i] = jet.pt();
+    jet_mass[i] = jet.mass();
     jet_area[i] = jet.jetArea();
+
+    // Applying L1 corrections
+    jetL1Correctors[era]->setJetEta( jet_eta[i] );
+    jetL1Correctors[era]->setJetPt( jet_pt[i] );
+    jetL1Correctors[era]->setJetA( jet_area[i] );
+    jetL1Correctors[era]->setRho(rho);
+
+    TLorentzVector jetL1;
+    jetL1.SetPtEtaPhiM( jet_pt[i], jet_eta[i], jet_phi[i], jet_mass[i] );
+    jetL1 *= jetL1Correctors[era]->getCorrection();
+
+    jet_index_corrpt.push_back( make_pair(i, jetL1.Pt()) );
 
     jet_ch[i] = jet.chargedHadronEnergyFraction();
     jet_nh[i] = jet.neutralHadronEnergyFraction();
@@ -501,6 +543,8 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     jet_hfe[i] = jet.HFEMEnergyFraction();
     jet_lep[i] = jet.electronEnergyFraction() + jet.muonEnergyFraction();
   }
+
+  sort(jet_index_corrpt.begin(), jet_index_corrpt.end(), sortJetPt); // Sorting jets based on pT
 
 //------------ Fill Tree ------------//
 
