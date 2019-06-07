@@ -489,14 +489,12 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   // Correcteing jets for pileup and sorting them as per pT
 
   map<string, JetCorrectorParameters*> L1JetPars;
-  map<string, vector<JetCorrectorParameters> > jetPars, jetL1Pars;
+  map<string, vector<JetCorrectorParameters> > jetL1Pars;
   map<string, FactorizedJetCorrector*> jetL1Correctors;
 
   for(vector<string>::iterator i_era = eras.begin(); i_era != eras.end(); ++i_era) {
     string era = *i_era;
     L1JetPars[era] = new JetCorrectorParameters(era + "/" + era + "_L1FastJet_" + jet_type + ".txt");
-
-    jetPars[era].push_back( *L1JetPars[era] );
 
     jetL1Pars[era].push_back( *L1JetPars[era] );
     jetL1Correctors[era] = new FactorizedJetCorrector( jetL1Pars[era] );
@@ -514,27 +512,32 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   vector<pair<int, double> > jet_index_corrpt; // Pair of jet index and corrected jet pT
   string era = eras[0];
 
-  pfJets->size()<MAXJETS ? nJets = pfJets->size() : nJets = MAXJETS;
-  for (int i=0; i != nJets; ++i){ // Looping through the jets
+  nJets = pfJets->size();
+  for (int i=0; i != nJets; ++i){ // Looping through ALL the jets
     reco::PFJet jet = pfJets->at(i);
 
+    // Applying L1 corrections
+    jetL1Correctors[era]->setJetEta( jet.eta() );
+    jetL1Correctors[era]->setJetPt( jet.pt() );
+    jetL1Correctors[era]->setJetA( jet.jetArea() );
+    jetL1Correctors[era]->setRho(rho);
+
+    jet_index_corrpt.push_back( make_pair(i, jet.pt()*jetL1Correctors[era]->getCorrection() ) );
+  }
+
+  sort(jet_index_corrpt.begin(), jet_index_corrpt.end(), sortJetPt); // Sorting jets based on pT
+
+  pfJets->size()<MAXJETS ? nJets = pfJets->size() : nJets = MAXJETS; // Only storing FOUR jets
+  for (int i=0; i != nJets; ++i){ // Looping through the jets
+    
+    int is = jet_index_corrpt[i].first ; 
+    reco::PFJet jet = pfJets->at(is);
+ 
     jet_eta[i] = jet.eta();
     jet_phi[i] = jet.phi();
     jet_pt[i] = jet.pt();
     jet_mass[i] = jet.mass();
     jet_area[i] = jet.jetArea();
-
-    // Applying L1 corrections
-    jetL1Correctors[era]->setJetEta( jet_eta[i] );
-    jetL1Correctors[era]->setJetPt( jet_pt[i] );
-    jetL1Correctors[era]->setJetA( jet_area[i] );
-    jetL1Correctors[era]->setRho(rho);
-
-    TLorentzVector jetL1;
-    jetL1.SetPtEtaPhiM( jet_pt[i], jet_eta[i], jet_phi[i], jet_mass[i] );
-    jetL1 *= jetL1Correctors[era]->getCorrection();
-
-    jet_index_corrpt.push_back( make_pair(i, jetL1.Pt()) );
 
     jet_ch[i] = jet.chargedHadronEnergyFraction();
     jet_nh[i] = jet.neutralHadronEnergyFraction();
@@ -542,9 +545,7 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     jet_hfh[i] = jet.HFHadronEnergyFraction();
     jet_hfe[i] = jet.HFEMEnergyFraction();
     jet_lep[i] = jet.electronEnergyFraction() + jet.muonEnergyFraction();
-  }
-
-  sort(jet_index_corrpt.begin(), jet_index_corrpt.end(), sortJetPt); // Sorting jets based on pT
+  }  
 
 //------------ Fill Tree ------------//
 
