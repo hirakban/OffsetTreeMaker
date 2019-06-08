@@ -120,14 +120,14 @@ class OffsetTreeMaker : public edm::EDAnalyzer {
 
     vector<int> pf_type;
     vector<float> pf_pt, pf_eta, pf_phi, pf_et;
-    vector<string> eras;
+    //vector<string> eras;
 
     TString RootFileName_;
-    string puFileName_;
+    string puFileName_, era_, jet_type_;
     int numSkip_;
     bool isMC_, writeCands_;
 
-    string jet_type;
+    //string jet_type;
 
     edm::EDGetTokenT< vector<reco::Vertex> > pvTag_;
     edm::EDGetTokenT< vector<reco::Track> > trackTag_;
@@ -155,6 +155,8 @@ OffsetTreeMaker::OffsetTreeMaker(const edm::ParameterSet& iConfig)
   rhoC0Tag_ = consumes<double>( iConfig.getParameter<edm::InputTag>("rhoC0Tag") );
   rhoCCTag_ = consumes<double>( iConfig.getParameter<edm::InputTag>("rhoCCTag") );
   pfJetTag_ = consumes< vector<reco::PFJet> >( iConfig.getParameter<edm::InputTag>("pfJetTag") );
+  era_ = iConfig.getParameter<string>("era");
+  jet_type_ = iConfig.getParameter<string>("jet_type");
 }
 
 // ------------ method called once each job just before starting event loop  ------------
@@ -485,20 +487,6 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
   edm::Handle< vector<reco::PFJet> > pfJets;
   iEvent.getByToken(pfJetTag_, pfJets);
-  
-  // Correcteing jets for pileup and sorting them as per pT
-
-  map<string, JetCorrectorParameters*> L1JetPars;
-  map<string, vector<JetCorrectorParameters> > jetL1Pars;
-  map<string, FactorizedJetCorrector*> jetL1Correctors;
-
-  for(vector<string>::iterator i_era = eras.begin(); i_era != eras.end(); ++i_era) {
-    string era = *i_era;
-    L1JetPars[era] = new JetCorrectorParameters(era + "/" + era + "_L1FastJet_" + jet_type + ".txt");
-
-    jetL1Pars[era].push_back( *L1JetPars[era] );
-    jetL1Correctors[era] = new FactorizedJetCorrector( jetL1Pars[era] );
-  }
 
   ht = 0;
   vector<reco::PFJet>::const_iterator i_jet, endjet = pfJets->end();
@@ -509,20 +497,29 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
   }
 
+  // Correcteing jets for pileup and sorting them as per pT
+
+  JetCorrectorParameters* L1JetPars;
+  vector<JetCorrectorParameters> jetL1Pars;
+  FactorizedJetCorrector* jetL1Correctors;
+
+  L1JetPars = new JetCorrectorParameters(era_ + "/" + era_ + "_L1FastJet_" + jet_type_ + ".txt");
+  jetL1Pars.push_back( *L1JetPars );
+  jetL1Correctors = new FactorizedJetCorrector( jetL1Pars );
+
   vector<pair<int, double> > jet_index_corrpt; // Pair of jet index and corrected jet pT
-  string era = eras[0];
 
   nJets = pfJets->size();
   for (int i=0; i != nJets; ++i){ // Looping through ALL the jets
     reco::PFJet jet = pfJets->at(i);
 
     // Applying L1 corrections
-    jetL1Correctors[era]->setJetEta( jet.eta() );
-    jetL1Correctors[era]->setJetPt( jet.pt() );
-    jetL1Correctors[era]->setJetA( jet.jetArea() );
-    jetL1Correctors[era]->setRho(rho);
+    jetL1Correctors->setJetEta( jet.eta() );
+    jetL1Correctors->setJetPt( jet.pt() );
+    jetL1Correctors->setJetA( jet.jetArea() );
+    jetL1Correctors->setRho(rho);
 
-    jet_index_corrpt.push_back( make_pair(i, jet.pt()*jetL1Correctors[era]->getCorrection() ) );
+    jet_index_corrpt.push_back( make_pair(i, jet.pt()*jetL1Correctors->getCorrection() ) );
   }
 
   sort(jet_index_corrpt.begin(), jet_index_corrpt.end(), sortJetPt); // Sorting jets based on pT
