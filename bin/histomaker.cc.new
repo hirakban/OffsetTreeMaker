@@ -82,6 +82,8 @@ int main(int argc, char* argv[]) {
       m_Profiles[hname] = new TProfile(hname, hname, nEta, etabins);
       hname = Form("p_mikko_eta_nPU%i_",i_nPU) + ids[i_id];
       m_Profiles[hname] = new TProfile(hname, hname, nEta, etabins);
+      hname = Form("p_mikko_eta_new_nPU%i_",i_nPU) + ids[i_id];
+      m_Profiles[hname] = new TProfile(hname, hname, nEta, etabins);
     }
     for (int i_nPV=0; i_nPV<MAXNPV; i_nPV++){
       hname = Form("p_offset_eta_nPV%i_", i_nPV) + ids[i_id];
@@ -195,7 +197,7 @@ int main(int argc, char* argv[]) {
   //Loop Over Entries//
 
   for (Long64_t n=0; n<nEntries; n++) {
-    if (n % 100000 == 0) cout << "Processing Event " << n+1 << endl;
+    if (n % 10000 == 0) cout << "Processing Event " << n+1 << endl;
     tree->GetEntry(n);
 
     float weight = isMC ? h_weights->GetBinContent( h_weights->FindBin(mu) ) : 1.;
@@ -230,12 +232,19 @@ int main(int argc, char* argv[]) {
         FillProfile(hname, eta, offpt, weight);
         hname = Form("p_offset_eta_nPV%i_", nPV) + ids[i_id];
         FillProfile(hname, eta, offpt, weight);
+        hname = Form("p_offset_eta_new_nPV%i_", nPV) + ids[i_id];
+        FillProfile(hname, eta_new, offpt, weight);
 
         if (mu > 5) {
           double area = 2 * M_PI * (etabins[ieta+1] - etabins[ieta]);
           double mikko_offpt = energy[ieta] * f[i_id][ieta] * M_PI*rCone*rCone / 255. / cosh(eta) / area;
+          double mikko_offpp = (energy[ieta] * f[i_id][ieta] * M_PI*rCone*rCone / 255. / area) * tanh(eta);
+          double theta_mikko_new = atan(mikko_offpt/mikko_offpp);
+          double eta_mikko_new = -1*log(tan(theta_mikko_new/2.));
           hname = Form("p_mikko_eta_nPU%i_", intmu) + ids[i_id];
-          FillProfile(hname, eta, mikko_offpt, weight); 
+          FillProfile(hname, eta, mikko_offpt, weight);
+          hname = Form("p_mikko_eta_new_nPU%i_", intmu) + ids[i_id];
+          FillProfile(hname, eta_mikko_new, mikko_offpt, weight); 
           double ptdensity_permu_in_eta_stripe = mikko_offpt / (M_PI*rCone*rCone) / mu ;
           ptdensity_permu_in_eta_stripe = (ptdensity_permu_in_eta_stripe>5 ? 4.99 : ptdensity_permu_in_eta_stripe) ;
           if(fabs(eta)<1.3){
@@ -261,7 +270,10 @@ int main(int argc, char* argv[]) {
   for (int i_id=0; i_id<numFlavors; i_id++){
     outFile->mkdir( "offset_nPU/" + ids[i_id] );
     outFile->mkdir( "offset_nPV/" + ids[i_id] );
+    outFile->mkdir( "offset_nPU_new/" + ids[i_id] );
+    outFile->mkdir( "offset_nPV_new/" + ids[i_id] );
     outFile->mkdir( "mikko_nPU/"  + ids[i_id] );
+    outFile->mkdir( "mikko_nPU_new/"  + ids[i_id] );
   }
   outFile->mkdir( "ptdensity_/" );
 
@@ -303,6 +315,10 @@ int main(int argc, char* argv[]) {
     else if ( hname.Contains("p_mikko_eta_nPU") ){
       TString id = hname( hname.Last('_')+1, hname.Length() );
       outFile->cd(outName + ":/mikko_nPU/" + id);
+    }
+    else if ( hname.Contains("p_mikko_eta_new_nPU") ){
+      TString id = hname( hname.Last('_')+1, hname.Length() );
+      outFile->cd(outName + ":/mikko_nPU_new/" + id);
     }
     hid->second->Write();
   }
