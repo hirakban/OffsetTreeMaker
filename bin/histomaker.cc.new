@@ -217,6 +217,7 @@ int main(int argc, char* argv[]) {
       for (int i_id=0; i_id<numFlavors; i_id++){
         double offpt = 0;
         double offpp = 0;
+        double theta_new = 0;
 
         for(int jeta = ieta-10; jeta <= ieta+10; jeta++){
           if( jeta<0 || jeta+1 > nEta) continue;
@@ -224,8 +225,13 @@ int main(int argc, char* argv[]) {
           offpt += energy[jeta] * geo[ieta][jeta] * f[i_id][jeta] / 255.;
           offpp += energy[jeta] * geo_p[ieta][jeta] * f[i_id][jeta] / 255.;
         }
-        double theta_new = atan(offpt/offpp);
+        //cout<< "Off pT: "<< offpt <<"  Off pp: "<< offpp <<endl;
+        theta_new = atan(abs(offpt/offpp));
+        //cout << "Theta new: "<< theta_new <<endl;
+        if (offpp < 0.){theta_new = M_PI - theta_new;}
+        //cout << "Theta new: "<< theta_new << " pi:" << M_PI<<endl;
         double eta_new = -1*log(tan(theta_new/2.));
+        //cout <<"Eta new: "<<eta_new<<endl;
         hname = Form("p_offset_eta_new_nPU%i_", intmu) + ids[i_id];
         FillProfile(hname, eta_new, offpt, weight);
         hname = Form("p_offset_eta_nPU%i_", intmu) + ids[i_id];
@@ -239,8 +245,12 @@ int main(int argc, char* argv[]) {
           double area = 2 * M_PI * (etabins[ieta+1] - etabins[ieta]);
           double mikko_offpt = energy[ieta] * f[i_id][ieta] * M_PI*rCone*rCone / 255. / cosh(eta) / area;
           double mikko_offpp = (energy[ieta] * f[i_id][ieta] * M_PI*rCone*rCone / 255. / area) * tanh(eta);
-          double theta_mikko_new = atan(mikko_offpt/mikko_offpp);
+          double theta_mikko_new = atan(abs(mikko_offpt/mikko_offpp));
+          if (offpp<0.){theta_mikko_new = M_PI - theta_mikko_new;}
           double eta_mikko_new = -1*log(tan(theta_mikko_new/2.));
+          //cout<<"Mikko Off pT: "<<mikko_offpt<<"  Mikko Off pp: "<<mikko_offpp<<endl;
+          //cout <<"Mikko Theta new: "<<theta_mikko_new<<endl;
+          //cout <<"Mikko Eta new: "<<eta_mikko_new<<endl;
           hname = Form("p_mikko_eta_nPU%i_", intmu) + ids[i_id];
           FillProfile(hname, eta, mikko_offpt, weight);
           hname = Form("p_mikko_eta_new_nPU%i_", intmu) + ids[i_id];
