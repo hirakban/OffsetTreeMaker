@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
 
   TString inName = isMC ? argv[4] : dataName;
   TString outName = inName( inName.Last('/')+1, inName.Last('.')-inName.Last('/')-1 );
-  outName += "_R" + to_string( int(rCone*10) ) + ".root";
+  outName += "_new_R" + to_string( int(rCone*10) ) + ".root";
   cout << "output:" << "\t" << outName << endl;
   cout << "inName:" << "\t" << inName << endl;
 
@@ -80,10 +80,12 @@ int main(int argc, char* argv[]) {
       m_Profiles[hname] = new TProfile(hname, hname, nEta, etabins);
       hname = Form("p_offset_eta_new_nPU%i_", i_nPU) + ids[i_id]; // New eta
       m_Profiles[hname] = new TProfile(hname, hname, nEta, etabins);
-      hname = Form("p_mikko_eta_nPU%i_",i_nPU) + ids[i_id];
+      hname = Form("p_geometric_eta_nPU%i_",i_nPU) + ids[i_id];
       m_Profiles[hname] = new TProfile(hname, hname, nEta, etabins);
-      hname = Form("p_mikko_eta_new_nPU%i_",i_nPU) + ids[i_id];
+      hname = Form("p_geometric_eta_new_nPU%i_",i_nPU) + ids[i_id];
       m_Profiles[hname] = new TProfile(hname, hname, nEta, etabins);
+      hname = Form("eta_new_eta%i_", i_nPU)+ ids[i_id];
+      m_Histos2D[hname] = new TH2F(hname,hname,nEta, etabins, nEta, etabins);
     }
     for (int i_nPV=0; i_nPV<MAXNPV; i_nPV++){
       hname = Form("p_offset_eta_nPV%i_", i_nPV) + ids[i_id];
@@ -101,6 +103,16 @@ int main(int argc, char* argv[]) {
     hname = "ptdensity_hf_" + ids[i_id];
     m_Histos1D[hname] = new TH1F(hname,hname,100,0,5);
   }
+  for (int i_nPU=0; i_nPU<MAXNPU; i_nPU++){
+    hname = Form("p_offset_eta_newSum_nPU%i_all", i_nPU);
+    m_Profiles[hname] = new TProfile(hname, hname, nEta, etabins);
+    hname = Form("p_offset_eta_newSum_nPU%i_chs", i_nPU);
+    m_Profiles[hname] = new TProfile(hname, hname, nEta, etabins);
+    hname = Form("eta_new_eta_nPU%i_all", i_nPU);
+    m_Histos2D[hname] = new TH2F(hname,hname,nEta, etabins, nEta, etabins);
+    hname = Form("eta_new_eta_nPU%i_chs", i_nPU);
+    m_Histos2D[hname] = new TH2F(hname,hname,nEta, etabins, nEta, etabins);
+   }
 
   //hname = "nPV_all";
   //m_Histos1D[hname] = new TH1F(hname,hname,MAXNPV,0,MAXNPV);
@@ -214,6 +226,13 @@ int main(int argc, char* argv[]) {
     for (int ieta=0; ieta<nEta; ieta++){
       double eta = 0.5*(etabins[ieta] + etabins[ieta+1]);
 
+      double offpt_all = 0;
+      double offpp_all = 0;
+      double offpt_chs = 0;
+      double offpp_chs = 0;
+      double theta_new_chs = 0;
+      double theta_new_all = 0;
+
       for (int i_id=0; i_id<numFlavors; i_id++){
         double offpt = 0;
         double offpp = 0;
@@ -224,7 +243,14 @@ int main(int argc, char* argv[]) {
 
           offpt += energy[jeta] * geo[ieta][jeta] * f[i_id][jeta] / 255.;
           offpp += energy[jeta] * geo_p[ieta][jeta] * f[i_id][jeta] / 255.;
+          offpt_all += energy[jeta] * geo[ieta][jeta] * f[i_id][jeta] / 255.;
+          offpp_all += energy[jeta] * geo_p[ieta][jeta] * f[i_id][jeta] / 255.;
+          if(i_id != chm){
+            offpt_chs += energy[jeta] * geo[ieta][jeta] * f[i_id][jeta] / 255.;
+            offpp_chs += energy[jeta] * geo_p[ieta][jeta] * f[i_id][jeta] / 255.;
+          }
         }
+
         //cout<< "Off pT: "<< offpt <<"  Off pp: "<< offpp <<endl;
         theta_new = atan(abs(offpt/offpp));
         //cout << "Theta new: "<< theta_new <<endl;
@@ -240,22 +266,24 @@ int main(int argc, char* argv[]) {
         FillProfile(hname, eta, offpt, weight);
         hname = Form("p_offset_eta_new_nPV%i_", nPV) + ids[i_id];
         FillProfile(hname, eta_new, offpt, weight);
+        hname = Form("eta_new_eta%i_", intmu) + ids[i_id];
+        FillHist2D(hname, eta, eta_new, weight);
 
         if (mu > 5) {
           double area = 2 * M_PI * (etabins[ieta+1] - etabins[ieta]);
-          double mikko_offpt = energy[ieta] * f[i_id][ieta] * M_PI*rCone*rCone / 255. / cosh(eta) / area;
-          double mikko_offpp = (energy[ieta] * f[i_id][ieta] * M_PI*rCone*rCone / 255. / area) * tanh(eta);
-          double theta_mikko_new = atan(abs(mikko_offpt/mikko_offpp));
-          if (offpp<0.){theta_mikko_new = M_PI - theta_mikko_new;}
-          double eta_mikko_new = -1*log(tan(theta_mikko_new/2.));
-          //cout<<"Mikko Off pT: "<<mikko_offpt<<"  Mikko Off pp: "<<mikko_offpp<<endl;
-          //cout <<"Mikko Theta new: "<<theta_mikko_new<<endl;
-          //cout <<"Mikko Eta new: "<<eta_mikko_new<<endl;
-          hname = Form("p_mikko_eta_nPU%i_", intmu) + ids[i_id];
-          FillProfile(hname, eta, mikko_offpt, weight);
-          hname = Form("p_mikko_eta_new_nPU%i_", intmu) + ids[i_id];
-          FillProfile(hname, eta_mikko_new, mikko_offpt, weight); 
-          double ptdensity_permu_in_eta_stripe = mikko_offpt / (M_PI*rCone*rCone) / mu ;
+          double geometric_offpt = energy[ieta] * f[i_id][ieta] * M_PI*rCone*rCone / 255. / cosh(eta) / area;
+          //double geometric_offpp = (energy[ieta] * f[i_id][ieta] * M_PI*rCone*rCone / 255. / area) * tanh(eta);
+          //double theta_geometric_new = atan(abs(geometric_offpt/geometric_offpp));
+          //if (offpp<0.){theta_geometric_new = M_PI - theta_geometric_new;}
+          //double eta_geometric_new = -1*log(tan(theta_geometric_new/2.));
+          //cout<<"Geometric Off pT: "<<geometric_offpt<<"  Geometric Off pp: "<<geometric_offpp<<endl;
+          //cout <<"Geometric Theta new: "<<theta_geometric_new<<endl;
+          //cout <<"Geometric Eta new: "<<eta_geometric_new<<endl;
+          hname = Form("p_geometric_eta_nPU%i_", intmu) + ids[i_id];
+          FillProfile(hname, eta, geometric_offpt, weight);
+          //hname = Form("p_geometric_eta_new_nPU%i_", intmu) + ids[i_id];
+          //FillProfile(hname, eta_geometric_new, geometric_offpt, weight); 
+          double ptdensity_permu_in_eta_stripe = geometric_offpt / (M_PI*rCone*rCone) / mu ;
           ptdensity_permu_in_eta_stripe = (ptdensity_permu_in_eta_stripe>5 ? 4.99 : ptdensity_permu_in_eta_stripe) ;
           if(fabs(eta)<1.3){
             FillHist1D("ptdensity_bb_"+ids[i_id], ptdensity_permu_in_eta_stripe, weight);
@@ -268,6 +296,22 @@ int main(int argc, char* argv[]) {
           }
         }
       }
+      //cout <<"intmu: "<< intmu <<endl;
+      theta_new_all = atan(abs(offpt_all/offpp_all));
+      if (offpp_all < 0.){theta_new_all = M_PI - theta_new_all;}
+      double eta_new_all = -1*log(tan(theta_new_all/2.));
+      hname = Form("p_offset_eta_newSum_nPU%i_all", intmu); // added "Sum beacuse error in TDirectory"
+      FillProfile(hname, eta_new_all, offpt_all, weight);
+      hname = Form("eta_new_eta_nPU%i_all", intmu);
+      FillHist2D(hname, eta, eta_new_all, weight);
+
+      theta_new_chs = atan(abs(offpt_chs/offpp_chs));
+      if (offpp_chs < 0.){theta_new_chs = M_PI - theta_new_chs;}
+      double eta_new_chs = -1*log(tan(theta_new_chs/2.));
+      hname = Form("p_offset_eta_newSum_nPU%i_chs", intmu); // added "Sum beacuse error in TDirectory"
+      FillProfile(hname, eta_new_chs, offpt_chs, weight);
+      hname = Form("eta_new_eta_nPU%i_chs", intmu);
+      FillHist2D(hname, eta, eta_new_chs, weight);
     }
   } //end event loop
 
@@ -282,8 +326,8 @@ int main(int argc, char* argv[]) {
     outFile->mkdir( "offset_nPV/" + ids[i_id] );
     outFile->mkdir( "offset_nPU_new/" + ids[i_id] );
     outFile->mkdir( "offset_nPV_new/" + ids[i_id] );
-    outFile->mkdir( "mikko_nPU/"  + ids[i_id] );
-    outFile->mkdir( "mikko_nPU_new/"  + ids[i_id] );
+    outFile->mkdir( "geometric_nPU/"  + ids[i_id] );
+    //outFile->mkdir( "geometric_nPU_new/"  + ids[i_id] );
   }
   outFile->mkdir( "ptdensity_/" );
 
@@ -322,14 +366,14 @@ int main(int argc, char* argv[]) {
       TString id = hname( hname.Last('_')+1, hname.Length() );
       outFile->cd(outName + ":/offset_nPV_new/" + id);
     }
-    else if ( hname.Contains("p_mikko_eta_nPU") ){
+    else if ( hname.Contains("p_geometric_eta_nPU") ){
       TString id = hname( hname.Last('_')+1, hname.Length() );
-      outFile->cd(outName + ":/mikko_nPU/" + id);
+      outFile->cd(outName + ":/geometric_nPU/" + id);
     }
-    else if ( hname.Contains("p_mikko_eta_new_nPU") ){
-      TString id = hname( hname.Last('_')+1, hname.Length() );
-      outFile->cd(outName + ":/mikko_nPU_new/" + id);
-    }
+    //else if ( hname.Contains("p_geometric_eta_new_nPU") ){
+    //  TString id = hname( hname.Last('_')+1, hname.Length() );
+    //  outFile->cd(outName + ":/geometric_nPU_new/" + id);
+    //}
     hid->second->Write();
   }
 
