@@ -67,6 +67,8 @@ int main(int argc, char* argv[]) {
   TTree* tree = (TTree*) inFile->Get("T");
   Long64_t nEntries = tree->GetEntries();
   cout << nEntries << " Events" << endl;
+  nEntries = nEntries/10000 ;
+  cout << "Running on only "<< nEntries << " Events" << endl;
 
   //Declare Histos//
 
@@ -107,6 +109,10 @@ int main(int argc, char* argv[]) {
     hname = Form("p_offset_eta_newSum_nPU%i_all", i_nPU);
     m_Profiles[hname] = new TProfile(hname, hname, nEta, etabins);
     hname = Form("p_offset_eta_newSum_nPU%i_chs", i_nPU);
+    m_Profiles[hname] = new TProfile(hname, hname, nEta, etabins);
+    hname = Form("p_offset_eta_oldSum_nPU%i_all", i_nPU);
+    m_Profiles[hname] = new TProfile(hname, hname, nEta, etabins);
+    hname = Form("p_offset_eta_oldSum_nPU%i_chs", i_nPU);
     m_Profiles[hname] = new TProfile(hname, hname, nEta, etabins);
     hname = Form("eta_new_eta_nPU%i_all", i_nPU);
     m_Histos2D[hname] = new TH2F(hname,hname,nEta, etabins, nEta, etabins);
@@ -210,6 +216,7 @@ int main(int argc, char* argv[]) {
 
   for (Long64_t n=0; n<nEntries; n++) {
     if (n % 10000 == 0) cout << "Processing Event " << n+1 << endl;
+    cout << "-----------------------Next Event-----------------------" << endl;
     tree->GetEntry(n);
 
     float weight = isMC ? h_weights->GetBinContent( h_weights->FindBin(mu) ) : 1.;
@@ -226,6 +233,7 @@ int main(int argc, char* argv[]) {
     for (int ieta=0; ieta<nEta; ieta++){
       double eta = 0.5*(etabins[ieta] + etabins[ieta+1]);
 
+      // One value for each eta slice 
       double offpt_all = 0;
       double offpp_all = 0;
       double offpt_chs = 0;
@@ -234,30 +242,35 @@ int main(int argc, char* argv[]) {
       double theta_new_all = 0;
 
       for (int i_id=0; i_id<numFlavors; i_id++){
+        // One value for each flavor per eta slice
         double offpt = 0;
         double offpp = 0;
         double theta_new = 0;
 
         for(int jeta = ieta-10; jeta <= ieta+10; jeta++){
           if( jeta<0 || jeta+1 > nEta) continue;
-
           offpt += energy[jeta] * geo[ieta][jeta] * f[i_id][jeta] / 255.;
           offpp += energy[jeta] * geo_p[ieta][jeta] * f[i_id][jeta] / 255.;
-          offpt_all += energy[jeta] * geo[ieta][jeta] * f[i_id][jeta] / 255.;
-          offpp_all += energy[jeta] * geo_p[ieta][jeta] * f[i_id][jeta] / 255.;
-          if(i_id != chm){
-            offpt_chs += energy[jeta] * geo[ieta][jeta] * f[i_id][jeta] / 255.;
-            offpp_chs += energy[jeta] * geo_p[ieta][jeta] * f[i_id][jeta] / 255.;
+
+          if(i_id != untrk){ 
+            offpt_all += energy[jeta] * geo[ieta][jeta] * f[i_id][jeta] / 255.;
+            offpp_all += energy[jeta] * geo_p[ieta][jeta] * f[i_id][jeta] / 255.;
+            if(i_id != chm){
+              offpt_chs += energy[jeta] * geo[ieta][jeta] * f[i_id][jeta] / 255.;
+              offpp_chs += energy[jeta] * geo_p[ieta][jeta] * f[i_id][jeta] / 255.;
+            }
           }
         }
 
         //cout<< "Off pT: "<< offpt <<"  Off pp: "<< offpp <<endl;
         theta_new = atan(abs(offpt/offpp));
         //cout << "Theta new: "<< theta_new <<endl;
-        if (offpp < 0.){theta_new = M_PI - theta_new;}
-        //cout << "Theta new: "<< theta_new << " pi:" << M_PI<<endl;
+        if (offpp < 0. || offpt < 0.){theta_new = M_PI - theta_new;}
+        //cout << "Theta new: "<< theta_new <<endl;
         double eta_new = -1*log(tan(theta_new/2.));
         //cout <<"Eta new: "<<eta_new<<endl;
+        cout << " mu  PFflavor = " << mu << "  " << ids[i_id] << endl ;
+        cout << " Eta Etanew offsetpt = " << eta << "  " << eta_new << "  " << offpt << endl ;
         hname = Form("p_offset_eta_new_nPU%i_", intmu) + ids[i_id];
         FillProfile(hname, eta_new, offpt, weight);
         hname = Form("p_offset_eta_nPU%i_", intmu) + ids[i_id];
@@ -272,17 +285,8 @@ int main(int argc, char* argv[]) {
         if (mu > 5) {
           double area = 2 * M_PI * (etabins[ieta+1] - etabins[ieta]);
           double geometric_offpt = energy[ieta] * f[i_id][ieta] * M_PI*rCone*rCone / 255. / cosh(eta) / area;
-          //double geometric_offpp = (energy[ieta] * f[i_id][ieta] * M_PI*rCone*rCone / 255. / area) * tanh(eta);
-          //double theta_geometric_new = atan(abs(geometric_offpt/geometric_offpp));
-          //if (offpp<0.){theta_geometric_new = M_PI - theta_geometric_new;}
-          //double eta_geometric_new = -1*log(tan(theta_geometric_new/2.));
-          //cout<<"Geometric Off pT: "<<geometric_offpt<<"  Geometric Off pp: "<<geometric_offpp<<endl;
-          //cout <<"Geometric Theta new: "<<theta_geometric_new<<endl;
-          //cout <<"Geometric Eta new: "<<eta_geometric_new<<endl;
           hname = Form("p_geometric_eta_nPU%i_", intmu) + ids[i_id];
-          FillProfile(hname, eta, geometric_offpt, weight);
-          //hname = Form("p_geometric_eta_new_nPU%i_", intmu) + ids[i_id];
-          //FillProfile(hname, eta_geometric_new, geometric_offpt, weight); 
+          FillProfile(hname, eta, geometric_offpt, weight); 
           double ptdensity_permu_in_eta_stripe = geometric_offpt / (M_PI*rCone*rCone) / mu ;
           ptdensity_permu_in_eta_stripe = (ptdensity_permu_in_eta_stripe>5 ? 4.99 : ptdensity_permu_in_eta_stripe) ;
           if(fabs(eta)<1.3){
@@ -296,20 +300,24 @@ int main(int argc, char* argv[]) {
           }
         }
       }
-      //cout <<"intmu: "<< intmu <<endl;
+      
       theta_new_all = atan(abs(offpt_all/offpp_all));
-      if (offpp_all < 0.){theta_new_all = M_PI - theta_new_all;}
+      if (offpp_all < 0. || offpt_all < 0.){theta_new_all = M_PI - theta_new_all;}
       double eta_new_all = -1*log(tan(theta_new_all/2.));
-      hname = Form("p_offset_eta_newSum_nPU%i_all", intmu); // added "Sum beacuse error in TDirectory"
+      hname = Form("p_offset_eta_newSum_nPU%i_all", intmu); // added "Sum" to avoid TDirectory error
       FillProfile(hname, eta_new_all, offpt_all, weight);
+      hname = Form("p_offset_eta_oldSum_nPU%i_all", intmu);
+      FillProfile(hname, eta, offpt_all, weight);
       hname = Form("eta_new_eta_nPU%i_all", intmu);
       FillHist2D(hname, eta, eta_new_all, weight);
 
       theta_new_chs = atan(abs(offpt_chs/offpp_chs));
       if (offpp_chs < 0.){theta_new_chs = M_PI - theta_new_chs;}
       double eta_new_chs = -1*log(tan(theta_new_chs/2.));
-      hname = Form("p_offset_eta_newSum_nPU%i_chs", intmu); // added "Sum beacuse error in TDirectory"
+      hname = Form("p_offset_eta_newSum_nPU%i_chs", intmu); // added "Sum" to avoid TDirectory error
       FillProfile(hname, eta_new_chs, offpt_chs, weight);
+      hname = Form("p_offset_eta_oldSum_nPU%i_chs", intmu);
+      FillProfile(hname, eta, offpt_chs, weight);
       hname = Form("eta_new_eta_nPU%i_chs", intmu);
       FillHist2D(hname, eta, eta_new_chs, weight);
     }
