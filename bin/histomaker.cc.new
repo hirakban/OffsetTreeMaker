@@ -67,8 +67,8 @@ int main(int argc, char* argv[]) {
   TTree* tree = (TTree*) inFile->Get("T");
   Long64_t nEntries = tree->GetEntries();
   cout << nEntries << " Events" << endl;
-  nEntries = nEntries/10000 ;
-  cout << "Running on only "<< nEntries << " Events" << endl;
+  //nEntries = nEntries/100 ;
+  //cout << "Running on only "<< nEntries << " Events" << endl;
 
   //Declare Histos//
 
@@ -252,7 +252,7 @@ int main(int argc, char* argv[]) {
           offpt += energy[jeta] * geo[ieta][jeta] * f[i_id][jeta] / 255.;
           offpp += energy[jeta] * geo_p[ieta][jeta] * f[i_id][jeta] / 255.;
 
-          if(i_id != untrk){ 
+          if(i_id != untrk && i_id != lep){ 
             offpt_all += energy[jeta] * geo[ieta][jeta] * f[i_id][jeta] / 255.;
             offpp_all += energy[jeta] * geo_p[ieta][jeta] * f[i_id][jeta] / 255.;
             if(i_id != chm){
@@ -267,7 +267,7 @@ int main(int argc, char* argv[]) {
         //cout << "Theta new: "<< theta_new <<endl;
         if (offpp < 0. || offpt < 0.){theta_new = M_PI - theta_new;}
         //cout << "Theta new: "<< theta_new <<endl;
-        double eta_new = -1*log(tan(theta_new/2.));
+        double eta_new = offpt > 0.00001 ? -1*log(tan(theta_new/2.)) : eta ;
         //cout <<"Eta new: "<<eta_new<<endl;
         cout << " mu  PFflavor = " << mu << "  " << ids[i_id] << endl ;
         cout << " Eta Etanew offsetpt = " << eta << "  " << eta_new << "  " << offpt << endl ;
@@ -303,7 +303,7 @@ int main(int argc, char* argv[]) {
       
       theta_new_all = atan(abs(offpt_all/offpp_all));
       if (offpp_all < 0. || offpt_all < 0.){theta_new_all = M_PI - theta_new_all;}
-      double eta_new_all = -1*log(tan(theta_new_all/2.));
+      double eta_new_all = offpt_all > 0.00001 ? -1*log(tan(theta_new_all/2.)) : eta ;
       hname = Form("p_offset_eta_newSum_nPU%i_all", intmu); // added "Sum" to avoid TDirectory error
       FillProfile(hname, eta_new_all, offpt_all, weight);
       hname = Form("p_offset_eta_oldSum_nPU%i_all", intmu);
@@ -313,7 +313,7 @@ int main(int argc, char* argv[]) {
 
       theta_new_chs = atan(abs(offpt_chs/offpp_chs));
       if (offpp_chs < 0.){theta_new_chs = M_PI - theta_new_chs;}
-      double eta_new_chs = -1*log(tan(theta_new_chs/2.));
+      double eta_new_chs = offpt_chs > 0.00001 ? -1*log(tan(theta_new_chs/2.)) : eta ;
       hname = Form("p_offset_eta_newSum_nPU%i_chs", intmu); // added "Sum" to avoid TDirectory error
       FillProfile(hname, eta_new_chs, offpt_chs, weight);
       hname = Form("p_offset_eta_oldSum_nPU%i_chs", intmu);
