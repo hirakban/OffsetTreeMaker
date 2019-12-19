@@ -67,8 +67,8 @@ int main(int argc, char* argv[]) {
   TTree* tree = (TTree*) inFile->Get("T");
   Long64_t nEntries = tree->GetEntries();
   cout << nEntries << " Events" << endl;
-  //nEntries = nEntries/100 ;
-  //cout << "Running on only "<< nEntries << " Events" << endl;
+  nEntries = nEntries/10000 ;
+  cout << "Running on only "<< nEntries << " Events" << endl;
 
   //Declare Histos//
 
@@ -306,6 +306,7 @@ int main(int argc, char* argv[]) {
       double eta_new_all = offpt_all > 0.00001 ? -1*log(tan(theta_new_all/2.)) : eta ;
       hname = Form("p_offset_eta_newSum_nPU%i_all", intmu); // added "Sum" to avoid TDirectory error
       FillProfile(hname, eta_new_all, offpt_all, weight);
+      cout << " Total offset all: " << offpt_all <<endl;
       hname = Form("p_offset_eta_oldSum_nPU%i_all", intmu);
       FillProfile(hname, eta, offpt_all, weight);
       hname = Form("eta_new_eta_nPU%i_all", intmu);
@@ -316,6 +317,7 @@ int main(int argc, char* argv[]) {
       double eta_new_chs = offpt_chs > 0.00001 ? -1*log(tan(theta_new_chs/2.)) : eta ;
       hname = Form("p_offset_eta_newSum_nPU%i_chs", intmu); // added "Sum" to avoid TDirectory error
       FillProfile(hname, eta_new_chs, offpt_chs, weight);
+      cout << " Total offset chs: " << offpt_chs <<endl;
       hname = Form("p_offset_eta_oldSum_nPU%i_chs", intmu);
       FillProfile(hname, eta, offpt_chs, weight);
       hname = Form("eta_new_eta_nPU%i_chs", intmu);
