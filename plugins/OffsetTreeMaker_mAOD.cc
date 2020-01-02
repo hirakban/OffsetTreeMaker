@@ -30,13 +30,7 @@
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
-#include "DataFormats/PatCandidates/interface/Muon.h"
-#include "DataFormats/PatCandidates/interface/Electron.h"
-#include "DataFormats/PatCandidates/interface/Tau.h"
-#include "DataFormats/PatCandidates/interface/Photon.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
-#include "DataFormats/PatCandidates/interface/MET.h"
-#include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "DataFormats/Common/interface/Ref.h"
 #include <SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h>
 #include "DataFormats/JetReco/interface/PFJet.h"
