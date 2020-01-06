@@ -1,9 +1,9 @@
 // -*- C++ -*-
 //
-// Package:    treemaker/OffsetTreeMaker
-// Class:      OffsetTreeMaker
+// Package:    test/OffsetTreeMaker_mAOD
+// Class:      OffsetTreeMaker_mAOD
 //
-/**\class OffsetTreeMaker OffsetTreeMaker.cc treemaker/OffsetTreeMaker/plugins/OffsetTreeMaker.cc
+/**\class OffsetTreeMaker_mAOD OffsetTreeMaker_mAOD.cc test/OffsetTreeMaker_mAOD/plugins/OffsetTreeMaker_mAOD.cc
 
  Description: [one line class summary]
 
@@ -11,29 +11,32 @@
      [Notes on implementation]
 */
 //
-// Original Author:  charles harrington
-//         Created:  Mon, 09 Nov 2015 17:09:43 GMT
+// Original Author:  Garvita Agarwal
+//         Created:  Sat, 04 Jan 2020 05:00:48 GMT
 //
 //
+
 
 // system include files
 #include <memory>
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
-#include "FWCore/Framework/interface/EDAnalyzer.h"
+#include "FWCore/Framework/interface/one/EDAnalyzer.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
-#include "FWCore/Framework/interface/LuminosityBlock.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
+#include "FWCore/Utilities/interface/InputTag.h"
+
 #include "DataFormats/TrackReco/interface/Track.h"
+#include "DataFormats/Common/interface/Handle.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
-#include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
-#include "DataFormats/PatCandidates/interface/PackedCandidate.h"
-#include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/Common/interface/Ref.h"
 #include <SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h>
-#include "DataFormats/JetReco/interface/PFJet.h"
+#include "DataFormats/PatCandidates/interface/PackedCandidate.h"
+#include "DataFormats/PatCandidates/interface/Jet.h"
+#include "DataFormats/PatCandidates/interface/Vertexing.h"
+
 #include "parsePileUpJSON2.h"
 #include <vector>
 #include "TMath.h"
@@ -45,15 +48,12 @@
 #include <TRandom3.h>
 
 using namespace std;
-using namespace pat;
 
 const int ETA_BINS = 82;
 const int ETA_BINS_GME = 18;
 const int PHI_BINS_GME = 11;
 const int MAXNPV = 50;
 const int MAXJETS = 4;
-
-
 float etabins[ETA_BINS+1] =
   {-5.191, -4.889, -4.716, -4.538, -4.363, -4.191, -4.013, -3.839, -3.664, -3.489, -3.314, -3.139, -2.964, -2.853, -2.65,
    -2.5, -2.322, -2.172, -2.043, -1.93, -1.83, -1.74, -1.653, -1.566, -1.479, -1.392, -1.305, -1.218, -1.131, -1.044, -0.957,
@@ -64,9 +64,10 @@ float etabins[ETA_BINS+1] =
 
 float phibins[PHI_BINS_GME+1] = 
   {-3.142, -2.57, -1.999, -1.428, -0.8568, -0.2856, 0.2856, 0.8568, 1.428, 1.999, 2.57, 3.142};
-class OffsetTreeMaker : public edm::EDAnalyzer {
+
+class OffsetTreeMaker_mAOD : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
   public:
-    explicit OffsetTreeMaker(const edm::ParameterSet&);
+    explicit OffsetTreeMaker_mAOD(const edm::ParameterSet&);
 
   private:
     virtual void beginJob() override;
@@ -76,7 +77,7 @@ class OffsetTreeMaker : public edm::EDAnalyzer {
     enum Flavor{
       chm = 0, chu, nh, ne, hfh, hfe, lep, untrk, numFlavors, X //undefined
     };
-    Flavor getFlavor(reco::PFCandidate::ParticleType id);
+    Flavor getFlavor(int id);
 
     int counter;
     TFile* root_file;
@@ -87,16 +88,12 @@ class OffsetTreeMaker : public edm::EDAnalyzer {
     TH2F* h2_finnereta;
     TRandom3* rand;
 
-    TH1F* h_nFoundVertex;
-    TH1F* h_bestweight;
-    TH1F* h_bestweight1;
-
     int nEta;
     float energy[ETA_BINS], eRMS[ETA_BINS], et[ETA_BINS], etMED[ETA_BINS], etMEAN[ETA_BINS];
     float et_gme[ETA_BINS_GME][PHI_BINS_GME];
-    float et_gme_gen[ETA_BINS_GME][PHI_BINS_GME];
+    //float et_gme_gen[ETA_BINS_GME][PHI_BINS_GME];
     UChar_t ch_et_gme[ETA_BINS_GME][PHI_BINS_GME];
-    UChar_t ch_et_gme_gen[ETA_BINS_GME][PHI_BINS_GME];
+    //UChar_t ch_et_gme_gen[ETA_BINS_GME][PHI_BINS_GME];
     UChar_t f[numFlavors][ETA_BINS];  //energy fraction by flavor
 
 
@@ -125,125 +122,41 @@ class OffsetTreeMaker : public edm::EDAnalyzer {
     bool isMC_, writeCands_;
 
     edm::EDGetTokenT< edm::View<reco::Vertex> > pvTag_;
-    edm::EDGetTokenT< edm::View<pat::PackedCandidate> >  trackTag_;
+    edm::EDGetTokenT< edm::View<pat::PackedCandidate> > trackTag_;
     edm::EDGetTokenT< edm::View<PileupSummaryInfo> > muTag_;
     edm::EDGetTokenT< edm::View<pat::PackedCandidate> > pfTag_;
     edm::EDGetTokenT<double> rhoTag_;
     edm::EDGetTokenT<double> rhoC0Tag_;
     edm::EDGetTokenT<double> rhoCCTag_;
     edm::EDGetTokenT< edm::View<pat::Jet> > pfJetTag_;
-
 };
 
-OffsetTreeMaker::OffsetTreeMaker(const edm::ParameterSet& iConfig)
+OffsetTreeMaker_mAOD::OffsetTreeMaker_mAOD(const edm::ParameterSet& iConfig)
 {
+  pvTag_ = consumes< edm::View<reco::Vertex> >( iConfig.getParameter<edm::InputTag>("pvTag"));
+  trackTag_ = consumes< edm::View<pat::PackedCandidate> >( iConfig.getParameter<edm::InputTag>("trackTag"));
+  muTag_ = consumes< edm::View<PileupSummaryInfo> >( iConfig.getParameter<edm::InputTag>("muTag") );
+  pfTag_ = consumes< edm::View<pat::PackedCandidate> >( iConfig.getParameter<edm::InputTag>("pfTag"));
+  rhoTag_ = consumes<double>( iConfig.getParameter<edm::InputTag>("rhoTag"));
+  rhoC0Tag_ = consumes<double>( iConfig.getParameter<edm::InputTag>("rhoC0Tag"));
+  rhoCCTag_ = consumes<double>( iConfig.getParameter<edm::InputTag>("rhoCCTag"));
+  pfJetTag_ = consumes< edm::View<pat::Jet> >( iConfig.getParameter<edm::InputTag>("pfJetTag"));
+
   numSkip_ = iConfig.getParameter<int> ("numSkip");
   RootFileName_ = iConfig.getParameter<string>("RootFileName");
   puFileName_ = iConfig.getParameter<string>("puFileName");
   isMC_ = iConfig.getParameter<bool>("isMC");
   writeCands_ = iConfig.getParameter<bool>("writeCands");
-  pvTag_ = consumes< edm::View<reco::Vertex> >( iConfig.getParameter<edm::InputTag>("pvTag") );
-  trackTag_ = consumes< edm::View<pat::PackedCandidate> >( iConfig.getParameter<edm::InputTag>("trackTag") );
-  muTag_ = consumes< edm::View<PileupSummaryInfo> >( iConfig.getParameter<edm::InputTag>("muTag") );
-  pfTag_ = consumes< edm::View<pat::PackedCandidate> >( iConfig.getParameter<edm::InputTag>("pfTag") );
-  rhoTag_ = consumes<double>( iConfig.getParameter<edm::InputTag>("rhoTag") );
-  rhoC0Tag_ = consumes<double>( iConfig.getParameter<edm::InputTag>("rhoC0Tag") );
-  rhoCCTag_ = consumes<double>( iConfig.getParameter<edm::InputTag>("rhoCCTag") );
-  pfJetTag_ = consumes< edm::View<pat::Jet> >( iConfig.getParameter<edm::InputTag>("pfJetTag") );
 }
-
-// ------------ method called once each job just before starting event loop  ------------
-void  OffsetTreeMaker::beginJob() {
-
-  root_file = new TFile(RootFileName_,"RECREATE");
-  tree = new TTree("T","Offset Tree");
-
-  counter = -1;
-  h = new TH1F("mu", "mu", 100, 0, 50);
-  rand = new TRandom3;
-  h2_GME = new TH2F("GME_2D", "GME_2D_yPhi_xEta", ETA_BINS_GME, -5.0, 5.0, PHI_BINS_GME , -1*M_PI , M_PI);
-  h2_finnereta = new TH2F("finnereta_ET", "yPhi_xEta", ETA_BINS, etabins, PHI_BINS_GME, phibins);
-  //Histos for checking CHS
-  h_nFoundVertex = new TH1F ("nFoundVertex", "nFoundVertex", 3, -0.5, 2.5);
-  h_bestweight = new TH1F ("bestweight", "bestweight", 50, 0., 1.);
-  h_bestweight1 = new TH1F ("bestweight1", "bestweight1", 50, 0., 1.);
-  if (!isMC_){
-    parsePileUpJSON2( puFileName_ );
-
-    tree->Branch("run", &run, "run/I");
-    tree->Branch("lumi", &lumi, "lumi/I");
-    tree->Branch("bx", &bx, "bx/I");
-    tree->Branch("event", &event, "event/l");
-  }
-
-  if (writeCands_) {
-    tree->Branch("pf_type", "std::vector<int>",   &pf_type);
-    tree->Branch("pf_pt",   "std::vector<float>", &pf_pt);
-    tree->Branch("pf_eta",  "std::vector<float>", &pf_eta);
-    tree->Branch("pf_phi",  "std::vector<float>", &pf_phi);
-    tree->Branch("pf_et",  "std::vector<float>", &pf_et);
-  }
-
-  tree->Branch("mu", &mu, "mu/F");
-  tree->Branch("mua", mua, "mua[16]/I");
-  tree->Branch("puz", puz, "puz[50]/F");
-
-  tree->Branch("rho",   &rho,   "rho/F");
-  tree->Branch("rhoC0", &rhoC0, "rhoC0/F");
-  tree->Branch("rhoCC", &rhoCC, "rhoCC/F");
-
-  tree->Branch("nPVall",  &nPVall, "nPVall/I");
-  tree->Branch("nPV",     &nPV,    "nPV/I");
-  tree->Branch("pv_ndof", pv_ndof, "pv_ndof[nPVall]/F");
-  tree->Branch("pv_z",    pv_z,    "pv_z[nPVall]/F");
-  tree->Branch("pv_rho",  pv_rho,  "pv_rho[nPVall]/F");
-
-  tree->Branch("nEta",   &nEta,  "nEta/I");
-  tree->Branch("energy", energy, "energy[nEta]/F");
-  tree->Branch("et",     et,     "et[nEta]/F");
-  tree->Branch("eRMS",   eRMS,   "eRMS[nEta]/F");
-
-  tree->Branch("etMED",     etMED,     "etMED[nEta]/F");
-  tree->Branch("etMEAN",    etMEAN,    "etMEAN[nEta]/F");
-
-  tree->Branch("et_gme",       et_gme,     "et_gme[18][11]/F");
-  tree->Branch("et_gme_gen",   et_gme_gen, "et_gme_gen[18][11]/F");
-  tree->Branch("ch_et_gme",       ch_et_gme,     "ch_et_gme[18][11]/b");
-  tree->Branch("ch_et_gme_gen",   ch_et_gme_gen, "ch_et_gme_gen[18][11]/b");
-
-  tree->Branch("fchm",   f[chm],   "fchm[nEta]/b");
-  tree->Branch("fchu",   f[chu],   "fchu[nEta]/b");
-  tree->Branch("fnh",    f[nh],    "fnh[nEta]/b");
-  tree->Branch("fne",    f[ne],    "fne[nEta]/b");
-  tree->Branch("fhfh",   f[hfh],   "fhfh[nEta]/b");
-  tree->Branch("fhfe",   f[hfe],   "fhfe[nEta]/b");
-  tree->Branch("flep",   f[lep],   "flep[nEta]/b");
-  tree->Branch("funtrk", f[untrk], "funtrk[nEta]/b");
-
-
-  tree->Branch("ht", &ht, "ht/F");
-  tree->Branch("nJets",    &nJets,   "nJets/I");
-  tree->Branch("jet_eta",  jet_eta,  "jet_eta[nJets]/F");
-  tree->Branch("jet_phi",  jet_phi,  "jet_phi[nJets]/F");
-  tree->Branch("jet_pt",   jet_pt,   "jet_pt[nJets]/F");
-  tree->Branch("jet_area", jet_area, "jet_area[nJets]/F");
-
-  tree->Branch("jet_ch",  jet_ch,  "jet_ch[nJets]/F");
-  tree->Branch("jet_nh",  jet_nh,  "jet_nh[nJets]/F");
-  tree->Branch("jet_ne",  jet_ne,  "jet_ne[nJets]/F");
-  tree->Branch("jet_hfh", jet_hfh, "jet_hfh[nJets]/F");
-  tree->Branch("jet_hfe", jet_hfe, "jet_hfe[nJets]/F");
-  tree->Branch("jet_lep", jet_lep, "jet_lep[nJets]/F");
-}
-
 // ------------ method called for each event  ------------
-void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
-
+void
+OffsetTreeMaker_mAOD::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+{
   counter++;
   if (counter%numSkip_ != 0) return;
 
 //------------ Pileup ------------//
-  //cout <<"\n\nEvent # :" << counter << endl;
+  cout <<"\n\nEvent # :" << counter << endl;
   if (isMC_){
     edm::Handle< edm::View<PileupSummaryInfo> > pileups;
     iEvent.getByToken(muTag_, pileups);
@@ -254,10 +167,10 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     edm::View<PileupSummaryInfo>::const_iterator pileupinfo;
     for(pileupinfo = pileups->begin(); pileupinfo != pileups->end(); ++pileupinfo){
       mua[j] = pileupinfo->getPU_NumInteractions();
-      /*cout << "index = "<< j << endl;
-      cout << "BX = "<< pileupinfo->getBunchCrossing()<<endl;
-      cout << "mu = "<<pileupinfo->getTrueNumInteractions() <<endl;
-      cout << "muactual = "<< pileupinfo->getPU_NumInteractions()<<endl;*/
+      //cout << "index = "<< j << endl;
+      //cout << "BX = "<< pileupinfo->getBunchCrossing()<<endl;
+      //cout << "mu = "<<pileupinfo->getTrueNumInteractions() <<endl;
+      //cout << "muactual = "<< pileupinfo->getPU_NumInteractions()<<endl;
 
       if (pileupinfo->getBunchCrossing() == 0){
         for(int i = 0; i != pileupinfo->getPU_NumInteractions() && i < 50 ; ++i){
@@ -310,10 +223,10 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   iEvent.getByToken(rhoCCTag_, rhoCCHandle);
   rhoCC = *rhoCCHandle;
 
-/*
+
 //------------ PF Particles ------------//
 
-  edm::Handle< vector<reco::PFCandidate> > pfCandidates;
+  edm::Handle< edm::View<pat::PackedCandidate> > pfCandidates;
   iEvent.getByToken(pfTag_, pfCandidates);
 
   memset(energy, 0, sizeof(energy));    //reset arrays to zero
@@ -329,67 +242,52 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   //float et_gme_gen[ETA_BINS_GME][PHI_BINS_GME] = {};
   memset(et_gme,        0, sizeof(et_gme));
   memset(ch_et_gme,     0, sizeof(ch_et_gme));
-  memset(et_gme_gen,    0, sizeof(et_gme_gen));
-  memset(ch_et_gme_gen, 0, sizeof(ch_et_gme_gen));
+  //memset(et_gme_gen,    0, sizeof(et_gme_gen));
+  //memset(ch_et_gme_gen, 0, sizeof(ch_et_gme_gen));
 
   pf_type.clear(); pf_pt.clear(); pf_eta.clear(); pf_phi.clear(); pf_et.clear();
   h2_GME->Reset();
   h2_finnereta->Reset();
 
-  vector<reco::PFCandidate>::const_iterator i_pf, endpf = pfCandidates->end();
+  edm::View<pat::PackedCandidate>::const_iterator i_pf, endpf = pfCandidates->end();
   for (i_pf = pfCandidates->begin(); i_pf != endpf; ++i_pf) {
 
     int etaIndex = getEtaIndex( i_pf->eta() );
-    Flavor flavor = getFlavor( i_pf->particleId() );
+    
+    Flavor flavor = getFlavor( i_pf->pdgId() );
 
     if (etaIndex == -1 || flavor == X) continue;
 
-    bool attached1 = false;
     bool attached = false;
 
-    reco::TrackRef pftrack( i_pf->trackRef() );
+    reco::Track pftrack;
+    if (i_pf->hasTrackDetails()){pftrack = (i_pf->pseudoTrack());}
 
-    if (flavor == chm && !pftrack.isNull() ) { //check charged hadrons ONLY
-     // unsigned int iVertex = 0;
-      //unsigned int index=0;
+    if (flavor == chm) { //check charged hadrons ONLY
+     
       unsigned int nFoundVertex = 0;
       float bestweight = 0;
 
-      vector<reco::Vertex>::const_iterator i_pv, endpv = primaryVertices->end();
+      edm::View<reco::Vertex>::const_iterator i_pv, endpv = primaryVertices->end();
       for (i_pv = primaryVertices->begin(); i_pv != endpv ; ++i_pv) {
         
         if ( !i_pv->isFake() && i_pv->ndof() >= 4.0 && fabs(i_pv->z()) <= 24.0 && fabs(i_pv->position().rho())<=2.0 ) {
 
+          
           float w = i_pv->trackWeight(pftrack);
           //cout << " weight = " << w <<endl;
 
           if (w > bestweight){
-	    bestweight=w;
-	//    iVertex=index;
-	    nFoundVertex++;
+            bestweight=w;
+            nFoundVertex++;
           }
-        //  ++index;
 
-          reco::Vertex::trackRef_iterator i_vtxTrk, endvtxTrk = i_pv->tracks_end();
-          for(i_vtxTrk = i_pv->tracks_begin(); i_vtxTrk != endvtxTrk && !attached1; ++i_vtxTrk) {
-              
-            reco::TrackRef vtxTrk(i_vtxTrk->castTo<reco::TrackRef>());
-            if (vtxTrk == pftrack)
-              attached1 = true;
-          } 
         }
       }
       if (nFoundVertex > 0) attached = true;
-      
-      //cout << endl;
-      //cout << "Best Weight, nFoundVertex, attached = "<< bestweight << "\t" << nFoundVertex << "\t" << attached1 << endl;
-      //if(nFoundVertex != int(attached1)) cout << "  =======> Different decision " << endl ;
       if (!attached) flavor = chu; //unmatched charged hadron
-
-      h_nFoundVertex->Fill(nFoundVertex);
-      h_bestweight->Fill(bestweight);
-      if (attached1) h_bestweight1->Fill(bestweight);
     }
+
     float e = i_pf->energy();
 
     energy[etaIndex] += e;
@@ -408,7 +306,7 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       pf_phi.push_back( i_pf->phi() );
       pf_et.push_back( i_pf->et() );
     }
-  }
+  }/*
 
   for (int ieta = 1; ieta != (ETA_BINS_GME+1); ++ieta){
     for (int iphi = 1; iphi != PHI_BINS_GME+1; ++iphi){
@@ -427,21 +325,21 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     float median = x[5]; // for 11 phi bins
     etMED[ieta-1] = median;
     etMEAN[ieta-1] = float(et_sum)/(11);
-  }
+  }*/
 
 
 //------------ Tracks ------------//
 
-  edm::Handle< vector<reco::Track> > tracks;
+  /*edm::Handle< edm::View<pat::PackedCandidate> > tracks;
   iEvent.getByToken(trackTag_, tracks);
 
-  vector<reco::Track>::const_iterator i_trk, endtrk = tracks->end();
+  edm::View<pat::PackedCandidate>::const_iterator i_trk, endtrk = tracks->end();
   for (i_trk = tracks->begin(); i_trk != endtrk; ++i_trk) {
 
-    if ( !i_trk->quality(reco::Track::tight) ) continue;
+    if ( !i_trk->quality(pat::PackedCandidate::highPurity) ) continue;
     bool matched = false;
 
-    vector<reco::PFCandidate>::const_iterator i_pf, endpf = pfCandidates->end();
+    edm::View<pat::PackedCandidate>::const_iterator i_pf, endpf = pfCandidates->end();
     for (i_pf = pfCandidates->begin();  i_pf != endpf && !matched; ++i_pf) {
 
       if ( &(*i_trk) == i_pf->trackRef().get() )
@@ -459,9 +357,9 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     eFlavor[untrk][etaIndex] += e;
     e2[etaIndex] += (e*e);
     nPart[etaIndex] ++;
-  }
+  }*/
 
-  for (int i=0; i != nEta; ++i){
+  /*for (int i=0; i != nEta; ++i){
 
     for (int flav = 0; flav != numFlavors; ++flav){
       UChar_t f_value; float eFlav = eFlavor[flav][i]; float E = energy[i];
@@ -474,16 +372,15 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     }
 
     nPart[i] == 0 ? eRMS[i] = 0 : eRMS[i] = sqrt( e2[i]/nPart[i] );
-  }
-
+  }*/
 
 //------------ PF Jets ------------//
 
-  edm::Handle< vector<reco::PFJet> > pfJets;
+  edm::Handle< edm::View<pat::Jet> > pfJets;
   iEvent.getByToken(pfJetTag_, pfJets);
 
   ht = 0;
-  vector<reco::PFJet>::const_iterator i_jet, endjet = pfJets->end();
+  edm::View<pat::Jet>::const_iterator i_jet, endjet = pfJets->end();
   for (i_jet = pfJets->begin(); i_jet != endjet; ++i_jet) {
 
     float pt = i_jet->pt();
@@ -492,7 +389,7 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
   pfJets->size()<MAXJETS ? nJets = pfJets->size() : nJets = MAXJETS;
   for (int i=0; i != nJets; ++i){
-    reco::PFJet jet = pfJets->at(i);
+    pat::Jet jet = pfJets->at(i);
 
     jet_eta[i] = jet.eta();
     jet_phi[i] = jet.phi();
@@ -506,28 +403,106 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     jet_hfe[i] = jet.HFEMEnergyFraction();
     jet_lep[i] = jet.electronEnergyFraction() + jet.muonEnergyFraction();
   }
-*/
+
 //------------ Fill Tree ------------//
 
   tree->Fill();
 }
 
 
+// ------------ method called once each job just before starting event loop  ------------
+void
+OffsetTreeMaker_mAOD::beginJob()
+{
+  root_file = new TFile(RootFileName_,"RECREATE");
+  tree = new TTree("T","Offset Tree");
+
+  counter = -1;
+  /*h = new TH1F("mu", "mu", 100, 0, 50);
+  rand = new TRandom3;
+  h2_GME = new TH2F("GME_2D", "GME_2D_yPhi_xEta", ETA_BINS_GME, -5.0, 5.0, PHI_BINS_GME , -1*M_PI , M_PI);
+  h2_finnereta = new TH2F("finnereta_ET", "yPhi_xEta", ETA_BINS, etabins, PHI_BINS_GME, phibins);*/
+
+  if (!isMC_){
+    parsePileUpJSON2( puFileName_ );
+
+    tree->Branch("run", &run, "run/I");
+    tree->Branch("lumi", &lumi, "lumi/I");
+    tree->Branch("bx", &bx, "bx/I");
+    tree->Branch("event", &event, "event/l");
+  }
+
+  /*if (writeCands_) {
+    tree->Branch("pf_type", "std::vector<int>",   &pf_type);
+    tree->Branch("pf_pt",   "std::vector<float>", &pf_pt);
+    tree->Branch("pf_eta",  "std::vector<float>", &pf_eta);
+    tree->Branch("pf_phi",  "std::vector<float>", &pf_phi);
+    tree->Branch("pf_et",  "std::vector<float>", &pf_et);
+  }*/
+
+  tree->Branch("mu", &mu, "mu/F");
+  tree->Branch("mua", mua, "mua[16]/I");
+  tree->Branch("puz", puz, "puz[50]/F");
+
+  tree->Branch("rho",   &rho,   "rho/F");
+  tree->Branch("rhoC0", &rhoC0, "rhoC0/F");
+  tree->Branch("rhoCC", &rhoCC, "rhoCC/F");
+
+  tree->Branch("nPVall",  &nPVall, "nPVall/I");
+  tree->Branch("nPV",     &nPV,    "nPV/I");
+  tree->Branch("pv_ndof", pv_ndof, "pv_ndof[nPVall]/F");
+  tree->Branch("pv_z",    pv_z,    "pv_z[nPVall]/F");
+  tree->Branch("pv_rho",  pv_rho,  "pv_rho[nPVall]/F");
+
+  /*tree->Branch("nEta",   &nEta,  "nEta/I");
+  tree->Branch("energy", energy, "energy[nEta]/F");
+  tree->Branch("et",     et,     "et[nEta]/F");
+  tree->Branch("eRMS",   eRMS,   "eRMS[nEta]/F");
+
+  tree->Branch("etMED",     etMED,     "etMED[nEta]/F");
+  tree->Branch("etMEAN",    etMEAN,    "etMEAN[nEta]/F");
+
+  tree->Branch("et_gme",       et_gme,     "et_gme[18][11]/F");
+  //tree->Branch("et_gme_gen",   et_gme_gen, "et_gme_gen[18][11]/F");
+  tree->Branch("ch_et_gme",       ch_et_gme,     "ch_et_gme[18][11]/b");
+  //tree->Branch("ch_et_gme_gen",   ch_et_gme_gen, "ch_et_gme_gen[18][11]/b");
+
+  tree->Branch("fchm",   f[chm],   "fchm[nEta]/b");
+  tree->Branch("fchu",   f[chu],   "fchu[nEta]/b");
+  tree->Branch("fnh",    f[nh],    "fnh[nEta]/b");
+  tree->Branch("fne",    f[ne],    "fne[nEta]/b");
+  tree->Branch("fhfh",   f[hfh],   "fhfh[nEta]/b");
+  tree->Branch("fhfe",   f[hfe],   "fhfe[nEta]/b");
+  tree->Branch("flep",   f[lep],   "flep[nEta]/b");
+  tree->Branch("funtrk", f[untrk], "funtrk[nEta]/b");
+
+
+  tree->Branch("ht", &ht, "ht/F");*/
+  tree->Branch("nJets",    &nJets,   "nJets/I");
+  tree->Branch("jet_eta",  jet_eta,  "jet_eta[nJets]/F");
+  tree->Branch("jet_phi",  jet_phi,  "jet_phi[nJets]/F");
+  tree->Branch("jet_pt",   jet_pt,   "jet_pt[nJets]/F");
+  tree->Branch("jet_area", jet_area, "jet_area[nJets]/F");
+
+  tree->Branch("jet_ch",  jet_ch,  "jet_ch[nJets]/F");
+  tree->Branch("jet_nh",  jet_nh,  "jet_nh[nJets]/F");
+  tree->Branch("jet_ne",  jet_ne,  "jet_ne[nJets]/F");
+  tree->Branch("jet_hfh", jet_hfh, "jet_hfh[nJets]/F");
+  tree->Branch("jet_hfe", jet_hfe, "jet_hfe[nJets]/F");
+  tree->Branch("jet_lep", jet_lep, "jet_lep[nJets]/F");
+}
+
 // ------------ method called once each job just after ending the event loop  ------------
-void OffsetTreeMaker::endJob() {
-  
+void
+OffsetTreeMaker_mAOD::endJob()
+{
   if (root_file !=0) {
-    h_nFoundVertex->Write();
-    h_bestweight->Write();
-    h_bestweight1->Write();
-    
     root_file->Write();
     delete root_file;
     root_file = 0;
   }
 }
-
-int OffsetTreeMaker::getEtaIndex(float eta){
+int OffsetTreeMaker_mAOD::getEtaIndex(float eta){
 
   for (int i=0; i != ETA_BINS; ++i){
     if (etabins[i] <= eta && eta < etabins[i+1]) return i;
@@ -537,25 +512,24 @@ int OffsetTreeMaker::getEtaIndex(float eta){
 }
 
 
-OffsetTreeMaker::Flavor OffsetTreeMaker::getFlavor(reco::PFCandidate::ParticleType id)
+OffsetTreeMaker_mAOD::Flavor OffsetTreeMaker_mAOD::getFlavor(int id)
 {
-    if (id == reco::PFCandidate::h)
+    if (id == 211)
         return chm;     //initially matched charged hadron
-    else if (id == reco::PFCandidate::e)
+    else if (id == 11)
         return lep;
-    else if (id == reco::PFCandidate::mu)
+    else if (id == 13)
         return lep;
-    else if (id == reco::PFCandidate::gamma)
+    else if (id == 22)
         return ne;
-    else if (id == reco::PFCandidate::h0)
+    else if (id == 130)
         return nh;
-    else if (id == reco::PFCandidate::h_HF)
+    else if (id == 1)
         return hfh;
-    else if (id == reco::PFCandidate::egamma_HF)
+    else if (id == 2)
         return hfe;
     else
         return X;
 }
 
-//define this as a plug-in
-DEFINE_FWK_MODULE(OffsetTreeMaker);
+DEFINE_FWK_MODULE(OffsetTreeMaker_mAOD);
