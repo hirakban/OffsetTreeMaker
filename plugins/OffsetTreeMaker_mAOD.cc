@@ -105,7 +105,7 @@ class OffsetTreeMaker_mAOD : public edm::one::EDAnalyzer<edm::one::SharedResourc
     int mua[16];
     float puz[50];
 
-    int nPVall, nPV;
+    unsigned int nPVall, nPV;
     float pv_ndof[MAXNPV], pv_z[MAXNPV], pv_rho[MAXNPV];
 
     float ht;
@@ -196,17 +196,24 @@ OffsetTreeMaker_mAOD::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   iEvent.getByToken(pvTag_, primaryVertices);
 
   nPVall = primaryVertices->size();
-  nPV = 0;
+  bool isGoodPV[nPVall];
+  
+  for (unsigned int i = 0; i < nPVall; ++i){
+    isGoodPV[i] = false;
+  }
 
-  for (int i = 0; i != nPVall; ++i){
+  nPV = 0;
+  for (unsigned int i = 0; i < nPVall; ++i){
     reco::Vertex pv = primaryVertices->at(i);
 
     pv_ndof[i] = pv.ndof();
     pv_z[i] = pv.z();
     pv_rho[i] = pv.position().rho();
 
-    if( !pv.isFake() && pv_ndof[i] >= 4.0 && fabs(pv_z[i]) <= 24.0 && fabs(pv_rho[i]) <= 2.0 )
+    if( !pv.isFake() && pv_ndof[i] >= 4.0 && fabs(pv_z[i]) <= 24.0 && fabs(pv_rho[i]) <= 2.0 ){
       nPV++;
+      isGoodPV[i] = true;
+    }
   }
 
 //------------ Rho ------------//
@@ -251,41 +258,17 @@ OffsetTreeMaker_mAOD::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
   edm::View<pat::PackedCandidate>::const_iterator i_pf, endpf = pfCandidates->end();
   for (i_pf = pfCandidates->begin(); i_pf != endpf; ++i_pf) {
-
     int etaIndex = getEtaIndex( i_pf->eta() );
-    
     Flavor flavor = getFlavor( i_pf->pdgId() );
 
     if (etaIndex == -1 || flavor == X) continue;
-
-    bool attached = false;
-
-    reco::Track pftrack;
-    if (i_pf->hasTrackDetails()){pftrack = (i_pf->pseudoTrack());}
-
     if (flavor == chm) { //check charged hadrons ONLY
-     
-      unsigned int nFoundVertex = 0;
-      float bestweight = 0;
-
-      edm::View<reco::Vertex>::const_iterator i_pv, endpv = primaryVertices->end();
-      for (i_pv = primaryVertices->begin(); i_pv != endpv ; ++i_pv) {
-        
-        if ( !i_pv->isFake() && i_pv->ndof() >= 4.0 && fabs(i_pv->z()) <= 24.0 && fabs(i_pv->position().rho())<=2.0 ) {
-
-          
-          float w = i_pv->trackWeight(pftrack);
-          //cout << " weight = " << w <<endl;
-
-          if (w > bestweight){
-            bestweight=w;
-            nFoundVertex++;
-          }
-
-        }
+      bool attached = false;
+      for (unsigned int ipv = 0; ipv < nPVall && !attached; ipv++) {
+        if (isGoodPV[ipv] && i_pf->fromPV(ipv) == 3)
+          attached = true;  //pv used in fit
       }
-      if (nFoundVertex > 0) attached = true;
-      if (!attached) flavor = chu; //unmatched charged hadron
+      if (!attached) flavor = chu;
     }
 
     float e = i_pf->energy();
@@ -306,7 +289,7 @@ OffsetTreeMaker_mAOD::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       pf_phi.push_back( i_pf->phi() );
       pf_et.push_back( i_pf->et() );
     }
-  }/*
+  }
 
   for (int ieta = 1; ieta != (ETA_BINS_GME+1); ++ieta){
     for (int iphi = 1; iphi != PHI_BINS_GME+1; ++iphi){
@@ -325,15 +308,14 @@ OffsetTreeMaker_mAOD::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     float median = x[5]; // for 11 phi bins
     etMED[ieta-1] = median;
     etMEAN[ieta-1] = float(et_sum)/(11);
-  }*/
-
+  }
 
 //------------ Tracks ------------//
 
-  /*edm::Handle< edm::View<pat::PackedCandidate> > tracks;
+  edm::Handle< edm::View<pat::PackedCandidate> > tracks;
   iEvent.getByToken(trackTag_, tracks);
 
-  edm::View<pat::PackedCandidate>::const_iterator i_trk, endtrk = tracks->end();
+  /*edm::View<pat::PackedCandidate>::const_iterator i_trk, endtrk = tracks->end();
   for (i_trk = tracks->begin(); i_trk != endtrk; ++i_trk) {
 
     if ( !i_trk->quality(pat::PackedCandidate::highPurity) ) continue;
@@ -357,9 +339,9 @@ OffsetTreeMaker_mAOD::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     eFlavor[untrk][etaIndex] += e;
     e2[etaIndex] += (e*e);
     nPart[etaIndex] ++;
-  }*/
+  }
 
-  /*for (int i=0; i != nEta; ++i){
+  for (int i=0; i != nEta; ++i){
 
     for (int flav = 0; flav != numFlavors; ++flav){
       UChar_t f_value; float eFlav = eFlavor[flav][i]; float E = energy[i];
@@ -418,10 +400,10 @@ OffsetTreeMaker_mAOD::beginJob()
   tree = new TTree("T","Offset Tree");
 
   counter = -1;
-  /*h = new TH1F("mu", "mu", 100, 0, 50);
+  h = new TH1F("mu", "mu", 100, 0, 50);
   rand = new TRandom3;
   h2_GME = new TH2F("GME_2D", "GME_2D_yPhi_xEta", ETA_BINS_GME, -5.0, 5.0, PHI_BINS_GME , -1*M_PI , M_PI);
-  h2_finnereta = new TH2F("finnereta_ET", "yPhi_xEta", ETA_BINS, etabins, PHI_BINS_GME, phibins);*/
+  h2_finnereta = new TH2F("finnereta_ET", "yPhi_xEta", ETA_BINS, etabins, PHI_BINS_GME, phibins);
 
   if (!isMC_){
     parsePileUpJSON2( puFileName_ );
@@ -432,13 +414,13 @@ OffsetTreeMaker_mAOD::beginJob()
     tree->Branch("event", &event, "event/l");
   }
 
-  /*if (writeCands_) {
+  if (writeCands_) {
     tree->Branch("pf_type", "std::vector<int>",   &pf_type);
     tree->Branch("pf_pt",   "std::vector<float>", &pf_pt);
     tree->Branch("pf_eta",  "std::vector<float>", &pf_eta);
     tree->Branch("pf_phi",  "std::vector<float>", &pf_phi);
     tree->Branch("pf_et",  "std::vector<float>", &pf_et);
-  }*/
+  }
 
   tree->Branch("mu", &mu, "mu/F");
   tree->Branch("mua", mua, "mua[16]/I");
