@@ -35,6 +35,8 @@
 #include "parsePileUpJSON2.h"
 #include <vector>
 #include "TMath.h"
+#include "CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h"
+#include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
 //root files
 #include <TFile.h>
 #include <TTree.h>
@@ -46,7 +48,7 @@ using namespace std;
 
 const int ETA_BINS = 82;
 const int ETA_BINS_GME = 18;
-const int PHI_BINS_GME = 11;
+const int PHI_BINS_GME = 12;
 const int MAXNPV = 50;
 const int MAXJETS = 4;
 
@@ -60,7 +62,10 @@ float etabins[ETA_BINS+1] =
    4.191, 4.363, 4.538, 4.716, 4.889, 5.191};
 
 float phibins[PHI_BINS_GME+1] = 
-  {-3.142, -2.57, -1.999, -1.428, -0.8568, -0.2856, 0.2856, 0.8568, 1.428, 1.999, 2.57, 3.142};
+  {-M_PI, -M_PI*5./6., -M_PI*2./3., -M_PI/2., -M_PI/3., -M_PI/6., 0., M_PI/6., M_PI/3., M_PI/2., M_PI*2./3., M_PI*5./6., M_PI};
+
+bool sortJetPt(const pair<int, float>& jet1, const pair<int, float>& jet2){ return jet1.second > jet2.second; }
+
 class OffsetTreeMaker : public edm::EDAnalyzer {
   public:
     explicit OffsetTreeMaker(const edm::ParameterSet&);
@@ -81,7 +86,8 @@ class OffsetTreeMaker : public edm::EDAnalyzer {
 
     TH1F* h;
     TH2F* h2_GME; // 2d ET_eta_phi histo 
-    TH2F* h2_finnereta;
+    TH2F* et_etaphi;
+    TH2F* et_etaphi_chs;
     TRandom3* rand;
 
     TH1F* h_nFoundVertex;
@@ -89,11 +95,9 @@ class OffsetTreeMaker : public edm::EDAnalyzer {
     TH1F* h_bestweight1;
 
     int nEta;
-    float energy[ETA_BINS], eRMS[ETA_BINS], et[ETA_BINS], etMED[ETA_BINS], etMEAN[ETA_BINS];
+    float energy[ETA_BINS], eRMS[ETA_BINS], et[ETA_BINS], etMED[ETA_BINS], etMEAN[ETA_BINS], etMEDchs[ETA_BINS], etMEANchs[ETA_BINS];
     float et_gme[ETA_BINS_GME][PHI_BINS_GME];
-    float et_gme_gen[ETA_BINS_GME][PHI_BINS_GME];
     UChar_t ch_et_gme[ETA_BINS_GME][PHI_BINS_GME];
-    UChar_t ch_et_gme_gen[ETA_BINS_GME][PHI_BINS_GME];
     UChar_t f[numFlavors][ETA_BINS];  //energy fraction by flavor
 
 
@@ -110,16 +114,19 @@ class OffsetTreeMaker : public edm::EDAnalyzer {
 
     float ht;
     int nJets;
-    float jet_eta[MAXJETS], jet_phi[MAXJETS], jet_pt[MAXJETS], jet_area[MAXJETS];
+    float jet_eta[MAXJETS], jet_phi[MAXJETS], jet_pt[MAXJETS], jet_area[MAXJETS], jet_mass[MAXJETS];
     float jet_ch[MAXJETS], jet_nh[MAXJETS], jet_ne[MAXJETS], jet_hfh[MAXJETS], jet_hfe[MAXJETS], jet_lep[MAXJETS];
 
     vector<int> pf_type;
     vector<float> pf_pt, pf_eta, pf_phi, pf_et;
+    //vector<string> eras;
 
     TString RootFileName_;
-    string puFileName_;
+    string puFileName_, era_, jet_type_;
     int numSkip_;
     bool isMC_, writeCands_;
+
+    //string jet_type;
 
     edm::EDGetTokenT< vector<reco::Vertex> > pvTag_;
     edm::EDGetTokenT< vector<reco::Track> > trackTag_;
@@ -129,6 +136,7 @@ class OffsetTreeMaker : public edm::EDAnalyzer {
     edm::EDGetTokenT<double> rhoC0Tag_;
     edm::EDGetTokenT<double> rhoCCTag_;
     edm::EDGetTokenT< vector<reco::PFJet> > pfJetTag_;
+
 };
 
 OffsetTreeMaker::OffsetTreeMaker(const edm::ParameterSet& iConfig)
@@ -146,6 +154,8 @@ OffsetTreeMaker::OffsetTreeMaker(const edm::ParameterSet& iConfig)
   rhoC0Tag_ = consumes<double>( iConfig.getParameter<edm::InputTag>("rhoC0Tag") );
   rhoCCTag_ = consumes<double>( iConfig.getParameter<edm::InputTag>("rhoCCTag") );
   pfJetTag_ = consumes< vector<reco::PFJet> >( iConfig.getParameter<edm::InputTag>("pfJetTag") );
+  era_ = iConfig.getParameter<string>("era");
+  jet_type_ = iConfig.getParameter<string>("jet_type");
 }
 
 // ------------ method called once each job just before starting event loop  ------------
@@ -158,7 +168,8 @@ void  OffsetTreeMaker::beginJob() {
   h = new TH1F("mu", "mu", 100, 0, 50);
   rand = new TRandom3;
   h2_GME = new TH2F("GME_2D", "GME_2D_yPhi_xEta", ETA_BINS_GME, -5.0, 5.0, PHI_BINS_GME , -1*M_PI , M_PI);
-  h2_finnereta = new TH2F("finnereta_ET", "yPhi_xEta", ETA_BINS, etabins, PHI_BINS_GME, phibins);
+  et_etaphi = new TH2F("et_etaphi", "yPhi_xEta", ETA_BINS, etabins, PHI_BINS_GME, phibins);
+  et_etaphi_chs = new TH2F("et_etaphi_chs", "yPhi_xEta", ETA_BINS, etabins, PHI_BINS_GME, phibins);
   //Histos for checking CHS
   h_nFoundVertex = new TH1F ("nFoundVertex", "nFoundVertex", 3, -0.5, 2.5);
   h_bestweight = new TH1F ("bestweight", "bestweight", 50, 0., 1.);
@@ -201,11 +212,11 @@ void  OffsetTreeMaker::beginJob() {
 
   tree->Branch("etMED",     etMED,     "etMED[nEta]/F");
   tree->Branch("etMEAN",    etMEAN,    "etMEAN[nEta]/F");
+  tree->Branch("etMEDchs",     etMEDchs,     "etMEDchs[nEta]/F");
+  tree->Branch("etMEANchs",    etMEANchs,    "etMEANchs[nEta]/F");
 
   tree->Branch("et_gme",       et_gme,     "et_gme[18][11]/F");
-  tree->Branch("et_gme_gen",   et_gme_gen, "et_gme_gen[18][11]/F");
   tree->Branch("ch_et_gme",       ch_et_gme,     "ch_et_gme[18][11]/b");
-  tree->Branch("ch_et_gme_gen",   ch_et_gme_gen, "ch_et_gme_gen[18][11]/b");
 
   tree->Branch("fchm",   f[chm],   "fchm[nEta]/b");
   tree->Branch("fchu",   f[chu],   "fchu[nEta]/b");
@@ -315,21 +326,21 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   memset(et, 0, sizeof(et));
   memset(etMED, 0, sizeof(etMED));
   memset(etMEAN, 0, sizeof(etMEAN));
+  memset(etMEDchs, 0, sizeof(etMEDchs));
+  memset(etMEANchs, 0, sizeof(etMEANchs));
 
   nEta = ETA_BINS;
 
   float eFlavor[numFlavors][ETA_BINS] = {};
   float e2[ETA_BINS] = {};  //energy squared
   int nPart[ETA_BINS] = {}; //number of particles per eta bin
-  //float et_gme_gen[ETA_BINS_GME][PHI_BINS_GME] = {};
   memset(et_gme,        0, sizeof(et_gme));
   memset(ch_et_gme,     0, sizeof(ch_et_gme));
-  memset(et_gme_gen,    0, sizeof(et_gme_gen));
-  memset(ch_et_gme_gen, 0, sizeof(ch_et_gme_gen));
 
   pf_type.clear(); pf_pt.clear(); pf_eta.clear(); pf_phi.clear(); pf_et.clear();
   h2_GME->Reset();
-  h2_finnereta->Reset();
+  et_etaphi->Reset();
+  et_etaphi_chs->Reset();
 
   vector<reco::PFCandidate>::const_iterator i_pf, endpf = pfCandidates->end();
   for (i_pf = pfCandidates->begin(); i_pf != endpf; ++i_pf) {
@@ -392,7 +403,8 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     eFlavor[flavor][etaIndex] += e;
 
     h2_GME->Fill(i_pf->eta(),i_pf->phi(),i_pf->et());
-    h2_finnereta->Fill(i_pf->eta(),i_pf->phi(),i_pf->et());
+    et_etaphi->Fill(i_pf->eta(),i_pf->phi(),i_pf->et());
+    if (flavor != chm) et_etaphi_chs->Fill(i_pf->eta(),i_pf->phi(),i_pf->et());
     e2[etaIndex] += (e*e);
     nPart[etaIndex] ++;
 
@@ -412,16 +424,19 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     }
   } 
   for (int ieta = 1; ieta != (ETA_BINS+1); ++ieta){
-    vector<double> x;
-    double et_sum = 0;
+    vector<double> x, x_chs;
+    double et_sum = 0., et_sum_chs = 0.;
     for (int iphi = 1; iphi != PHI_BINS_GME+1; ++iphi){
-      x.push_back(h2_finnereta->GetBinContent(ieta, iphi));
-      et_sum += h2_finnereta->GetBinContent(ieta, iphi);
+      x.push_back(et_etaphi->GetBinContent(ieta, iphi));
+      et_sum += et_etaphi->GetBinContent(ieta, iphi);
+      x_chs.push_back(et_etaphi_chs->GetBinContent(ieta, iphi));
+      et_sum_chs += et_etaphi_chs->GetBinContent(ieta, iphi);
     }
     sort(x.begin(),x.end()); 
-    float median = x[5]; // for 11 phi bins
-    etMED[ieta-1] = median;
-    etMEAN[ieta-1] = float(et_sum)/(11);
+    etMED[ieta-1]  = 0.5 * (x[5]+x[6]);
+    etMEAN[ieta-1] = float(et_sum)/float(PHI_BINS_GME);
+    etMEDchs[ieta-1]  = 0.5 * (x_chs[5]+x_chs[6]);
+    etMEANchs[ieta-1] = float(et_sum_chs)/float(PHI_BINS_GME);
   }
 
 
@@ -483,15 +498,46 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
     float pt = i_jet->pt();
     if (pt > 10) ht += pt;
+
   }
 
-  pfJets->size()<MAXJETS ? nJets = pfJets->size() : nJets = MAXJETS;
-  for (int i=0; i != nJets; ++i){
+  // Correcteing jets for pileup and sorting them as per pT
+
+  JetCorrectorParameters* L1JetPars;
+  vector<JetCorrectorParameters> jetL1Pars;
+  FactorizedJetCorrector* jetL1Correctors;
+
+  L1JetPars = new JetCorrectorParameters(era_ + "/" + era_ + "_L1FastJet_" + jet_type_ + ".txt");
+  jetL1Pars.push_back( *L1JetPars );
+  jetL1Correctors = new FactorizedJetCorrector( jetL1Pars );
+
+  vector<pair<int, double> > jet_index_corrpt; // Pair of jet index and corrected jet pT
+
+  nJets = pfJets->size();
+  for (int i=0; i != nJets; ++i){ // Looping through ALL the jets
     reco::PFJet jet = pfJets->at(i);
 
+    // Applying L1 corrections
+    jetL1Correctors->setJetEta( jet.eta() );
+    jetL1Correctors->setJetPt( jet.pt() );
+    jetL1Correctors->setJetA( jet.jetArea() );
+    jetL1Correctors->setRho(rho);
+
+    jet_index_corrpt.push_back( make_pair(i, jet.pt()*jetL1Correctors->getCorrection() ) );
+  }
+
+  sort(jet_index_corrpt.begin(), jet_index_corrpt.end(), sortJetPt); // Sorting jets based on pT
+
+  pfJets->size()<MAXJETS ? nJets = pfJets->size() : nJets = MAXJETS; // Only storing FOUR jets
+  for (int i=0; i != nJets; ++i){ // Looping through the jets
+    
+    int is = jet_index_corrpt[i].first ; 
+    reco::PFJet jet = pfJets->at(is);
+ 
     jet_eta[i] = jet.eta();
     jet_phi[i] = jet.phi();
     jet_pt[i] = jet.pt();
+    jet_mass[i] = jet.mass();
     jet_area[i] = jet.jetArea();
 
     jet_ch[i] = jet.chargedHadronEnergyFraction();
@@ -500,7 +546,7 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     jet_hfh[i] = jet.HFHadronEnergyFraction();
     jet_hfe[i] = jet.HFEMEnergyFraction();
     jet_lep[i] = jet.electronEnergyFraction() + jet.muonEnergyFraction();
-  }
+  }  
 
 //------------ Fill Tree ------------//
 
