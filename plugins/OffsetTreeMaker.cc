@@ -62,11 +62,7 @@ float etabins[ETA_BINS+1] =
    4.191, 4.363, 4.538, 4.716, 4.889, 5.191};
 
 float phibins[PHI_BINS_GME+1] = 
-<<<<<<< HEAD
   {-M_PI, -M_PI*5./6., -M_PI*2./3., -M_PI/2., -M_PI/3., -M_PI/6., 0., M_PI/6., M_PI/3., M_PI/2., M_PI*2./3., M_PI*5./6., M_PI};
-=======
-  {-3.142, -2.57, -1.999, -1.428, -0.8568, -0.2856, 0.2856, 0.8568, 1.428, 1.999, 2.57, 3.142};
->>>>>>> 93911e02a70777afadd8f6475ae35915f58f6b40
 
 bool sortJetPt(const pair<int, float>& jet1, const pair<int, float>& jet2){ return jet1.second > jet2.second; }
 
