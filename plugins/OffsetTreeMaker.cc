@@ -104,8 +104,8 @@ class OffsetTreeMaker : public edm::EDAnalyzer {
     ULong64_t event;
     int run, lumi, bx;
     float mu;
-    float rho, rhoC0, rhoCC;
-//-------------------------------------->>>>>>>>>>
+    float rho, rhoC0, rhoCC, rhoC;
+
     int mua[16];
     float puz[50];
 
@@ -135,6 +135,7 @@ class OffsetTreeMaker : public edm::EDAnalyzer {
     edm::EDGetTokenT<double> rhoTag_;
     edm::EDGetTokenT<double> rhoC0Tag_;
     edm::EDGetTokenT<double> rhoCCTag_;
+    edm::EDGetTokenT<double> rhoCTag_;
     edm::EDGetTokenT< vector<reco::PFJet> > pfJetTag_;
 
 };
@@ -153,6 +154,7 @@ OffsetTreeMaker::OffsetTreeMaker(const edm::ParameterSet& iConfig)
   rhoTag_ = consumes<double>( iConfig.getParameter<edm::InputTag>("rhoTag") );
   rhoC0Tag_ = consumes<double>( iConfig.getParameter<edm::InputTag>("rhoC0Tag") );
   rhoCCTag_ = consumes<double>( iConfig.getParameter<edm::InputTag>("rhoCCTag") );
+  rhoCTag_ = consumes<double>( iConfig.getParameter<edm::InputTag>("rhoCTag") );
   pfJetTag_ = consumes< vector<reco::PFJet> >( iConfig.getParameter<edm::InputTag>("pfJetTag") );
   era_ = iConfig.getParameter<string>("era");
   jet_type_ = iConfig.getParameter<string>("jet_type");
@@ -317,6 +319,10 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   iEvent.getByToken(rhoCCTag_, rhoCCHandle);
   rhoCC = *rhoCCHandle;
 
+  edm::Handle<double> rhoCHandle;
+  iEvent.getByToken(rhoCTag_, rhoCHandle);
+  rhoC = *rhoCHandle;
+
 //------------ PF Particles ------------//
 
   edm::Handle< vector<reco::PFCandidate> > pfCandidates;
@@ -427,12 +433,14 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     vector<double> x, x_chs;
     double et_sum = 0., et_sum_chs = 0.;
     for (int iphi = 1; iphi != PHI_BINS_GME+1; ++iphi){
+      if (ieta == ETA_BINS/2) cout << " iphi " << et_etaphi->GetBinContent(ieta, iphi) <<endl;;
       x.push_back(et_etaphi->GetBinContent(ieta, iphi));
       et_sum += et_etaphi->GetBinContent(ieta, iphi);
       x_chs.push_back(et_etaphi_chs->GetBinContent(ieta, iphi));
       et_sum_chs += et_etaphi_chs->GetBinContent(ieta, iphi);
     }
-    sort(x.begin(),x.end()); 
+    sort(x.begin(),x.end());
+    sort(x_chs.begin(),x_chs.end()); 
     etMED[ieta-1]  = 0.5 * (x[5]+x[6]);
     etMEAN[ieta-1] = float(et_sum)/float(PHI_BINS_GME);
     etMEDchs[ieta-1]  = 0.5 * (x_chs[5]+x_chs[6]);
@@ -495,19 +503,18 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   ht = 0;
   vector<reco::PFJet>::const_iterator i_jet, endjet = pfJets->end();
   for (i_jet = pfJets->begin(); i_jet != endjet; ++i_jet) {
-
     float pt = i_jet->pt();
     if (pt > 10) ht += pt;
-
   }
 
-  // Correcteing jets for pileup and sorting them as per pT
+  // Correcteing jets for pileup and sorting wrt pT
 
   JetCorrectorParameters* L1JetPars;
   vector<JetCorrectorParameters> jetL1Pars;
   FactorizedJetCorrector* jetL1Correctors;
 
-  L1JetPars = new JetCorrectorParameters(era_ + "/" + era_ + "_L1FastJet_" + jet_type_ + ".txt");
+  //L1JetPars = new JetCorrectorParameters(era_ + "/" + era_ + "_L1FastJet_" + jet_type_ + ".txt");
+  L1JetPars = new JetCorrectorParameters("./l1fastjet/RunB/L1Simple_ParallelDATA_L1FastJet_"+ era_ +"_"+ jet_type_ + ".txt");
   jetL1Pars.push_back( *L1JetPars );
   jetL1Correctors = new FactorizedJetCorrector( jetL1Pars );
 
