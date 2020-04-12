@@ -124,7 +124,7 @@ class OffsetTreeMaker : public edm::EDAnalyzer {
     TString RootFileName_;
     string puFileName_, era_, jet_type_;
     int numSkip_;
-    bool isMC_, writeCands_;
+    bool isMC_, writeCands_, doL1L2L3Res_;
 
     //string jet_type;
 
@@ -158,6 +158,7 @@ OffsetTreeMaker::OffsetTreeMaker(const edm::ParameterSet& iConfig)
   pfJetTag_ = consumes< vector<reco::PFJet> >( iConfig.getParameter<edm::InputTag>("pfJetTag") );
   era_ = iConfig.getParameter<string>("era");
   jet_type_ = iConfig.getParameter<string>("jet_type");
+  doL1L2L3Res_ = iConfig.getParameter<bool>("doL1L2L3Res");
 }
 
 // ------------ method called once each job just before starting event loop  ------------
@@ -433,7 +434,7 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     vector<double> x, x_chs;
     double et_sum = 0., et_sum_chs = 0.;
     for (int iphi = 1; iphi != PHI_BINS_GME+1; ++iphi){
-      if (ieta == ETA_BINS/2) cout << " iphi " << et_etaphi->GetBinContent(ieta, iphi) <<endl;;
+      if (ieta == ETA_BINS/2) cout << " iphi " << et_etaphi->GetBinContent(ieta, iphi) <<endl;
       x.push_back(et_etaphi->GetBinContent(ieta, iphi));
       et_sum += et_etaphi->GetBinContent(ieta, iphi);
       x_chs.push_back(et_etaphi_chs->GetBinContent(ieta, iphi));
@@ -504,19 +505,24 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   vector<reco::PFJet>::const_iterator i_jet, endjet = pfJets->end();
   for (i_jet = pfJets->begin(); i_jet != endjet; ++i_jet) {
     float pt = i_jet->pt();
-    if (pt > 10) ht += pt;
+    if (pt > 10) ht += pt; // jet pt cut of 10 GeV
   }
 
   // Correcteing jets for pileup and sorting wrt pT
+  vector<JetCorrectorParameters> jetPars;
+  FactorizedJetCorrector* jetCorrectors;
 
-  JetCorrectorParameters* L1JetPars;
-  vector<JetCorrectorParameters> jetL1Pars;
-  FactorizedJetCorrector* jetL1Correctors;
-
-  //L1JetPars = new JetCorrectorParameters(era_ + "/" + era_ + "_L1FastJet_" + jet_type_ + ".txt");
-  L1JetPars = new JetCorrectorParameters("./l1fastjet/RunB/L1Simple_ParallelDATA_L1FastJet_"+ era_ +"_"+ jet_type_ + ".txt");
-  jetL1Pars.push_back( *L1JetPars );
-  jetL1Correctors = new FactorizedJetCorrector( jetL1Pars );
+  JetCorrectorParameters* L1JetPars  = new JetCorrectorParameters(era_ + "/" + era_ + "_L1FastJet_"    +  jet_type_ + ".txt");
+  JetCorrectorParameters* L2JetPars  = new JetCorrectorParameters(era_ + "/" + era_ + "_L2Relative_"   +  jet_type_ + ".txt");
+  JetCorrectorParameters* L3JetPars  = new JetCorrectorParameters(era_ + "/" + era_ + "_L3Absolute_"   +  jet_type_ + ".txt");
+  JetCorrectorParameters* ResJetPars = new JetCorrectorParameters(era_ + "/" + era_ + "_L2L3Residual_" +  jet_type_ + ".txt");
+  jetPars.push_back( *L1JetPars );
+  if (doL1L2L3Res_){
+    jetPars.push_back( *L2JetPars );
+    jetPars.push_back( *L3JetPars );
+    jetPars.push_back( *ResJetPars );
+  }
+  jetCorrectors = new FactorizedJetCorrector( jetPars );
 
   vector<pair<int, double> > jet_index_corrpt; // Pair of jet index and corrected jet pT
 
@@ -525,12 +531,12 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     reco::PFJet jet = pfJets->at(i);
 
     // Applying L1 corrections
-    jetL1Correctors->setJetEta( jet.eta() );
-    jetL1Correctors->setJetPt( jet.pt() );
-    jetL1Correctors->setJetA( jet.jetArea() );
-    jetL1Correctors->setRho(rho);
+    jetCorrectors->setJetEta( jet.eta() );
+    jetCorrectors->setJetPt( jet.pt() );
+    jetCorrectors->setJetA( jet.jetArea() );
+    jetCorrectors->setRho(rho);
 
-    jet_index_corrpt.push_back( make_pair(i, jet.pt()*jetL1Correctors->getCorrection() ) );
+    jet_index_corrpt.push_back( make_pair(i, jet.pt()*jetCorrectors->getCorrection() ) );
   }
 
   sort(jet_index_corrpt.begin(), jet_index_corrpt.end(), sortJetPt); // Sorting jets based on pT
