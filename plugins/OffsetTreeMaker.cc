@@ -434,7 +434,7 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     vector<double> x, x_chs;
     double et_sum = 0., et_sum_chs = 0.;
     for (int iphi = 1; iphi != PHI_BINS_GME+1; ++iphi){
-      if (ieta == ETA_BINS/2) cout << " iphi " << et_etaphi->GetBinContent(ieta, iphi) <<endl;
+      //if (ieta == ETA_BINS/2) cout << " iphi " << et_etaphi->GetBinContent(ieta, iphi) <<endl;
       x.push_back(et_etaphi->GetBinContent(ieta, iphi));
       et_sum += et_etaphi->GetBinContent(ieta, iphi);
       x_chs.push_back(et_etaphi_chs->GetBinContent(ieta, iphi));
