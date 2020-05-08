@@ -81,6 +81,12 @@ int main(int argc, char* argv[]) {
       m_Profiles[hname] = new TProfile(hname, hname, nEta, etabins);
       hname = Form("p_mikko_eta_nPU%i_",i_nPU) + ids[i_id];
       m_Profiles[hname] = new TProfile(hname, hname, nEta, etabins);
+
+      hname = Form("h_offset_eta_nPU%i_", i_nPU) + ids[i_id];
+      m_Histos1D[hname] = new TH1F(hname, hname, nEta, etabins);
+      hname = Form("h_mikko_eta_nPU%i_",i_nPU) + ids[i_id];
+      m_Histos1D[hname] = new TH1F(hname, hname, nEta, etabins);
+
     }
     for (int i_nPV=0; i_nPV<MAXNPV; i_nPV++){
       hname = Form("p_offset_eta_nPV%i_", i_nPV) + ids[i_id];
@@ -97,23 +103,48 @@ int main(int argc, char* argv[]) {
     m_Histos1D[hname] = new TH1F(hname,hname,100,0,5);
   }
   for (int i_nPU=0; i_nPU<MAXNPU; i_nPU++){
+    hname = Form("h_ieta_nPU%i", i_nPU); 
+    m_Histos1D[hname] = new TH1F(hname, hname, nEta, etabins);
+
     hname = Form("p_offsetMEDchs_eta_nPU%i", i_nPU);
     m_Profiles[hname] = new TProfile(hname, hname, nEta, etabins);
     hname = Form("p_mikkoMEDchs_eta_nPU%i",i_nPU);
     m_Profiles[hname] = new TProfile(hname, hname, nEta, etabins);
+
+    hname = Form("h_offsetMEDchs_eta_nPU%i", i_nPU);
+    m_Histos1D[hname] = new TH1F(hname, hname, nEta, etabins);
+    hname = Form("h_mikkoMEDchs_eta_nPU%i",i_nPU);
+    m_Histos1D[hname] = new TH1F(hname, hname, nEta, etabins);
+
     hname = Form("p_offsetMEANchs_eta_nPU%i", i_nPU);
     m_Profiles[hname] = new TProfile(hname, hname, nEta, etabins);
     hname = Form("p_mikkoMEANchs_eta_nPU%i",i_nPU);
     m_Profiles[hname] = new TProfile(hname, hname, nEta, etabins);
 
+    hname = Form("h_offsetMEANchs_eta_nPU%i", i_nPU);
+    m_Histos1D[hname] = new TH1F(hname, hname, nEta, etabins);
+    hname = Form("h_mikkoMEANchs_eta_nPU%i",i_nPU);
+    m_Histos1D[hname] = new TH1F(hname, hname, nEta, etabins);
+
     hname = Form("p_offsetMED_eta_nPU%i", i_nPU);
     m_Profiles[hname] = new TProfile(hname, hname, nEta, etabins);
     hname = Form("p_mikkoMED_eta_nPU%i",i_nPU);
     m_Profiles[hname] = new TProfile(hname, hname, nEta, etabins);
+
+    hname = Form("h_offsetMED_eta_nPU%i", i_nPU);
+    m_Histos1D[hname] = new TH1F(hname, hname, nEta, etabins);
+    hname = Form("h_mikkoMED_eta_nPU%i",i_nPU);
+    m_Histos1D[hname] = new TH1F(hname, hname, nEta, etabins);
+
     hname = Form("p_offsetMEAN_eta_nPU%i", i_nPU);
     m_Profiles[hname] = new TProfile(hname, hname, nEta, etabins);
     hname = Form("p_mikkoMEAN_eta_nPU%i",i_nPU);
     m_Profiles[hname] = new TProfile(hname, hname, nEta, etabins);
+
+    hname = Form("h_offsetMEAN_eta_nPU%i", i_nPU);
+    m_Histos1D[hname] = new TH1F(hname, hname, nEta, etabins);
+    hname = Form("h_mikkoMEAN_eta_nPU%i",i_nPU);
+    m_Histos1D[hname] = new TH1F(hname, hname, nEta, etabins);
   }
 
   //hname = "nPV_all";
@@ -191,13 +222,15 @@ int main(int argc, char* argv[]) {
 
   UChar_t f[numFlavors][nEta];
   float energy[nEta], etMEAN[nEta], etMED[nEta], etMEANchs[nEta], etMEDchs[nEta];
-  int nJets = 4;
-  float jet_pt[nJets];
+  int nJets;
+  float jet_pt[nJets], jet_eta[nJets];
   float mu, rho;
   int nPV;
 
   tree->SetBranchAddress("energy", energy);
   tree->SetBranchAddress("jet_pt", jet_pt);
+  tree->SetBranchAddress("jet_eta", jet_eta);
+  tree->SetBranchAddress("nJets", &nJets);
   tree->SetBranchAddress("etMEAN", etMEAN);
   tree->SetBranchAddress("etMEANchs", etMEANchs);
   tree->SetBranchAddress("etMED", etMED);
@@ -219,7 +252,7 @@ int main(int argc, char* argv[]) {
   for (Long64_t n=0; n<nEntries; n++) {
     if (n % 100000 == 0) cout << "Processing Event " << n+1 << endl;
     tree->GetEntry(n);
-    //if (jet_pt[0] < pt_cut) continue ; // to only select events with pT,corr > pt_cut
+    //if (jet_pt[0] > pt_cut) continue ; //to only select events with pT,corr < pt_cut
 
     float weight = isMC ? h_weights->GetBinContent( h_weights->FindBin(mu) ) : 1.;
 
@@ -234,6 +267,16 @@ int main(int argc, char* argv[]) {
 
     for (int ieta=0; ieta<nEta; ieta++){
       double eta = 0.5*(etabins[ieta] + etabins[ieta+1]);
+
+      bool jet_overlap = false ;
+      for (int i=0; i != nJets; ++i){ 
+        if( fabs(eta - jet_eta[i]) < 0.2 && jet_pt[i] > pt_cut)  jet_overlap = true ;
+      }
+      cout<< "JetOverlap: "<< jet_overlap <<" eta: " << eta << endl;
+      if( jet_overlap) continue;
+      hname = Form("h_ieta_nPU%i", intmu); 
+      FillHist1D(hname, eta, 1.);
+
       double offsetptMEDchs = 0. , offsetptMEANchs = 0., offsetptMED = 0. , offsetptMEAN = 0.;
 
       for(int jeta = ieta-10; jeta <= ieta+10; jeta++){
@@ -246,30 +289,49 @@ int main(int argc, char* argv[]) {
       }
       hname = Form("p_offsetMEDchs_eta_nPU%i", intmu);
       FillProfile(hname, eta, offsetptMEDchs, weight);
+      hname = Form("h_offsetMEDchs_eta_nPU%i", intmu);
+      FillHist1D(hname, eta, offsetptMEDchs);
+
       hname = Form("p_offsetMEANchs_eta_nPU%i", intmu);
       FillProfile(hname, eta, offsetptMEANchs, weight);
+      hname = Form("h_offsetMEANchs_eta_nPU%i", intmu);
+      FillHist1D(hname, eta, offsetptMEANchs);
+
       hname = Form("p_offsetMED_eta_nPU%i", intmu);
       FillProfile(hname, eta, offsetptMED, weight);
+      hname = Form("h_offsetMED_eta_nPU%i", intmu);
+      FillHist1D(hname, eta, offsetptMED);
+
       hname = Form("p_offsetMEAN_eta_nPU%i", intmu);
       FillProfile(hname, eta, offsetptMEAN, weight);
+      hname = Form("h_offsetMEAN_eta_nPU%i", intmu);
+      FillHist1D(hname, eta, offsetptMEAN);
 
       if (mu > 5){
       double area = M_PI * (etabins[ieta+1] - etabins[ieta]) / 6. ;
       double mikko_offptMEDchs = etMEDchs[ieta] * M_PI*rCone*rCone / area;
       hname = Form("p_mikkoMEDchs_eta_nPU%i", intmu) ;
       FillProfile(hname, eta, mikko_offptMEDchs, weight);
+      hname = Form("h_mikkoMEDchs_eta_nPU%i", intmu) ;
+      FillHist1D(hname, eta, mikko_offptMEDchs);
 
       double mikko_offptMEANchs = etMEANchs[ieta] * M_PI*rCone*rCone / area;
       hname = Form("p_mikkoMEANchs_eta_nPU%i", intmu) ;
       FillProfile(hname, eta, mikko_offptMEANchs, weight);
+      hname = Form("h_mikkoMEANchs_eta_nPU%i", intmu) ;
+      FillHist1D(hname, eta, mikko_offptMEANchs);
 
       double mikko_offptMED = etMED[ieta] * M_PI*rCone*rCone / area;
       hname = Form("p_mikkoMED_eta_nPU%i", intmu) ;
       FillProfile(hname, eta, mikko_offptMED, weight);
+      hname = Form("h_mikkoMED_eta_nPU%i", intmu) ;
+      FillHist1D(hname, eta, mikko_offptMED);
 
       double mikko_offptMEAN = etMEAN[ieta] * M_PI*rCone*rCone / area;
       hname = Form("p_mikkoMEAN_eta_nPU%i", intmu) ;
       FillProfile(hname, eta, mikko_offptMEAN, weight);
+      hname = Form("h_mikkoMEAN_eta_nPU%i", intmu) ;
+      FillHist1D(hname, eta, mikko_offptMEAN);
       }
 
       for (int i_id=0; i_id<numFlavors; i_id++){
@@ -285,11 +347,19 @@ int main(int argc, char* argv[]) {
         hname = Form("p_offset_eta_nPV%i_", nPV) + ids[i_id];
         FillProfile(hname, eta, offpt, weight);
 
+        hname = Form("h_offset_eta_nPU%i_", intmu) + ids[i_id];
+        FillHist1D(hname, eta, offpt);
+        //hname = Form("h_offset_eta_nPV%i_", nPV) + ids[i_id];
+        //FillHist1D(hname, eta, offpt);
+
+
         if (mu > 5) {
           double area = 2 * M_PI * (etabins[ieta+1] - etabins[ieta]);
           double mikko_offpt = energy[ieta] * f[i_id][ieta] * M_PI*rCone*rCone / 255. / cosh(eta) / area;
           hname = Form("p_mikko_eta_nPU%i_", intmu) + ids[i_id];
           FillProfile(hname, eta, mikko_offpt, weight); 
+          hname = Form("h_mikko_eta_nPU%i_", intmu) + ids[i_id];
+          FillHist1D(hname, eta, mikko_offpt); 
           double ptdensity_permu_in_eta_stripe = mikko_offpt / (M_PI*rCone*rCone) / mu ;
           ptdensity_permu_in_eta_stripe = (ptdensity_permu_in_eta_stripe>5 ? 4.99 : ptdensity_permu_in_eta_stripe) ;
           if(fabs(eta)<1.3){
