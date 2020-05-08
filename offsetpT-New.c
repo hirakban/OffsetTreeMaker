@@ -61,7 +61,7 @@ void offsetpT(int n1=1, int n2=25, float topX=15, float topY=30){
   else if (pf_choice == 7) pf_type = "hfe";
   else if (pf_choice == 8) pf_type = "chs";
   else if (pf_choice == 9) pf_type = "MEDchs";
-  else if (pf_choice == 10) pf_type = "MEDall";
+  else if (pf_choice == 10) pf_type = "MED";
 
   vector<TH1D*> mcProfiles;
   vector<TH1D*> dataProfiles;
@@ -101,18 +101,15 @@ void offsetpT(int n1=1, int n2=25, float topX=15, float topY=30){
         }
       }
     } 
-    
-    else if (pf_type.EqualTo("MEDchs")){
-      TString hname = Form("p_offsetMEDchs_eta_%s%i", var_type.Data(), n1+n);
-      //cout<<"hname: "<<hname <<endl;
-      mcProfiles.push_back( ((TProfile*) mcFile->FindObjectAny(hname))->ProjectionX( pf_type+Form("%i_mc",n1+n) ) );
-      dataProfiles.push_back( ((TProfile*) dataFile->FindObjectAny(hname))->ProjectionX( pf_type+Form("%i_data",n1+n) ) );
-    }
-    else if (pf_type.EqualTo("MEDall")){
-      TString hname = Form("p_offsetMED_eta_%s%i", var_type.Data(), n1+n);
-      mcProfiles.push_back( ((TProfile*) mcFile->FindObjectAny(hname))->ProjectionX( pf_type+Form("%i_mc",n1+n) ) );
-      dataProfiles.push_back( ((TProfile*) dataFile->FindObjectAny(hname))->ProjectionX( pf_type+Form("%i_data",n1+n) ) );
-    }
+    else if (pf_type.EqualTo("MEDchs") || pf_type.EqualTo("MED") ){
+      TString hname = hp+Form("_offset%s_eta_%s%i",pf_type.Data(), var_type.Data(), n1+n);
+      if(hp.EqualTo(“p”)){
+        mcProfiles.push_back( ((TProfile*) mcFile->FindObjectAny(hname))->ProjectionX( pf_type+Form("%i_mc",n1+n) ) );
+        dataProfiles.push_back( ((TProfile*) dataFile->FindObjectAny(hname))->ProjectionX( pf_type+Form("%i_data",n1+n) ) );
+      else {
+        mcProfiles.push_back( ((TH1D*) mcFile->FindObjectAny(hname))->SetName(pf_type+Form("%i_mc",n1+n) ) );
+        dataProfiles.push_back( ((TH1D*) dataFile->FindObjectAny(hname))->SetName( pf_type+Form("%i_data",n1+n) ) );
+       }
     else{
       TString hname = hp+Form("_offset_eta_%s%i_", var_type.Data(), n1+n) + pf_type;
       if(hp.EqualTo(“p”)){
