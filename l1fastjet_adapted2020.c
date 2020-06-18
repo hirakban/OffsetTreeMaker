@@ -1,11 +1,12 @@
-//Chad Harrington 7/28/2015, root -l -b -q l1fastjet.c
+//Garvita Agarwal 6/15/2020, root -l -b -q l1fastjet_adapted2020.c
 
 //MC L1FastJet parametrization evolutions :
     // before 2017 (original version) max(0.0001,1-z*([0]+([1]*x)*(1+[2]*log(y)))/y)            [x=rho, y=pt, z=A]
     // 2017-2018 (Mikko's version)    max(0.0001,1-y*([1]*(z-[0])*(1+[2]*log(x/30.)))/x)        [x=pt, y=A, z=rho]
     // 2018           max(0.0001,1-(z/y)*([0]+[1]*(x-20.0)+[2]*log(y/30.0)+[3]*pow(log(y/30.0),2)+[4]*(x-20.0)*log(y/30.0)+[5]*(x-20.0)*pow(log(y/30.0),2)) 										                        [x=rho, y=pt, z=A]
     // 2020 Simple    max(0.0001,1-(z/y)*[3]*([1]*(x/[2]-[0])*pow(y,0)))                        [x=rho, y=pt, z=A]
-    // 2020 Complex   max(0.0001,1-(z/y)*[7]*([0]+[1]*(x/[6]-20.0)+[2]*log(y/30.0)+[3]*pow(log(y/30.0),2)+[4]*(x/[6]-20.0)*log(y/30.0)+[5]*(x/[6]-20.0)*pow(log(y/30.0),2))) 		        				                [x=rho, y=pt, z=A]				
+    // 2020 Complex   max(0.0001,1-(z/y)*[7]*([0]+[1]*(x/[6]-20.0)+[2]*log(y/30.0)+[3]*pow(log(y/30.0),2)+[4]*(x/[6]-20.0)*log(y/30.0)+[5]*(x/[6]-20.0)*pow(log(y/30.0),2))) 		        				                [x=rho, y=pt, z=A]
+   // 2020 SemiSimple max(0.0001,1-(z/y)*[4]*([1]*(x/[3]-[0])*(1.+[2]*log(y/15.))))             [x=rho, y=pt, z=A]			
 	
 #include <iostream>
 #include <fstream>
@@ -25,8 +26,16 @@
 #include <sstream>
 
 using namespace std;
+namespace my {
+    string to_string( double d ) {
+        ostringstream stm ;
+        stm << setprecision(11) << d ;
+        return stm.str() ;
+    }
+}
 
 void setStyle();
+
 
 void l1fastjet_adapted2020(TString pf_type="chs"){
 
@@ -42,24 +51,31 @@ void l1fastjet_adapted2020(TString pf_type="chs"){
   const int MAXRHO = 100;
   bool nPU_derived = true;
   bool rhoCentral = false;
-  bool isComplex = false;
 
-  string run_name; float luminosity; double R;
+  string run_name; float luminosity; double R; int par;
   cout << "Run: " << " Lumi: " << "Radius:"<< endl;
-  cin >> run_name >> luminosity>> R;
+  cin >> run_name >> luminosity >> R;
   const int Rlabel = R*10;
+  cout <<"\n(1)Simple\n(2)SemiSimple\n(3)Complex\nChoice of Parametisation- ";
+  cin >> par;
+  string para_choice;
+  par = par -1;
+  if (par == 0) para_choice ="Simple";
+  else if (par == 1) para_choice ="SemiSimple";
+  else if (par == 2) para_choice ="Complex";
 
-  TFile* mc_root = TFile::Open(Form("rootfiles/Offset_ULMC2017%s_R%i.root",run_name.c_str(),Rlabel));
-  TFile* data_root = TFile::Open( Form("rootfiles/Offset_DataUL2017%s_R%i.root",run_name.c_str(),Rlabel ) );
+  TFile* mc_root = TFile::Open(Form("/eos/uscms/store/group/lpcjme/L1Offset/UltraLegacy17_scalefactors/jetSort/Total_MC_UL2017%s_R%i.root",run_name.c_str(),Rlabel));
+  TFile* data_root = TFile::Open( Form("/eos/uscms/store/group/lpcjme/L1Offset/UltraLegacy17_scalefactors/jetSort/Total_Data_UL2017%s_R%i.root",run_name.c_str(),Rlabel ) );
 
-  ifstream scale_file( Form("plots/scalefactor/Run%s/Fall17_09Aug2019%s_DataMcSF_L1RC_AK%iPF", run_name.c_str(), run_name.c_str(), Rlabel) + pf_type + ".txt" );
-  ifstream mc_file( Form("ApplicationL1_pt0to6500/ComplexL1/ParallelMC_L1FastJet_AK%iPF", Rlabel) + pf_type + ".txt" );
+  ifstream scale_file( Form("plots/scalefactor/Run%s/R%i/UL17_Run%s_DataMcSF_L1RC_AK%iPF", run_name.c_str(), Rlabel, run_name.c_str(), Rlabel) + pf_type + ".txt" );
+  string pf_type_MC=" ";
+  if(pf_type.Contains("chs")) pf_type_MC="chs";
+  ifstream mc_file( Form("ApplicationL1_pt0to6500/%sL1/ParallelMCL1_L1FastJet_AK%iPF", para_choice.c_str(), Rlabel) + pf_type_MC + "_L1"+ para_choice+".txt" );
   string scale_line, mc_line, mcheader_line;
 
   //read first line
   getline(scale_file, scale_line);
   getline(mc_file, mcheader_line);
-  //cout << mcheader_line << endl;
   TString mc_formula = TString(mcheader_line) ;
   double scale_p0[ETA_BINS], scale_p1[ETA_BINS], scale_p2[ETA_BINS];
   double mc_p0[ETA_BINS], mc_p1[ETA_BINS];
@@ -94,10 +110,39 @@ void l1fastjet_adapted2020(TString pf_type="chs"){
   }
   scale_file.close();
 
-  cout <<   mc_formula << endl;
-  if (!mc_formula.Contains("pow(log(y/30.0),2)") && !mc_formula.Contains("pow(log(y/90.0),2)") ){
-    isComplex = false;
-    cout << "L1Simple" << endl;
+  cout << "MC Formula: " << mc_formula << endl;
+
+  if (mc_formula.Contains("pow(y,0)") && (par == 0)){
+    //cout << "L1Simple Parametrisation" << endl;
+    int lines;
+    mc_file.clear();
+    mc_file.seekg(0, mc_file.beg);
+    getline(mc_file,mc_line);
+    for (int i=0; getline(mc_file,mc_line); i++){
+
+      lines = i;
+      string str;
+      int delim_pos;
+      while (mc_line.at(0) == ' '){  //eta values have space in front of them
+        mc_line.erase(0, 1);}
+      //loop over strings in mc line
+      int it1 = -10;
+      for (int col_num=0; (delim_pos = mc_line.find(' ')) != -1; col_num++){
+
+        str = mc_line.substr(0, delim_pos);
+        mc_line.erase(0, delim_pos + 1);
+
+        while (!mc_line.empty() && mc_line.at(0) == ' ')  //get rid of white space between columns
+          mc_line.erase(0, 1);
+
+        if (col_num == 9) mc_p0[i] = stod(str);
+        it1 = col_num;
+      }
+      if ((delim_pos = mc_line.find(' ')) == -1 && it1 == 9) mc_p1[i] = stod(mc_line.substr(0, mc_line.length()));
+    }
+  }
+  else if (mc_formula.Contains("log(y/15.)") && (par == 1)){
+    //cout << "L1SemiSimple Parametrisation" << endl;
     int lines;
     mc_file.clear();
     mc_file.seekg(0, mc_file.beg);
@@ -120,14 +165,14 @@ void l1fastjet_adapted2020(TString pf_type="chs"){
           mc_line.erase(0, 1);
 
         if (col_num == 9) mc_p0[i] = stod(str);
+        if (col_num == 10) mc_p1[i] = stod(str);
         it1 = col_num;
       }
-      if ((delim_pos = mc_line.find(' ')) == -1 && it1 == 9) mc_p1[i] = stod(mc_line.substr(0, mc_line.length()));
+      if ((delim_pos = mc_line.find(' ')) == -1 && it1 == 10) mc_p2[i] = stod(mc_line.substr(0, mc_line.length()));
     }
   }
-  else{
-    cout << "L1Complex" << endl;
-    isComplex = true;
+  else if (mc_formula.Contains("pow(log(y/30.0),2)") && (par == 2)) {
+    //cout << "L1Complex Parametrisation" << endl;
     unsigned first_delim_pos = string(mc_formula).find("*(x-");
     rho_offset_str = string(mc_formula).substr(first_delim_pos+4,4);
     rho_offset = stod(rho_offset_str);
@@ -135,14 +180,14 @@ void l1fastjet_adapted2020(TString pf_type="chs"){
     mc_file.clear();
     mc_file.seekg(0, mc_file.beg);
     getline(mc_file,mc_line);
-    cout << mc_line <<endl;
+    //cout << mc_line <<endl;
     for (int i=0; getline(mc_file,mc_line); i++){
 
       lines = i;
       string str;
       int delim_pos;
-      while (mc_line.at(0) == ' ')  //eta values have space in front of them
-        mc_line.erase(0, 1);
+      while (mc_line.at(0) == ' '){  //eta values have space in front of them
+        mc_line.erase(0, 1);}
       //loop over strings in mc line
       delim_pos = mc_line.find(' ');
       int it = -10;
@@ -150,9 +195,9 @@ void l1fastjet_adapted2020(TString pf_type="chs"){
         str = mc_line.substr(0, delim_pos);
         mc_line.erase(0, delim_pos + 1);
 
-        while (!mc_line.empty() && mc_line.at(0) == ' ')  //get rid of white space between columns
-          mc_line.erase(0, 1);
-
+        while (!mc_line.empty() && mc_line.at(0) == ' '){  //get rid of white space between columns
+          mc_line.erase(0, 1);}
+  
         if (col_num == 9) mc_p0[i] = stod(str);
         else if (col_num == 10) mc_p1[i] = stod(str);
         else if (col_num == 11) mc_p2[i] = stod(str);
@@ -217,16 +262,26 @@ void l1fastjet_adapted2020(TString pf_type="chs"){
     sf_high[i] = scale_p0[i] + scale_p1[i]*rho_high + scale_p2[i]*rho_high*rho_high;
 
     sf[i] = scale_p0[i] + scale_p1[i]*rho_nominal + scale_p2[i]*rho_nominal*rho_nominal;
+
+    //cout <<"sf[i]= "<<sf[i]<<endl;
     
-    if ( !isComplex ) {
-      cout << "L1Simple" << endl;
+    if ( par == 0 ) {
+      //cout << "L1Simple" << endl;
       new_p0[i] = mc_p0[i];
       new_p1[i] = mc_p1[i];
       new_p2[i] = (double(rho_nominal) / double(mc_rho_mean));
       new_p3[i] = sf[i];
     }
-    else if ( isComplex ) {
-      cout << "L1Complex" << endl;
+    else if ( par == 1 ) {
+      //cout << "L1SemiSimple" << endl;
+      new_p0[i] = mc_p0[i];
+      new_p1[i] = mc_p1[i];
+      new_p2[i] = mc_p2[i];
+      new_p3[i] = (double(rho_nominal) / double(mc_rho_mean));
+      new_p4[i] = sf[i];
+    }
+    else if ( par == 2 ) {
+      //cout << "L1Complex" << endl;
       //scale_rho_offset = rho_offset * (double(rho_nominal) / double(mc_rho_mean));
       new_p0[i] = mc_p0[i] ;
       new_p1[i] = mc_p1[i] ; 
@@ -241,9 +296,9 @@ void l1fastjet_adapted2020(TString pf_type="chs"){
       rho_offset_str = stream.str();*/
     }
   }
-  ofstream writeFile( Form("L1Complex_ParallelMC_L1FastJet_DATA2017%s_AK%iPF", run_name.c_str(), Rlabel) + pf_type + ".txt" );
+  ofstream writeFile( Form("plots/scalefactor/Run%s/UL17_Run%s_L1%s_L1FastJet_AK%iPF", run_name.c_str(), run_name.c_str(), para_choice.c_str(), Rlabel) + pf_type + ".txt");
 
-  if (!isComplex ){
+  if (par==0){
     mc_file.clear();
     mc_file.seekg(0, mc_file.beg);
 
@@ -252,15 +307,12 @@ void l1fastjet_adapted2020(TString pf_type="chs"){
     boost::replace_all(mc_line, "(x-[0])", "(x/[2]-[0])");
     boost::replace_all(mc_line,"(z/y)","(z/y)*[3]");
     writeFile << mc_line << endl;
-    cout << mc_line << endl;
+    cout <<"Data Formula: "<< mc_line << endl;
 
     for (int i=0; getline(mc_file,mc_line); i++){
 
       string str;
       int delim_pos;
-
-      while (mc_line.at(0) == ' ')  //eta values have space in front of them
-        mc_line.erase(0, 1);
 
       //loop over strings in mc line
       for (int col_num=0; (delim_pos = mc_line.find(' ')) != -1; col_num++){
@@ -270,23 +322,64 @@ void l1fastjet_adapted2020(TString pf_type="chs"){
 
         while (!mc_line.empty() && mc_line.at(0) == ' ')  //get rid of white space between columns
           mc_line.erase(0, 1);
-
-        if (col_num == 9) str = to_string(new_p0[i]);
-        writeFile << str << setw(15);
+        if (col_num == 3) str = to_string(10);
+        if (col_num == 10) str = my::to_string(new_p0[i]);
+        int w = (col_num < 9) ? 10 : 17;
+        writeFile << right << setprecision(10) << str << setw(w);
 
       }
-      str = to_string(new_p1[i]);
-      writeFile << str << setw(15);
-      str = to_string(new_p2[i]);
-      writeFile << str << setw(15);
-      str = to_string(new_p3[i]);
-      writeFile << str << endl;
+      str = my::to_string(new_p1[i]);
+      writeFile << right << setprecision(10) << str << setw(17);
+      str = my::to_string(new_p2[i]);
+      writeFile << right << setprecision(10) << str << setw(17);
+      str = my::to_string(new_p3[i]);
+      writeFile << right << setprecision(10) << str << endl;
       //writeFile << mc_line << endl;
     }
     mc_file.close();
   }
+  else if (par==1){
+    mc_file.clear();
+    mc_file.seekg(0, mc_file.beg);
 
-  else{
+    //write first line
+    getline(mc_file,mc_line);
+    boost::replace_all(mc_line, "(x-[0])", "(x/[3]-[0])");
+    boost::replace_all(mc_line,"(z/y)","(z/y)*[4]");
+    writeFile << mc_line << endl;
+    cout <<"Data Formula: "<< mc_line << endl;
+
+    for (int i=0; getline(mc_file,mc_line); i++){
+
+      string str;
+      int delim_pos;
+
+      //loop over strings in mc line
+      for (int col_num=0; (delim_pos = mc_line.find(' ')) != -1; col_num++){
+
+        str = mc_line.substr(0, delim_pos);
+        mc_line.erase(0, delim_pos + 1);
+
+        while (!mc_line.empty() && mc_line.at(0) == ' ')  //get rid of white space between columns
+          mc_line.erase(0, 1);
+        if (col_num == 3) str = to_string(11);
+        if (col_num == 10) str = my::to_string(new_p0[i]);
+        else if (col_num == 11) str = my::to_string(new_p1[i]);
+        int w = (col_num < 9) ? 10 : 17;
+        writeFile << right << setprecision(10) << str << setw(w);
+
+      }
+      str = my::to_string(new_p2[i]);
+      writeFile << right << setprecision(10) << str << setw(17);
+      str = my::to_string(new_p3[i]);
+      writeFile << right << setprecision(10) << str << setw(17);
+      str = my::to_string(new_p4[i]);
+      writeFile << right << setprecision(10) << str << endl;
+      //writeFile << mc_line << endl;
+    }
+    mc_file.close();
+  }
+  else if (par == 2){
     mc_file.clear();
     mc_file.seekg(0, mc_file.beg);
 
@@ -295,15 +388,13 @@ void l1fastjet_adapted2020(TString pf_type="chs"){
     boost::replace_all(mc_line, "(x-20.0)", "(x/[6]-20.0)");
     boost::replace_all(mc_line,"(z/y)","(z/y)*[7]");
     writeFile << mc_line << endl;
-    cout << mc_line << endl;
+    cout <<"Data Formula: "<<
+ mc_line << endl;
 
     for (int i=0; getline(mc_file,mc_line); i++){
 
       string str;
       int delim_pos;
-
-      while (mc_line.at(0) == ' ')  //eta values have space in front of them
-        mc_line.erase(0, 1);
 
       //loop over strings in mc line
       delim_pos = mc_line.find(' ');
@@ -314,20 +405,21 @@ void l1fastjet_adapted2020(TString pf_type="chs"){
 
         while (!mc_line.empty() && mc_line.at(0) == ' ')  //get rid of white space between columns
           mc_line.erase(0, 1);
-
-        if (col_num == 9) str = to_string(new_p0[i]);
-        else if (col_num == 10) str = to_string(new_p1[i]);
-        else if (col_num == 11) str = to_string(new_p2[i]);
-        else if (col_num == 12) str = to_string(new_p3[i]);
-        else if (col_num == 13) str = to_string(new_p4[i]);
-        writeFile << str << setw(15);
+        if (col_num == 3) str = to_string(14);
+        if (col_num == 10) str = my::to_string(new_p0[i]);
+        else if (col_num == 11) str = my::to_string(new_p1[i]);
+        else if (col_num == 12) str = my::to_string(new_p2[i]);
+        else if (col_num == 13) str = my::to_string(new_p3[i]);
+        else if (col_num == 14) str = my::to_string(new_p4[i]);
+        int w2 = (col_num < 9) ? 10 : 17;
+        writeFile << right << setprecision(10) << str << setw(w2);
       }
-        str = to_string(new_p5[i]);
-        writeFile << str << setw(15);
-        str = to_string(new_p6[i]);
-        writeFile << str << setw(15);
-        str = to_string(new_p7[i]);
-        writeFile << str << endl;
+        str = my::to_string(new_p5[i]);
+        writeFile << right << setprecision(10) << str << setw(17);
+        str = my::to_string(new_p6[i]);
+        writeFile << right << setprecision(10) << str << setw(17);
+        str = my::to_string(new_p7[i]);
+        writeFile << right << setprecision(10) << str << endl;
         //writeFile << mc_line << endl;
     }
     mc_file.close();
@@ -392,7 +484,7 @@ void l1fastjet_adapted2020(TString pf_type="chs"){
   text.SetTextFont(42);
   text.DrawLatex(0.48, 0.96, Form("Run 2017%s  - %2.2f fb^{-1} (13 TeV)", run_name.c_str() , luminosity ) );
 
-  c->Print("l1Complex_l1fastjet_scalefactor_eta_PF" + pf_type + Form("%s.pdf",run_name.c_str()) );
+  c->Print("L1"+para_choice+"_L1fastjet_scalefactor_eta_PF" + pf_type + Form("%s.pdf",run_name.c_str()) );
 }
 
 void setStyle(){
