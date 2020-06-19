@@ -1,6 +1,6 @@
 # Calculating L1Offset scale factor
 
-In this analyzer, L1RC Jet Energy Corrections (JECs) are derived using root tuples.
+In this analyzer, L1RC Jet Energy Corrections(JECs) are derived using root tuples.
 
 For more information on L1Offset see Section 4 of https://iopscience.iop.org/article/10.1088/1748-0221/12/02/P02014/pdf .
 
@@ -27,7 +27,7 @@ Another option is to copy a segment of data locally to test the file. This can b
 
 ### For Data:
 1. Extract corresponding pileup JSON from this site: https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/    
-2. Using the JSONtoASCII.py convert the json file (pileup_latest.txt) to ascii (pileup_20**XX**.txt) and move a copy of 'pileup_20**XX**.txt' to /plugins.
+2. Using the JSONtoASCII.py convert the json file(pileup_latest.txt) to ascii (pileup_20**XX**.txt) and move a copy of 'pileup_20**XX**.txt' to /plugins.
      ```
      > python JSONtoASCII.py pileup_latest.txt >pileup_20**XX**.txt
      > cp pileup_20**XX**.txt ./plugins
@@ -132,12 +132,12 @@ OR
 ## Step 3: Processing the created nTuples using histomaker.cc 
 Once we have the output files for both data and MC we can process them using the histomaker.cc
 
-The value 0.4 or 0.8 is the distance parameter for jet clustering. 
+The value 0.4 or 0.8 is the distance parameter(R) for anti-kT jet clustering. 
 
 ### For data:
      ```
-    nohup histomaker false 0.4(0.8) Total_Data.root 
-    ```
+     nohup histomaker false 0.4(0.8) Total_Data.root 
+     ```
 ### for MC:
 We are reweighting MC with respect to the data file : Total_Data.root 
     ```
