@@ -135,14 +135,13 @@ Once we have the output files for both data and MC we can process them using the
 The value 0.4 or 0.8 is the distance parameter(R) for anti-kT jet clustering. 
 
 ### For data:
-     ```
+
      nohup histomaker false 0.4(0.8) Total_Data.root 
-     ```
+     
 ### for MC:
 We are reweighting MC with respect to the data file : Total_Data.root 
-    ```
-    nohup histomaker true 0.4(0.8) Total_Data.root  Total_MC.root  (Total_Data.root is the file that you reweight wrt)
-    ```
+
+     nohup histomaker true 0.4(0.8) Total_Data.root  Total_MC.root  (Total_Data.root is the file that you reweight wrt)
     
 ## Step4:
     pick a range of pileup to process samples:
