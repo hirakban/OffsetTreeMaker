@@ -19,28 +19,34 @@ using namespace std;
 
 void setStyle();
 
-void scalefactor(TString pf_type="all", int n1=1, int n2=25){
+void scalefactor(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TString dataName="/root_files_R48/Legacy_BCD_R4.root", TString outName = "UL17_RunBCDEF_V1_", const double R=0.4, int pf_choice=1, int n1=10, int n2=52){
 
   setStyle();
 
-  double Rin;
-  cout << "Enter R: "<<endl;
-  cin >> Rin;
-  const double R = Rin;
   int Rlabel = R*10;
-  TString run_name;
-  cout<< "Enter the run name:"<<endl;
-  cin>>run_name;
+
+  TString pf_type = "all"; //default choice
+  if (pf_choice == 2) pf_type = "chm";
+  else if (pf_choice == 3) pf_type = "lep";
+  else if (pf_choice == 4) pf_type = "ne";
+  else if (pf_choice == 5) pf_type = "nh";
+  else if (pf_choice == 6) pf_type = "hfh";
+  else if (pf_choice == 7) pf_type = "hfe";
+  else if (pf_choice == 8) pf_type = "chs";
+  else if (pf_choice == 9) pf_type = "MEDchs";
+  else if (pf_choice == 10) pf_type = "MED";
 
 
-  TFile* mc_root = TFile::Open( Form("Total_MC_Autumn2018%s_R%i.root", run_name.Data(), Rlabel) );
-  TFile* data_root = TFile::Open( Form("Total_Data17Sep2018%s_R%i.root", run_name.Data(), Rlabel) );
+  TFile* mc_root = TFile::Open(mcName);
+  TFile* data_root = TFile::Open(dataName);
 
   bool nPU_derived = true;
   bool rhoCentral = false;
 
-  ifstream mc_file( "./plots/indirectRho/Run"+run_name +Form("/R%i/",Rlabel) + pf_type + Form("/Fall18_17Sep2018%s_V1_MC_L1RC_AK%iPF", run_name.Data(), Rlabel) + pf_type + ".txt");
-  ifstream data_file( "./plots/indirectRho/Run"+run_name +Form("/R%i/",Rlabel) + pf_type + Form("/Fall18_17Sep2018%s_V1_DATA_L1RC_AK%iPF",run_name.Data(), Rlabel) + pf_type + ".txt");
+  ifstream mc_file(Form("./text_files/indirectRho/R%i/",Rlabel) + pf_type + Form("/%sMC_L1RC_AK%iPF", outName.Data(), Rlabel) + pf_type + ".txt");
+  ifstream data_file(Form("./text_files/indirectRho/R%i/",Rlabel) + pf_type + Form("/%sDATA_L1RC_AK%iPF", outName.Data(), Rlabel) + pf_type + ".txt");
+  //cout << "Opening: "<< Form("./text_files/indirectRho/R%i/",Rlabel) + pf_type + Form("/%sMC_L1RC_AK%iPF", outName.Data(), Rlabel) + pf_type + ".txt" <<endl;
+  //cout << "Opening: "<< Form("./text_files/indirectRho/R%i/",Rlabel) + pf_type + Form("/%sDATA_L1RC_AK%iPF", outName.Data(), Rlabel) + pf_type + ".txt" <<endl;
   string data_line, mc_line;
 
   //read first line
@@ -114,7 +120,7 @@ void scalefactor(TString pf_type="all", int n1=1, int n2=25){
   TProfile* data_rho_nPU = (TProfile*) data_root->Get(hname);
   TProfile* mc_rho_nPU = (TProfile*) mc_root->Get(hname);
 
-  ofstream writeFile(Form("./plots/scalefactor/Spring16_25nsV1_DataMcSF_L1RC_AK%iPF", Rlabel) + pf_type + ".txt");
+  ofstream writeFile(Form("./text_files/scalefactor/R%i/",Rlabel) + pf_type + Form("/%sDataMcSF_L1RC_AK%iPF", outName.Data(), Rlabel) + pf_type + ".txt");
   writeFile << "{1   JetEta   1   Rho   [0]+[1]*x+[2]*pow(x,2)   Data/MC   L1FastJet}" << endl;
 
   TF1* fit = new TF1("fit", "1++x++x*x");
@@ -178,9 +184,9 @@ void scalefactor(TString pf_type="all", int n1=1, int n2=25){
     text.SetTextFont(42);
     text.DrawLatex(0.8, 0.96, "#sqrt{s} = 13 TeV");
 
-    cout << fit->GetChisquare() / fit->GetNDF() << endl;
-
-    c->Print("./plots/scalefactor/scalefactor_PF" + pf_type + Form("_eta%4.3f.pdf", eta1[i]) );
+    //cout << fit->GetChisquare() / fit->GetNDF() << endl;
+    
+    c->Print("./text_files/scalefactor/R4/"+pf_type+Form("/%sscalefactor_AK%iPF",outName.Data(),Rlabel)+ pf_type + Form("_eta%4.3f.pdf", eta1[i]) );
     delete h;
     delete c;
   }
