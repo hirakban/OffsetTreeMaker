@@ -1,7 +1,11 @@
 # OffsetTreeMaker
-L1 jet corrections derived using root tuples
 
-Step 1: Making tuples with OffsetTreeMaker.cc
+L1RC Jet Energy Corrections (JECs) derived using root tuples.
+For more information see Section 4 of https://iopscience.iop.org/article/10.1088/1748-0221/12/02/P02014/pdf .
+
+![JECs_image](https://github.com/garvitaa/OffsetTreeMaker/blob/master/JERC.png)
+
+## Step 1: Making tuples with OffsetTreeMaker.cc
 
      for Data:
      a) extract corresponding json pileup from this site:
@@ -15,14 +19,14 @@ Step 1: Making tuples with OffsetTreeMaker.cc
      repeat above with skipping steps a), b), c)
      
      
-step 2: after making ntuples we process them using histomaker.cc:
+## step 2: after making ntuples we process them using histomaker.cc:
 
     for data:
     nohup histomaker false 0.4(0.8) data.root
     for MC:
     nohup histomaker true 0.4(0.8) data.root mc.root (data.root is the file that you reweight wrt)
     
-step3:
+## step3:
     pick a range of pileup to process samples:
     e.g. (10,30)
     
@@ -30,7 +34,7 @@ step3:
       (pick all and chs)
     b) root -l -b -q 'scalefactor.c ("all",10,30)' and root -l -b -q 'scalefactor.c ("chs",10,30)' 
     c) root -l -b -q 'l1fastjet_adapted.c("all")' and root -l -b -q 'l1fastjet_adapted.c("chs")'
-step4:
+## step4:
  for stack plots use offsetpT_stack.c and implement using following:
      
      a) ./run_stack.sh <Run Era> <Luminosity*>
