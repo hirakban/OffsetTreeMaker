@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# Garvita Agarwal 06/19/2020 
+# execute as ./produce_scaalefactors.sh <Run> <Luminosity>
+# can at a later time, aff l1fastjet_adapted2020.c to this as well
+
+
+  args=("$@")
+  if [ $# -lt 2 ] ; then
+    echo "Please provide 'Run Era' and 'Recorded Luminosity': "
+  fi
+
+  if [ $# -eq 2 ] ; then
+
+    run_era=${args[0]}
+    luminosity=${args[1]}
+
+  fi
+  mc="/eos/uscms/store/group/lpcjme/L1Offset/UltraLegacy17_scalefactors/jetSort/Total_MC_UL2017${run_era}_R4.root"
+  data="/eos/uscms/store/group/lpcjme/L1Offset/UltraLegacy17_scalefactors/jetSort/Total_Data_UL2017${run_era}_R4.root"
+  outname="UL17_Run${run_era}_V1_"
+
+  R=0.4
+  n1=10
+  n2=52
+  topX=52
+  topY=52
+
+  var="nPU"
+  ratio="true"
+  label="Run 2017${run_era} - ${luminosity} fb^{-1} (13 TeV)"
+
+#1) All
+#2) Assoc. Charged Hadron
+#3) Lepton
+#4) Photon
+#5) Neutral Hadron
+#6) HF Tower Hadron
+#7) HF Tower EM Particle
+#8) Charged Hadron Subtraction
+#9) Median Charged Hadron Subtraction
+#10) Median All
+
+  cmds=( "root -l -b -q 'offsetpT.c (\"$mc\", \"$data\", \"$outname\", $R, 8, $n1, $n2, $topX, $topY)'"
+         "root -l -b -q 'offsetpT.c (\"$mc\", \"$data\", \"$outname\", $R, 9, $n1, $n2, $topX, $topY)'"
+         "root -l -b -q 'scalefactor.c (\"$mc\", \"$data\", \"$outname\", $R, 8, $n1, $n2)'"
+         "root -l -b -q 'scalefactor.c (\"$mc\", \"$data\", \"$outname\", $R, 9, $n1, $n2)'"
+         #"root -l -b -q 'offsetpT.c (\"$mc\", \"$data\", \"$outname\", $R, 1, $n1, $n2, $topX, $topY, \"$label\")'"
+       )
+
+  for cmd in "${cmds[@]}"
+  do
+    eval $cmd
+  done

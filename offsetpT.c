@@ -23,20 +23,13 @@ float etabins[ETA_BINS+1] =
    1.566, 1.653, 1.74, 1.83, 1.93, 2.043, 2.172, 2.322, 2.5, 2.65, 2.853, 2.964, 3.139, 3.314, 3.489, 3.664, 3.839, 4.013,
    4.191, 4.363, 4.538, 4.716, 4.889, 5.191};
 
-void offsetpT_New(int n1=10, int n2=52, float topX=52, float topY=52){
+void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TString dataName="/root_files_R48/Legacy_BCD_R4.root", TString outName = "UL17_RunBCDEF_V1_", const double R=0.4, int pf_choice=1, int n1=10, int n2=52, float topX=52, float topY=52){
   setStyle();
         
-  double Rin;
-  cout << "Enter R: "<<endl;
-  cin >> Rin;
-  const double R = Rin;
   int Rlabel = R*10;
-  TString run_name;
-  cout<< "Enter the run name:"<<endl;
-  cin>>run_name;
 
-  TFile* mcFile = TFile::Open( Form("/eos/uscms/store/group/lpcjme/L1Offset/UltraLegacy17_scalefactors/jetSort/pTcut_with_jetOverlap/Total_MC_UL2017%s_R%i.root", run_name.Data(), Rlabel) );
-  TFile* dataFile = TFile::Open( Form("/eos/uscms/store/group/lpcjme/L1Offset/UltraLegacy17_scalefactors/jetSort/pTcut_with_jetOverlap/Total_Data_UL2017%s_R%i.root", run_name.Data(), Rlabel) );//_pTcut15GeV
+  TFile* mcFile = TFile::Open(mcName);
+  TFile* dataFile = TFile::Open(dataName);//_pTcut15GeV
   TString var_type = "nPU"; // nPU, nPV
   bool isIndirect = true;   // indirectRho
   bool rhoCentral = false;
@@ -44,13 +37,7 @@ void offsetpT_New(int n1=10, int n2=52, float topX=52, float topY=52){
                 
   const int nPoints = n2-n1;
 
-  int pf_choice;
-  cout << "\n1) All\n2) Assoc. Charged Hadron\n3) Lepton\n4) Photon\n5) Neutral Hadron\n6) HF Tower Hadron\n"
-       << "7) HF Tower EM Particle\n8) Charged Hadron Subtraction\n9) Median Charged Hadron Subtraction\n10) Median All\n\n### Enter PF Particle type: ";
-  cin >> pf_choice;
-  cout << endl;
-
-  TString pf_type = "all";    //default choice
+  TString pf_type = "all"; //default choice
   if (pf_choice == 2) pf_type = "chm";
   else if (pf_choice == 3) pf_type = "lep";
   else if (pf_choice == 4) pf_type = "ne";
@@ -175,8 +162,11 @@ void offsetpT_New(int n1=10, int n2=52, float topX=52, float topY=52){
     var_type = "indirectRho";
   }
 
-  ofstream writeMC("./plots/" + var_type + "/Run"+ run_name + Form("/R%i/",Rlabel) + pf_type + Form("/UL17_Run%s_V1_MC_L1RC_AK%iPF", run_name.Data(), Rlabel) + pf_type + ".txt");
-  ofstream writeData("./plots/" + var_type + "/Run"+ run_name + Form("/R%i/",Rlabel) + pf_type + Form("/UL17_Run%s_V1_DATA_L1RC_AK%iPF",run_name.Data(), Rlabel) + pf_type + ".txt");
+  //cout<<"MC txt: ./text_files/" + var_type + Form("/R%i/",Rlabel) + pf_type + Form("/%sMC_L1RC_AK%iPF", outName.Data(), Rlabel) + pf_type + ".txt"<<endl;
+  ofstream writeMC("./text_files/" + var_type + Form("/R%i/",Rlabel) + pf_type + Form("/%sMC_L1RC_AK%iPF", outName.Data(), Rlabel) + pf_type + ".txt");
+  
+  //cout<<"Data txt: ./text_files/" + var_type + Form("/R%i/",Rlabel) + pf_type + Form("/%sDATA_L1RC_AK%iPF", outName.Data(), Rlabel) + pf_type + ".txt"<<endl;
+  ofstream writeData("./text_files/" + var_type + Form("/R%i/",Rlabel) + pf_type + Form("/%sDATA_L1RC_AK%iPF",outName.Data(), Rlabel) + pf_type + ".txt");
 
   TString header;
   // changes w.r.t previous versions: 1) TFormula had a bug and we modified accordingly 2) based on Mikko's calculation 1.519 changed to 2.00
@@ -185,9 +175,9 @@ void offsetpT_New(int n1=10, int n2=52, float topX=52, float topY=52){
     //header = "{1\tJetEta\t3\tJetPt\tJetA\t" + var_type + "\t\tmax(0.0001,1-(y/x)*([0]+[1]*(z-1.519)+[2]*pow(z-1.519,2)))\tCorrection L1Offset}";
     header = "{1\tJetEta\t3\tJetPt\tJetA\t" + var_type + "\t\tmax(0.0001,1-(y/x)*([0]+[1]*(z-2.00)+[2]*pow(z-2.00,2)))\tCorrection L1Offset}";
   else
-    //header = "{1         JetEta              3          JetPt           JetA            Rho               max(0.0001,1-y*([0]+[1]*(z-1.519)+[2]*pow(z-1.519,2))/x)     Correction      L1FastJet}";
-    //header = "{1         JetEta              3          JetPt           JetA            Rho               max(0.0001,1-(y/x)*([0]+[1]*(z-1.519)+[2]*pow(z-1.519,2)))     Correction      L1FastJet}";
-    header = "{1         JetEta              3          JetPt           JetA            Rho               max(0.0001,1-(y/x)*([0]+[1]*(z-2.00)+[2]*pow(z-2.00,2)))     Correction      L1FastJet}";
+    //header = "{1\tJetEta\t3\tJetPt\tJetA\tRho\tmax(0.0001,1-y*([0]+[1]*(z-1.519)+[2]*pow(z-1.519,2))/x)\tCorrection L1FastJet}";
+    //header = "{1\tJetEta\t3\tJetPt\tJetA\tRho\tmax(0.0001,1-(y/x)*([0]+[1]*(z-1.519)+[2]*pow(z-1.519,2)))\tCorrection L1FastJet}";
+    header = "{1\tJetEta\t3\tJetPt\tJetA\tRho\tmax(0.0001,1-(y/x)*([0]+[1]*(z-2.00)+[2]*pow(z-2.00,2)))\tCorrection L1FastJet}";
   
   writeMC << header << endl;
   writeData << header << endl;
@@ -296,7 +286,7 @@ void offsetpT_New(int n1=10, int n2=52, float topX=52, float topY=52){
     //cout << "MC: " << f_mc->GetParameter(0) << "\t" << f_mc->GetParameter(1) << "\t" << f_mc->GetParameter(2) << endl;
     //cout << f_data->GetChisquare() / f_data->GetNDF() << "\t" << f_mc->GetChisquare() / f_mc->GetNDF() << endl;
 
-    c->Print("./plots/" + var_type + "/Run"+ run_name + Form("/R%i/",Rlabel) + pf_type + "/" + pf_type + "_pT_" + var_type + Form("_eta%4.3f", etabins[i]) + ".pdf");
+    c->Print("./text_files/" + var_type + Form("/R%i/",Rlabel) + pf_type + "/" + outName + pf_type + "_pT_" + var_type + Form("_eta%4.3f", etabins[i]) + ".pdf");
     delete h;
     delete c;
   }
