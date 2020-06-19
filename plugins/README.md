@@ -1,5 +1,5 @@
-File | Purpose
-----------------------
+**File** | **Purpose**
+---------|-------------
 BuildFile.xml | Build file for OffsetTreeMaker.cc.
 BuildFile.xml.mAOD | 	Build file for OffsetTreeMaker_mAOD.cc.
 OffsetTreeMaker.cc |	Extracts the trees we need from the input files for analysis.
