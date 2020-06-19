@@ -19,8 +19,7 @@ enum Id{
   ne=0, hfe, nh, hfh, chu, chm, untrk, numId, all, hf_dep
 };
 
-void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TString dataName="/root_files_R48/Legacy_BCD_R4.root", TString bin_var="nPU", Id id = all, bool ratio=true,
-                     TString label="Run 2018D - 10.28 fb^{-1} (13 TeV") {
+void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TString dataName="/root_files_R48/Legacy_BCD_R4.root", TString outName = "Run2018D_DataMC_R4_", TString bin_var="nPU", Id id = all, bool ratio=true, TString label="Run 2018D - 10.28 fb^{-1} (13 TeV)") {
 
   TFile* mcFile = TFile::Open(mcName);
   TFile* dataFile = TFile::Open(dataName);
@@ -351,7 +350,6 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
 
     leg->Draw();
 
-
     text.SetTextSize(0.065);
     text.SetTextFont(61);
     text.DrawLatex(0.22, 0.85, "CMS");
@@ -359,28 +357,12 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
     text.SetTextSize(0.045);
     text.SetTextFont(42);
 
-    if (ratio) text.DrawLatex(0.5, 0.96, label);
-    else       text.DrawLatex(0.5, 0.96, label);
+    if (ratio) text.DrawLatex(0.51, 0.96, label);
+    else       text.DrawLatex(0.51, 0.96, label);
 
     //TString coneSize = dataName( dataName.Last('.')-1, 1 );
     //text.DrawLatex(0.2, 0.8, "R = 0." + coneSize);
-
     gPad->RedrawAxis();
-
-
-    text.SetTextSize(0.065);
-    text.SetTextFont(61);
-    text.DrawLatex(0.22, 0.85, "CMS");
-
-    text.SetTextSize(0.045);
-    text.SetTextFont(42);
-
-    if (ratio) text.DrawLatex(0.5, 0.96, label);
-    else       text.DrawLatex(0.5, 0.96, label);
-
-    //TString coneSize = dataName( dataName.Last('.')-1, 1 );
-    //text.DrawLatex(0.2, 0.8, "R = 0." + coneSize);
-
 
     if (ratio) {
 
@@ -419,7 +401,7 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
 
     }
 
-    c->Print("plots/stack_" + ids[id] + "_" + bin_var + to_string(n1) + ".pdf");
+    c->Print("./presentation_plots/stack_"+ outName + ids[id] + "_" + bin_var + to_string(n1) + ".pdf");
 
     leg->Clear();
     leg2->Clear();
@@ -460,6 +442,7 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
     leg->AddEntry(v_MC_Mikko[chm],"Assoc. Charged Hadrons","PF");
     //leg->AddEntry(v_MC[untrk],"Lost Tracks","PF");
     leg->Draw();
+  
     text.SetTextSize(0.065);
     text.SetTextFont(61);
     text.DrawLatex(0.22, 0.85, "CMS");
@@ -467,24 +450,8 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
     text.SetTextSize(0.045);
     text.SetTextFont(42);
 
-    if (ratio) text.DrawLatex(0.5, 0.96, label);
-    else       text.DrawLatex(0.5, 0.96, label);
-
-    //TString coneSize = dataName( dataName.Last('.')-1, 1 );
-    //text.DrawLatex(0.2, 0.8, "R = 0." + coneSize);
-
-    gPad->RedrawAxis();
-
-
-    text.SetTextSize(0.065);
-    text.SetTextFont(61);
-    text.DrawLatex(0.22, 0.85, "CMS");
-
-    text.SetTextSize(0.045);
-    text.SetTextFont(42);
-
-    if (ratio) text.DrawLatex(0.5, 0.96, label);
-    else       text.DrawLatex(0.5, 0.96, label);
+    if (ratio) text.DrawLatex(0.51, 0.96, label);
+    else       text.DrawLatex(0.51, 0.96, label);
 
     //TString coneSize = dataName( dataName.Last('.')-1, 1 );
     //text.DrawLatex(0.2, 0.8, "R = 0." + coneSize);
@@ -538,7 +505,7 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
       //h2->Draw();
 
     }
-    c_Mikko->Print("plots/stack_Mikko_" + ids[id] + "_" + bin_var + to_string(n1) + ".pdf");
+    c_Mikko->Print("./presentation_plots/stack_mikko_" +outName+ ids[id] + "_" + bin_var + to_string(n1) + ".pdf");
 
     leg->Clear();
     leg2->Clear();
@@ -625,9 +592,9 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
     text.SetTextFont(42);
     if (ratio)     text.SetTextSize(0.035);
     text.SetTextFont(42);
-    text.DrawLatex(0.6, 0.89, "2018MC: SingleNeutrino");
-    if (ratio) text.DrawLatex(0.6, 0.96, label);
-    else       text.DrawLatex(0.6, 0.96, label);
+    //text.DrawLatex(0.6, 0.89, "2018MC: SingleNeutrino");
+    if (ratio) text.DrawLatex(0.61, 0.96, label);
+    else       text.DrawLatex(0.61, 0.96, label);
 
     gPad->RedrawAxis();
 
@@ -673,7 +640,7 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
       h2->Draw();
       ratio_Data->Draw("sameP");
     }
-    c->Print("plots/stack_" + ids[id] + "_" + bin_var + to_string(n1) + ".pdf");
+    c->Print("./presentation_plots/stack_" + outName+ ids[id] + "_" + bin_var + to_string(n1) + ".pdf");
     top->Clear();
     bottom->Clear();
     leg2->Clear();
@@ -708,10 +675,10 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
     text.SetTextFont(42);
     if (ratio)     text.SetTextSize(0.035);
     text.SetTextFont(42);
-    text.DrawLatex(0.6, 0.89, "2018MC: SingleNeutrino");
+    //text.DrawLatex(0.6, 0.89, "2018MC: SingleNeutrino");
 
-    if (ratio) text.DrawLatex(0.6, 0.96, label);
-    else       text.DrawLatex(0.6, 0.96, label);
+    if (ratio) text.DrawLatex(0.61, 0.96, label);
+    else       text.DrawLatex(0.61, 0.96, label);
 
     gPad->RedrawAxis();
     
@@ -758,7 +725,7 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
       h2->Draw();
       ratio_Data_Mikko->Draw("sameP");
     }
-    c_Mikko->Print("plots/stack_Mikko" + ids[id] + "_" + bin_var + to_string(n1) + ".pdf");
+    c_Mikko->Print("./presentation_plots/stack_mikko"+ outName+ ids[id] + "_" + bin_var + to_string(n1) + ".pdf");
   }
 
 

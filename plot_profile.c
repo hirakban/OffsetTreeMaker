@@ -12,21 +12,14 @@ using namespace std;
 
 void setStyle();
 
-void profile(int n1=30, int n2=39, float topX=39, float topY=60){
+void plot_profile(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TString dataName="/root_files_R48/Legacy_BCD_R4.root", TString outName = "Run2018D_DataMC_R4_", int n1=30, int n2=39, float topX=39, float topY=60, TString label = "Run 2018D - 10.28 fb^{-1} (13 TeV)"){
 
   setStyle();
         
   const int nPoints = n2-n1;
-  double R ;
 
-  //string run_name;
-  float luminosity;
-  cout << " lumi: " <<"  Radius: "<< endl;
-  cin >> luminosity >> R;
-  int Rlabel = R*10;
-
-  TFile* mcFile = TFile::Open(Form("../root_files/Total_UltraLegacy_MC2018_R%i.root", Rlabel) );
-  TFile* dataFile = TFile::Open( Form("../root_files/Total_UltraLegacy_Data2018B_R%i.root", Rlabel) );
+  TFile* mcFile = TFile::Open(mcName);
+  TFile* dataFile = TFile::Open(dataName);
 
 
   TString xvar_type = "nPU"; 
@@ -122,7 +115,7 @@ void profile(int n1=30, int n2=39, float topX=39, float topY=60){
     bottom->SetGridy();
     bottom->Draw();
     top->cd();
-    TH1F* h = new TH1F("h", "h", 100, 30, topX);
+    TH1F* h = new TH1F("h", "h", 100, n1, topX);
     //float topY = 30;
 
     h->GetXaxis()->SetTickLength(0.03/0.7);
@@ -168,10 +161,10 @@ void profile(int n1=30, int n2=39, float topX=39, float topY=60){
     text.SetTextColor(1);
     text.SetTextSize(0.045);
     text.SetTextFont(42);
-    text.DrawLatex(0.5, 0.96, Form("Run 2018B  - %2.2f fb^{-1} (13 TeV)", luminosity ) );
+    text.DrawLatex(0.5, 0.96, label );
 
     bottom->cd();
-    TH1D* h2 = new TH1D("h2", "h2", 100, 30, topX);
+    TH1D* h2 = new TH1D("h2", "h2", 100, n1, topX);
 
     h2->GetXaxis()->SetLabelSize(0.12);
     h2->GetXaxis()->SetTickLength(0.03/0.3);
@@ -195,7 +188,7 @@ void profile(int n1=30, int n2=39, float topX=39, float topY=60){
     h2->Draw();
     ratioGraph->Draw("Psame");
 
-    c->Print(yvar_type[i]+"_mu_B"+Form("_R%i",Rlabel)+".pdf");
+    c->Print("./presentation_plots/p_"+ outName + yvar_type[i]+ "_mu.pdf");
     delete profile_data2 ;
     delete profile_mc2 ;
     mc_x.clear(); data_x.clear(); mc_y.clear(); data_y.clear(); mc_error.clear(); data_error.clear(); mcx_error.clear(); ratio_y.clear(); ratio_error.clear();
