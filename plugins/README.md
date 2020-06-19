@@ -1,3 +1,5 @@
+Below is the list of all files in this folder along with the purpose of each.
+
 **File** | **Purpose**
 ---------|-------------
 BuildFile.xml | Build file for OffsetTreeMaker.cc.
