@@ -15,18 +15,12 @@
 #include <iomanip>
 #include <sstream>
 void setStyle();
-void plot_histos(){
+void plot_histos(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TString dataName="/root_files_R48/Legacy_BCD_R4.root", TString outName = "Run2018D_DataMC_R4_", TString label = "Run 2018D - 10.28 fb^{-1} (13 TeV)"){
 
   	setStyle();
 
-	double Rin, luminosity;
-	//TString run_name;
-	cout<<"Enter Radius:    Luminosity"<<endl;
-	cin>>Rin>>luminosity;
-	const int Rlabel = Rin *10;
-
-	TFile* mc = new TFile(Form("../root_files/Total_UltraLegacy_MC2018_R%i.root", Rlabel));
-	TFile* data = new TFile(Form("../root_files/Total_UltraLegacy_Data2018B_R%i.root", Rlabel));
+	TFile* mc = new TFile(mcName);
+	TFile* data = new TFile(dataName);
 
 	// For nPU
         TCanvas* c1 = new TCanvas("c1", "c1", 600, 600);
@@ -83,14 +77,14 @@ void plot_histos(){
 	text.SetTextSize(0.035);
 	text.SetTextColor(1);
 	text.SetTextFont(42);
-	text.DrawLatex(0.48, 0.96, Form("Run 2018B  - %2.2f fb^{-1} (13 TeV)", luminosity ) );
+	text.DrawLatex(0.48, 0.96, label );
 	
 	leg->AddEntry(npu,Form("MC (Mean %2.2f)", mean_mc));
 	leg->AddEntry(npu_data,Form("Data (Mean %2.2f)", mean_data));
 
 	leg->Draw();
 	c1->Update();
-	c1->Print(Form("../presentation_plots/UltraLegacy18_DATAMC_nPU_AK%i.pdf", Rlabel) );
+	c1->Print("./presentation_plots/h_"+outName+"nPU.txt");
 
 	// VARIABLE: nPV
 	
@@ -138,14 +132,14 @@ void plot_histos(){
 	text2.SetTextSize(0.035);
 	text2.SetTextColor(1);
 	text2.SetTextFont(42);
-	text2.DrawLatex(0.48, 0.96, Form("Run 2018B  - %2.2f fb^{-1} (13 TeV)", luminosity ) );
+	text2.DrawLatex(0.48, 0.96, label );
 	
 	leg2->AddEntry(npv,Form("MC (Mean %2.2f)", npv_mean_mc));
 	leg2->AddEntry(npv_data,Form("Data (Mean %2.2f)", npv_mean_data));
 
 	leg2->Draw();
 	c2->Update();
-	c2->Print(Form("../presentation_plots/UltraLegacy18_DATAMC_nPV_AK%i.pdf", Rlabel) );
+	c2->Print("./presentation_plots/h_"+outName+"nPV.txt");
 
 	// VARIABLE: rho
 	
@@ -193,14 +187,14 @@ void plot_histos(){
 	text3.SetTextSize(0.035);
 	text3.SetTextColor(1);
 	text3.SetTextFont(42);
-	text3.DrawLatex(0.48, 0.96, Form("Run 2018B  - %2.2f fb^{-1} (13 TeV)", luminosity ) );
+	text3.DrawLatex(0.48, 0.96, label );
 	
 	leg3->AddEntry(rho,Form("MC (Mean %2.2f)", rho_mean_mc));
 	leg3->AddEntry(rho_data,Form("Data (Mean %2.2f)", rho_mean_data));
 
 	leg3->Draw();
 	c3->Update();
-	c3->Print(Form("../presentation_plots/UltraLegacy18_DATAMC_rho_AK%i.pdf", Rlabel) );
+	c3->Print("./presentation_plots/h_"+outName+"rho.txt");
 		
 }
 
