@@ -7,11 +7,11 @@ For more information on L1Offset see Section 4 of https://iopscience.iop.org/art
 ![JECs_image](https://github.com/garvitaa/OffsetTreeMaker/blob/master/JERC.png)
 
 ## Step 0: Setup
-Find the CMSSW release for your dataset. eg. CMSSW_11_2_0_pre1. Now, we set up the work area.
+Find the CMSSW release for your dataset. eg. CMSSW_10_6_2. Now, we set up the work area.
 
 ```console
-cmsrel CMSSW_11_2_0_pre1
-cd CMSSW_11_2_0_pre1/src
+cmsrel CMSSW_10_6_2
+cd CMSSW_10_6_2/src
 cmsenv
 mkdir test
 cd test
