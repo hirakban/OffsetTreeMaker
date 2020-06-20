@@ -148,15 +148,34 @@ We are reweighting MC with respect to the data file : Total_Data.root
 nohup histomaker true 0.4(0.8) Total_Data.root  Total_MC.root  (Total_Data.root is the file that you reweight wrt)
 ```
     
-## Step4:
-    pick a range of pileup to process samples:
-    e.g. (10,30)
-    
-    a) root -l -b -q 'offsetpT.c (10,30,30,30)'
-      (pick all and chs)
-    b) root -l -b -q 'scalefactor.c ("all",10,30)' and root -l -b -q 'scalefactor.c ("chs",10,30)' 
-    c) root -l -b -q 'l1fastjet_adapted.c("all")' and root -l -b -q 'l1fastjet_adapted.c("chs")'
-## Step5:
- for stack plots use offsetpT_stack.c and implement using following:
-     
-     a) ./run_stack.sh <Run Era> <Luminosity*>
+## Step4: Create histograms, profiles, stack plots
+Use ./produce_plots.sh to create plots. Make changes to _**produce_scalefactors.sh**_ as needed.
+
+We will have to run this shell script twice:
+
+- once with a random nPU range (n1, n2, topX, topY) and,
+- second time with the nPU range (n1, n2, topX, topY) extracted from the nPU hist produced in the previous run.
+
+```console
+./produce_plots.sh <Run> <Luminosity>
+```
+## Step5: Produce L1RC and Scalefactor .txt files
+Use the same nPU range (n1, n2, topX, topY) as in Step 4 and make changes to _**produce_scalefactors.sh**_ as needed.
+
+```console
+./produce_scalefactors.sh <Run> <Luminosity>
+```
+
+## Step6: Produce L1FastJet .txt files
+Once the MCTruth information is available we can produce the L1FastJet files for 3 parametrisations:
+1. Simple
+2. SemiSimple
+3. Complex
+
+Make the required changes to _**l1fastjet_adapted2020.c**_ as needed.
+
+```console
+root -l -b -q 'l1fastjet_adapted.c("chs")' 
+OR 
+root -l -b -q 'l1fastjet_adapted.c("all")'
+```
