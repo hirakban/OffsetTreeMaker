@@ -125,7 +125,7 @@ Once CRAB job finishes, add the .root files using the following command:
 ```console
 hadd Total_Data.root Offset_Data*.root
 OR
-hadd Total_MC.root Offset_MCa*.root
+hadd Total_MC.root Offset_MC*.root
 ```
 
 **_NOTE:_** To calculate the integrated luminosity for the datasets use BrilCalc on lxplus. Look at Appendix A for instructions.
