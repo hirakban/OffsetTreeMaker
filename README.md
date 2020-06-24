@@ -38,16 +38,23 @@ Another option is to copy a segment of data locally to test the file. This can b
      ```C
      int parsePileUpJSON2(string filename="pileup_20**XX**.txt")
      ```
-4. Modify run_offset.py
+4. Modify the following lines in run_offset.py
      ```python
      isMC = cms.bool(False)
      ```
+     Add the address to a root file from the dataset. 
      ```python
      readFiles.extend( ['/store/data/__*root file from DAS for your dataset*__.root' ] );
      ```
+     Add the global tag for the corresponding dataset from DAS. 
      ```python
      process.GlobalTag = GlobalTag( process.GlobalTag, '__*Global Tag for your dataset from DAS*__' )
      ```
+     Change the value of numSkip to another prime number depending on the number of events you want. Typically we need atmost 1.5 million events for each era.
+     ```python
+     numSkip = cms.int32(***),
+     ```
+     Change the pileup file name. 
      ```python
      puFileName = cms.string("pileup_20**XX**.txt"),
      ```  
@@ -179,3 +186,23 @@ root -l -b -q 'l1fastjet_adapted.c("chs")'
 OR 
 root -l -b -q 'l1fastjet_adapted.c("all")'
 ```
+
+# Appendix A - Calculating Luminosity using BrilCalc
+To calculate the integrated luminosity for the datasets use BrilCalc on lxplus. Get the normtag at:
+https://twiki.cern.ch/twiki/bin/view/CMSPublic/LumiPublicResults#Technical_details
+     Get CRAB report.
+     ```console
+     crab report crab_project/<path to the folder containing the results folder>
+     ```
+     Rename and copy the processeddLumis.json to lxplus.
+     ```console
+     mv processedLumis.json <new name>.json
+     ```
+     On lxplus:
+     ```console
+     export PATH=$HOME/.local/bin:/afs/cern.ch/cms/lumi/brilconda-1.1.7/bin:$PATH
+     pip uninstall -y brilws
+     pip install --install-option="--prefix=$HOME/.local" brilws
+     brilcalc lumi -b "STABLE BEAMS" --byls --normtag /cvmfs/cms-bril.cern.ch/cms-lumi-pog/Normtags/<normtag_file> -u /fb -i <new name>.json
+     ```
+     
