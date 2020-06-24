@@ -193,23 +193,21 @@ To calculate the integrated luminosity for the datasets use BrilCalc on lxplus. 
 https://twiki.cern.ch/twiki/bin/view/CMSPublic/LumiPublicResults#Technical_details
 
 Get CRAB report.
-
-     ```console
-     crab report crab_project/<path to the folder containing the results folder>
-     ```
+```console
+crab report crab_project/<path to the folder containing the results folder>
+```
      
 Rename and copy the processeddLumis.json to lxplus.
-
-     ```console
-     mv processedLumis.json <new name>.json
-     ```
+```console
+mv processedLumis.json <new name>.json
+```
      
 On lxplus:
 
-     ```console
-     export PATH=$HOME/.local/bin:/afs/cern.ch/cms/lumi/brilconda-1.1.7/bin:$PATH
-     pip uninstall -y brilws
-     pip install --install-option="--prefix=$HOME/.local" brilws
-     brilcalc lumi -b "STABLE BEAMS" --byls --normtag /cvmfs/cms-bril.cern.ch/cms-lumi-pog/Normtags/<normtag_file> -u /fb -i <new name>.json
-     ```
+```console
+export PATH=$HOME/.local/bin:/afs/cern.ch/cms/lumi/brilconda-1.1.7/bin:$PATH
+pip uninstall -y brilws
+pip install --install-option="--prefix=$HOME/.local" brilws
+brilcalc lumi -b "STABLE BEAMS" --byls --normtag /cvmfs/cms-bril.cern.ch/cms-lumi-pog/Normtags/<normtag_file> -u /fb -i <new name>.json
+```
      
