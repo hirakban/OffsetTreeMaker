@@ -215,5 +215,5 @@ brilcalc lumi -b "STABLE BEAMS" --byls --normtag /cvmfs/cms-bril.cern.ch/cms-lum
 List of all files in this folder along with the purpose of each.
 File/Folder | Purpose
 ---------|------------
-bin| Contains histomaker.cc and it's build file
+bin| Contains histomaker.cc and its build file
 Adding other files| Under development
