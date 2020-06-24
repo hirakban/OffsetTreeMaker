@@ -84,7 +84,7 @@ void plot_histos(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TSt
 
 	leg->Draw();
 	c1->Update();
-	c1->Print("./presentation_plots/h_"+outName+"nPU.txt");
+	c1->Print("./presentation_plots/h_"+outName+"nPU.pdf");
 
 	// VARIABLE: nPV
 	
@@ -139,7 +139,7 @@ void plot_histos(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TSt
 
 	leg2->Draw();
 	c2->Update();
-	c2->Print("./presentation_plots/h_"+outName+"nPV.txt");
+	c2->Print("./presentation_plots/h_"+outName+"nPV.pdf");
 
 	// VARIABLE: rho
 	
@@ -194,7 +194,7 @@ void plot_histos(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TSt
 
 	leg3->Draw();
 	c3->Update();
-	c3->Print("./presentation_plots/h_"+outName+"rho.txt");
+	c3->Print("./presentation_plots/h_"+outName+"rho.pdf");
 		
 }
 
