@@ -189,16 +189,23 @@ root -l -b -q 'l1fastjet_adapted.c("all")'
 
 # Appendix A - Calculating Luminosity using BrilCalc
 To calculate the integrated luminosity for the datasets use BrilCalc on lxplus. Get the normtag at:
+
 https://twiki.cern.ch/twiki/bin/view/CMSPublic/LumiPublicResults#Technical_details
-     Get CRAB report.
+
+Get CRAB report.
+
      ```console
      crab report crab_project/<path to the folder containing the results folder>
      ```
-     Rename and copy the processeddLumis.json to lxplus.
+     
+Rename and copy the processeddLumis.json to lxplus.
+
      ```console
      mv processedLumis.json <new name>.json
      ```
-     On lxplus:
+     
+On lxplus:
+
      ```console
      export PATH=$HOME/.local/bin:/afs/cern.ch/cms/lumi/brilconda-1.1.7/bin:$PATH
      pip uninstall -y brilws
