@@ -135,7 +135,7 @@ OR
 hadd Total_MC.root Offset_MC*.root
 ```
 
-**_NOTE:_** To calculate the integrated luminosity for the datasets use BrilCalc on lxplus. Look at Appendix A for instructions.
+**_NOTE:_** To calculate the integrated luminosity for the datasets use BrilCalc on lxplus. Look at [Appendix A](https://github.com/garvitaa/OffsetTreeMaker/blob/master/README.md#appendix-a---calculating-luminosity-using-brilcalc) for instructions.
 
 ## Step 3: Processing the created nTuples using histomaker.cc 
 Once we have the output files for both data and MC we can process them using the histomaker.cc
