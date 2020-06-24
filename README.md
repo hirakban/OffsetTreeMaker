@@ -155,7 +155,7 @@ We are reweighting MC with respect to the data file : Total_Data.root
 nohup histomaker true 0.4(0.8) Total_Data.root  Total_MC.root  (Total_Data.root is the file that you reweight wrt)
 ```
     
-## Step4: Create histograms, profiles, stack plots
+## Step 4: Create histograms, profiles, stack plots
 Use ./produce_plots.sh to create plots. Make changes to _**produce_scalefactors.sh**_ as needed.
 
 We will have to run this shell script twice:
@@ -166,14 +166,14 @@ We will have to run this shell script twice:
 ```console
 ./produce_plots.sh <Run> <Luminosity>
 ```
-## Step5: Produce L1RC and Scalefactor .txt files
+## Step 5: Produce L1RC and Scalefactor .txt files
 Use the same nPU range (n1, n2, topX, topY) as in Step 4 and make changes to _**produce_scalefactors.sh**_ as needed.
 
 ```console
 ./produce_scalefactors.sh <Run> <Luminosity>
 ```
 
-## Step6: Produce L1FastJet .txt files
+## Step 6: Produce L1FastJet .txt files
 Once the MCTruth information is available we can produce the L1FastJet files for 3 parametrisations:
 1. Simple
 2. SemiSimple
@@ -211,3 +211,9 @@ pip install --install-option="--prefix=$HOME/.local" brilws
 brilcalc lumi -b "STABLE BEAMS" --byls --normtag /cvmfs/cms-bril.cern.ch/cms-lumi-pog/Normtags/<normtag_file> -u /fb -i <new name>.json
 ```
      
+# Appendix B
+List of all files in this folder along with the purpose of each.
+File/Folder | Purpose
+---------|------------
+bin| Contains histomaker.cc and it's build file
+Adding other files| Under development
