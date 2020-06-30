@@ -1,6 +1,6 @@
 # Calculating L1Offset scale factor
 
-In this analyzer, L1RC Jet Energy Corrections(JECs) are derived using root tuples.
+In this analyzer, L1RC Jet Energy Corrections(JECs) are derived using root tuples. The documentaion of all available files and their purpose can be found in [Appendix B](https://github.com/garvitaa/OffsetTreeMaker#appendix-b).
 
 For more information on L1Offset see Section 4 of https://iopscience.iop.org/article/10.1088/1748-0221/12/02/P02014/pdf .
 
@@ -28,11 +28,9 @@ Here we are running the framework /plugins/OffsetTreeMaker.cc using the configur
 Another option is to copy a segment of data locally to test the file. This can be done using the code copy_cfg.py or xrdcp command.
 
 ### For Data:
-1. Extract corresponding pileup JSON from this site: https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/ 
+1. Extract corresponding pileup JSON from this site: https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/
 
-**OR**
-
-on lxplus at: /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/   
+**OR** on lxplus at: /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/   
 
 2. Using the JSONtoASCII.py convert the json file(pileup_latest.txt) to ascii (pileup_20**XX**.txt) and move a copy of 'pileup_20**XX**.txt' to /plugins.
      ```console
