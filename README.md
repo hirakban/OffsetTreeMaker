@@ -70,9 +70,10 @@ Another option is to copy a segment of data locally to test the file. This can b
 **Note: Pileup information is not needed to process the MC, the code still requires the file to run.**
 
 Perform the steps 1, 2, 3, 4 and 5 as given above for data with one modification in Step 4.
-     ```python
-     isMC = cms.bool(True)
-     ```
+
+```python
+isMC = cms.bool(True)
+```
      
 ## Step 2: Submitting CRAB jobs.
 To run on entire dataset locally is expensive and time consuming, so we submit CRAB jobs.
