@@ -28,7 +28,12 @@ Here we are running the framework /plugins/OffsetTreeMaker.cc using the configur
 Another option is to copy a segment of data locally to test the file. This can be done using the code copy_cfg.py or xrdcp command.
 
 ### For Data:
-1. Extract corresponding pileup JSON from this site: https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/    
+1. Extract corresponding pileup JSON from this site: https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/ 
+
+**OR**
+
+on lxplus at: /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/   
+
 2. Using the JSONtoASCII.py convert the json file(pileup_latest.txt) to ascii (pileup_20**XX**.txt) and move a copy of 'pileup_20**XX**.txt' to /plugins.
      ```console
      python JSONtoASCII.py pileup_latest.txt >pileup_20**XX**.txt
