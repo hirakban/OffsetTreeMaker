@@ -269,11 +269,11 @@ int main(int argc, char* argv[]) {
       double eta = 0.5*(etabins[ieta] + etabins[ieta+1]);
 
       bool jet_overlap = false ;
-      for (int i=0; i != nJets; ++i){ 
+      /*for (int i=0; i != nJets; ++i){ 
         if( fabs(eta - jet_eta[i]) < 0.2 && jet_pt[i] > pt_cut)  jet_overlap = true ;
       }
       cout<< "JetOverlap: "<< jet_overlap <<" eta: " << eta << endl;
-      if( jet_overlap) continue;
+      if( jet_overlap) continue;*/
       hname = Form("h_ieta_nPU%i", intmu); 
       FillHist1D(hname, eta, 1.);
 
