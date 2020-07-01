@@ -96,9 +96,9 @@ To run on entire dataset locally is expensive and time consuming, so we submit C
 
 ### For Data:
 Modify crab_run_offset.py
-1. Include the new pileup file:
+1. Include the new pileup file and JECs for Data:
      ```python
-     config.JobType.inputFiles = ["pileup_20**XX**.txt"]
+     config.JobType.inputFiles = ["pileup_20**XX**.txt", "Summer19UL18_Run**XX**_V2_SimpleL1_DATA"]
      ```
 2. Add the outputFiles depending upon the name of the output root file from run_offset.py
      ```python
@@ -121,8 +121,12 @@ Modify crab_run_offset.py
      config.Data.outLFNDirBase = '/store/user/--*username*--'
      ```
 ### For MC:
-We make 3 modifications to submit CRAB jobs for MC. Perform the steps as given above for data with modifications in step 2, 3, 4, 5.
+We make modifications to submit CRAB jobs for MC. 
 
+1. Include the new pileup file and the JECs for MC:
+     ```python
+     config.JobType.inputFiles = ["pileup_20**XX**.txt", "Summer19UL18_Run**XX**_V2_SimpleL1_MC"]
+     ```
 2. Change the outputFiles depending upon the name of the output root file from run_offset.py
      ```python
      config.JobType.outputFiles = ["Offset_MC.root"]
@@ -137,6 +141,10 @@ We make 3 modifications to submit CRAB jobs for MC. Perform the steps as given a
      ```
 5. Comment out the lumiMask statement.
 
+6. The last modification is the path to the storage site. 
+     ```python
+     config.Data.outLFNDirBase = '/store/user/--*username*--/--*MCstorage*--'
+     ```
 
 To modify the environment for running crab job we use the following commands:
 ```console
