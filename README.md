@@ -49,7 +49,17 @@ Another option is to copy a segment of data locally to test the file. This can b
      ```python
      readFiles.extend( ['/store/data/__*root file from DAS for your dataset*__.root' ] );
      ```
-     Add the global tag for the corresponding dataset from DAS. 
+     Depending on the dataset download the latest JECs into the current folder and specify the era accordingly. For example, If we were going to process UL18 to calculate JECs, we can use the JECs for 2018 RECO dataset. 
+     To find and download the appropriate JECs go to: https://twiki.cern.ch/twiki/bin/viewauth/CMS/JECDataMC.
+     
+     We also need to select the '_jetType_name_' depending on the type of jet's you want to apply Jet Energy corrections to.
+     ```python
+     run = "A"
+     OutputName = "_Data_UL2018"+run
+     eraName = "Summer19UL18_Run"+run+"_V2_SimpleL1_DATA"
+     jetType_name = "AK4PFchs" # or "AK4PF"
+     ```
+     Add the global tag for the corresponding dataset from DAS.
      ```python
      process.GlobalTag = GlobalTag( process.GlobalTag, '__*Global Tag for your dataset from DAS*__' )
      ```
@@ -69,10 +79,16 @@ Another option is to copy a segment of data locally to test the file. This can b
 ### For MC:
 **Note: Pileup information is not needed to process the MC, the code still requires the file to run.**
 
-Perform the steps 1, 2, 3, 4 and 5 as given above for data with one modification in Step 4.
+Perform the steps 1, 2, 3, 4 and 5 as given above for data with two modifications in Step 4.
 
 ```python
 isMC = cms.bool(True)
+```
+and
+```python
+OutputName = "_MC_UL2018"
+eraName = "Summer19UL18_V2_SimpleL1_MC"
+jetType_name = "AK4PFchs" # or "AK4PF"
 ```
      
 ## Step 2: Submitting CRAB jobs.
