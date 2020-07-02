@@ -22,7 +22,7 @@ using namespace std;
 
 const double pt_cut = 15.;
 const int nEta = 82;
-float etabins[nEta+1] =
+const Double_t etabins[nEta+1] =
   {-5.191, -4.889, -4.716, -4.538, -4.363, -4.191, -4.013, -3.839, -3.664, -3.489, -3.314, -3.139, -2.964, -2.853, -2.65,
    -2.5, -2.322, -2.172, -2.043, -1.93, -1.83, -1.74, -1.653, -1.566, -1.479, -1.392, -1.305, -1.218, -1.131, -1.044, -0.957,
    -0.879, -0.783, -0.696, -0.609, -0.522, -0.435, -0.348, -0.261, -0.174, -0.087, 0,
@@ -145,6 +145,12 @@ int main(int argc, char* argv[]) {
     m_Histos1D[hname] = new TH1F(hname, hname, nEta, etabins);
     hname = Form("h_mikkoMEAN_eta_nPU%i",i_nPU);
     m_Histos1D[hname] = new TH1F(hname, hname, nEta, etabins);
+
+    hname = Form("h2_offsetMEDchs_eta_nPU%i",i_nPU);
+    m_Histos2D[hname] = new TH2F(hname, hname, nEta, etabins, 100, 0., 20.);
+
+    hname = Form("h2_offsetMEANchs_eta_nPU%i",i_nPU);
+    m_Histos2D[hname] = new TH2F(hname, hname, nEta, etabins, 100, 0., 20.);
   }
 
   //hname = "nPV_all";
@@ -268,12 +274,12 @@ int main(int argc, char* argv[]) {
     for (int ieta=0; ieta<nEta; ieta++){
       double eta = 0.5*(etabins[ieta] + etabins[ieta+1]);
 
-      bool jet_overlap = false ;
+      /*bool jet_overlap = false ;
       for (int i=0; i != nJets; ++i){ 
         if( fabs(eta - jet_eta[i]) < 0.2 && jet_pt[i] > pt_cut)  jet_overlap = true ;
       }
-      cout<< "JetOverlap: "<< jet_overlap <<" eta: " << eta << endl;
-      if( jet_overlap) continue;
+      //cout<< "JetOverlap: "<< jet_overlap <<" eta: " << eta << endl;
+      if( jet_overlap) continue;*/
       hname = Form("h_ieta_nPU%i", intmu); 
       FillHist1D(hname, eta, 1.);
 
@@ -306,6 +312,18 @@ int main(int argc, char* argv[]) {
       FillProfile(hname, eta, offsetptMEAN, weight);
       hname = Form("h_offsetMEAN_eta_nPU%i", intmu);
       FillHist1D(hname, eta, offsetptMEAN);
+
+      if (intmu == 30){ // Here choose the most representative value of mu
+        float offsetpt_norm = offsetptMEDchs/mu ;
+        if (offsetpt_norm >= 20.) offsetpt_norm = 19.99 ;
+        hname = Form("h2_offsetMEDchs_eta_nPU%i", intmu); 
+        FillHist2D(hname, eta, offsetpt_norm, 1.);
+
+        offsetpt_norm = offsetptMEANchs/mu ;
+        if (offsetpt_norm >= 20.) offsetpt_norm = 19.99 ;
+        hname = Form("h2_offsetMEANchs_eta_nPU%i", intmu); 
+        FillHist2D(hname, eta, offsetpt_norm, 1.);
+      }  
 
       if (mu > 5){
       double area = M_PI * (etabins[ieta+1] - etabins[ieta]) / 6. ;
@@ -388,12 +406,32 @@ int main(int argc, char* argv[]) {
     outFile->mkdir( "mikko_nPU/"  + ids[i_id] );
   }
   outFile->mkdir( "ptdensity_/" );
+  outFile->mkdir( "offsetMED/" );
+  outFile->mkdir( "offsetMEAN/" );
+  outFile->mkdir( "mikkoMED/" );
+  outFile->mkdir( "mikkoMEAN/" );
 
 
   for (map<TString, TH1*>::iterator hid = m_Histos1D.begin(); hid != m_Histos1D.end(); hid++){
     hname = hid->first;
     if ( hname.Contains( "ptdensity_" ) ){
       outFile->cd(outName + ":/ptdensity_/" );
+      hid->second->Write();
+    }
+    else if ( hname.Contains( "offsetMED" ) ){
+      outFile->cd(outName + ":/offsetMED/" );
+      hid->second->Write();
+    }
+    else if ( hname.Contains( "offsetMEAN" ) ){
+      outFile->cd(outName + ":/offsetMEAN/" );
+      hid->second->Write();
+    }
+    else if ( hname.Contains( "mikkoMED" ) ){
+      outFile->cd(outName + ":/mikkoMED/" );
+      hid->second->Write();
+    }
+    else if ( hname.Contains( "mikkoMEAN" ) ){
+      outFile->cd(outName + ":/mikkoMEAN/" );
       hid->second->Write();
     }
     else{
