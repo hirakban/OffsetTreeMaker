@@ -1,6 +1,6 @@
 # Calculating L1Offset scale factor
 
-In this analyzer, L1RC Jet Energy Corrections(JECs) are derived using root tuples.
+In this analyzer, L1RC Jet Energy Corrections(JECs) are derived using root tuples. The documentaion of all available files and their purpose can be found in [Appendix B](https://github.com/garvitaa/OffsetTreeMaker#appendix-b).
 
 For more information on L1Offset see Section 4 of https://iopscience.iop.org/article/10.1088/1748-0221/12/02/P02014/pdf .
 
@@ -28,11 +28,9 @@ Here we are running the framework /plugins/OffsetTreeMaker.cc using the configur
 Another option is to copy a segment of data locally to test the file. This can be done using the code copy_cfg.py or xrdcp command.
 
 ### For Data:
-1. Extract corresponding pileup JSON from this site: https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/ 
+1. Extract corresponding pileup JSON from this site: https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/
 
-**OR**
-
-on lxplus at: /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/   
+**OR** on lxplus at: /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/   
 
 2. Using the JSONtoASCII.py convert the json file(pileup_latest.txt) to ascii (pileup_20**XX**.txt) and move a copy of 'pileup_20**XX**.txt' to /plugins.
      ```console
@@ -51,7 +49,17 @@ on lxplus at: /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/
      ```python
      readFiles.extend( ['/store/data/__*root file from DAS for your dataset*__.root' ] );
      ```
-     Add the global tag for the corresponding dataset from DAS. 
+     Depending on the dataset download the latest JECs into the current folder and specify the era accordingly. For example, If we were going to process UL18 to calculate JECs, we can use the JECs for 2018 RECO dataset. 
+     To find and download the appropriate JECs go to: https://twiki.cern.ch/twiki/bin/viewauth/CMS/JECDataMC.
+     
+     We also need to select the '_jetType_name_' depending on the type of jet's you want to apply Jet Energy corrections to.
+     ```python
+     run = "A"
+     OutputName = "_Data_UL2018"+run
+     eraName = "Summer19UL18_Run"+run+"_V2_SimpleL1_DATA"
+     jetType_name = "AK4PFchs" # or "AK4PF"
+     ```
+     Add the global tag for the corresponding dataset from DAS.
      ```python
      process.GlobalTag = GlobalTag( process.GlobalTag, '__*Global Tag for your dataset from DAS*__' )
      ```
@@ -71,19 +79,26 @@ on lxplus at: /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/
 ### For MC:
 **Note: Pileup information is not needed to process the MC, the code still requires the file to run.**
 
-Perform the steps 1, 2, 3, 4 and 5 as given above for data with one modification in Step 4.
-     ```python
-     isMC = cms.bool(True)
-     ```
+Perform the steps 1, 2, 3, 4 and 5 as given above for data with two modifications in Step 4.
+
+```python
+isMC = cms.bool(True)
+```
+and
+```python
+OutputName = "_MC_UL2018"
+eraName = "Summer19UL18_V2_SimpleL1_MC"
+jetType_name = "AK4PFchs" # or "AK4PF"
+```
      
 ## Step 2: Submitting CRAB jobs.
 To run on entire dataset locally is expensive and time consuming, so we submit CRAB jobs.
 
 ### For Data:
 Modify crab_run_offset.py
-1. Include the new pileup file:
+1. Include the new pileup file and JECs for Data:
      ```python
-     config.JobType.inputFiles = ["pileup_20**XX**.txt"]
+     config.JobType.inputFiles = ["pileup_20**XX**.txt", "Summer19UL18_Run**XX**_V2_SimpleL1_DATA"]
      ```
 2. Add the outputFiles depending upon the name of the output root file from run_offset.py
      ```python
@@ -106,8 +121,12 @@ Modify crab_run_offset.py
      config.Data.outLFNDirBase = '/store/user/--*username*--'
      ```
 ### For MC:
-We make 3 modifications to submit CRAB jobs for MC. Perform the steps as given above for data with modifications in step 2, 3, 4, 5.
+We make modifications to submit CRAB jobs for MC. 
 
+1. Include the new pileup file and the JECs for MC:
+     ```python
+     config.JobType.inputFiles = ["pileup_20**XX**.txt", "Summer19UL18_Run**XX**_V2_SimpleL1_MC"]
+     ```
 2. Change the outputFiles depending upon the name of the output root file from run_offset.py
      ```python
      config.JobType.outputFiles = ["Offset_MC.root"]
@@ -122,6 +141,10 @@ We make 3 modifications to submit CRAB jobs for MC. Perform the steps as given a
      ```
 5. Comment out the lumiMask statement.
 
+6. The last modification is the path to the storage site. 
+     ```python
+     config.Data.outLFNDirBase = '/store/user/--*username*--/--*MCstorage*--'
+     ```
 
 To modify the environment for running crab job we use the following commands:
 ```console
