@@ -357,8 +357,8 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
     text.SetTextSize(0.045);
     text.SetTextFont(42);
 
-    if (ratio) text.DrawLatex(0.51, 0.96, label);
-    else       text.DrawLatex(0.51, 0.96, label);
+    if (ratio) text.DrawLatex(0.58, 0.96, label);
+    else       text.DrawLatex(0.58, 0.96, label);
 
     //TString coneSize = dataName( dataName.Last('.')-1, 1 );
     //text.DrawLatex(0.2, 0.8, "R = 0." + coneSize);
@@ -450,8 +450,8 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
     text.SetTextSize(0.045);
     text.SetTextFont(42);
 
-    if (ratio) text.DrawLatex(0.51, 0.96, label);
-    else       text.DrawLatex(0.51, 0.96, label);
+    if (ratio) text.DrawLatex(0.58, 0.96, label);
+    else       text.DrawLatex(0.58, 0.96, label);
 
     //TString coneSize = dataName( dataName.Last('.')-1, 1 );
     //text.DrawLatex(0.2, 0.8, "R = 0." + coneSize);
@@ -588,13 +588,13 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
     text.DrawLatex(0.25, 0.8, "CMS");
 
 
-    text.SetTextSize(0.035);
+    text.SetTextSize(0.04);
     text.SetTextFont(42);
-    if (ratio)     text.SetTextSize(0.035);
+    //if (ratio)     text.SetTextSize(0.035);
     text.SetTextFont(42);
     //text.DrawLatex(0.6, 0.89, "2018MC: SingleNeutrino");
-    if (ratio) text.DrawLatex(0.61, 0.96, label);
-    else       text.DrawLatex(0.61, 0.96, label);
+    if (ratio) text.DrawLatex(0.62, 0.96, label);
+    else       text.DrawLatex(0.62, 0.96, label);
 
     gPad->RedrawAxis();
 
@@ -671,14 +671,14 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
     text.DrawLatex(0.25, 0.8, "CMS");
 
 
-    text.SetTextSize(0.035);
+    text.SetTextSize(0.04);
     text.SetTextFont(42);
-    if (ratio)     text.SetTextSize(0.035);
+    //if (ratio)     text.SetTextSize(0.035);
     text.SetTextFont(42);
     //text.DrawLatex(0.6, 0.89, "2018MC: SingleNeutrino");
 
-    if (ratio) text.DrawLatex(0.61, 0.96, label);
-    else       text.DrawLatex(0.61, 0.96, label);
+    if (ratio) text.DrawLatex(0.62, 0.96, label);
+    else       text.DrawLatex(0.62, 0.96, label);
 
     gPad->RedrawAxis();
     

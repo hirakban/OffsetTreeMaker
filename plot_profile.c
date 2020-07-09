@@ -31,8 +31,8 @@ void plot_profile(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TS
 
   TString hname;
 
-  TF1* f_mc = new TF1("f_mc", "1++x++x*x",30,39);
-  TF1* f_data = new TF1("f_data", "1++x++x*x",30,39);
+  TF1* f_mc = new TF1("f_mc", "1++x++x*x",n1,n2);
+  TF1* f_data = new TF1("f_data", "1++x++x*x",n1,n2);
   f_mc->SetLineColor(2);
   f_mc->SetLineWidth(2);
   f_data->SetLineColor(1);
@@ -161,7 +161,7 @@ void plot_profile(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TS
     text.SetTextColor(1);
     text.SetTextSize(0.045);
     text.SetTextFont(42);
-    text.DrawLatex(0.5, 0.96, label );
+    text.DrawLatex(0.58, 0.96, label );
 
     bottom->cd();
     TH1D* h2 = new TH1D("h2", "h2", 100, n1, topX);

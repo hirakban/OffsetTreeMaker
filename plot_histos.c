@@ -77,7 +77,7 @@ void plot_histos(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TSt
 	text.SetTextSize(0.035);
 	text.SetTextColor(1);
 	text.SetTextFont(42);
-	text.DrawLatex(0.48, 0.96, label );
+	text.DrawLatex(0.52, 0.96, label );
 	
 	leg->AddEntry(npu,Form("MC (Mean %2.2f)", mean_mc));
 	leg->AddEntry(npu_data,Form("Data (Mean %2.2f)", mean_data));
@@ -132,7 +132,7 @@ void plot_histos(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TSt
 	text2.SetTextSize(0.035);
 	text2.SetTextColor(1);
 	text2.SetTextFont(42);
-	text2.DrawLatex(0.48, 0.96, label );
+	text2.DrawLatex(0.52, 0.96, label );
 	
 	leg2->AddEntry(npv,Form("MC (Mean %2.2f)", npv_mean_mc));
 	leg2->AddEntry(npv_data,Form("Data (Mean %2.2f)", npv_mean_data));
@@ -187,7 +187,7 @@ void plot_histos(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TSt
 	text3.SetTextSize(0.035);
 	text3.SetTextColor(1);
 	text3.SetTextFont(42);
-	text3.DrawLatex(0.48, 0.96, label );
+	text3.DrawLatex(0.52, 0.96, label );
 	
 	leg3->AddEntry(rho,Form("MC (Mean %2.2f)", rho_mean_mc));
 	leg3->AddEntry(rho_data,Form("Data (Mean %2.2f)", rho_mean_data));
