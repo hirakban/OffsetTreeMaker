@@ -262,7 +262,7 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
   leg->SetTextSize(0.04);
   leg->SetTextFont(42);
 
-  TLegend* leg2 = new TLegend(.6,.65,.75,.8);
+  TLegend* leg2 = new TLegend(.5,.55,.65,.7);
   leg2->SetBorderSize(0);
   leg2->SetFillColor(0);
   leg2->SetFillStyle(0);
