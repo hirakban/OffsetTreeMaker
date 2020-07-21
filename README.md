@@ -261,5 +261,5 @@ UL2017 - ZeroBias| Under development
 UL2017 - SingleNeutrino| Under development
 2018 - ZeroBias|  /eos/uscms/store/user/gagarwal/offset/L1Offset2018/Data/2018/Total_Data17Sep2018**X**.root where **X** = A, B, C, D
 2018 - SingleNeutrino| /eos/uscms/store/user/gagarwal/offset/L1Offset2018/MC/2018/Total_MC_Autumn2018.root
-UL2018 - ZeroBias| Under development
-UL2018 - SingleNeutrino| Under development
+UL2018 - ZeroBias| /eos/uscms/store/group/lpcjme/L1Offset/UltraLegacy18_scalefactors/Total_Data_UL2018**X**.root where **X** = A, B, C, D
+UL2018 - SingleNeutrino| /eos/uscms/store/group/lpcjme/L1Offset/UltraLegacy18_scalefactors/Total_MC_UL2018.root
