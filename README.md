@@ -246,3 +246,12 @@ File/Folder | Purpose
 ---------|------------
 bin| Contains histomaker.cc and its build file
 Adding other files| Under development
+
+# Appendix C
+Here is a record of the dataset processed and their location on lpc.
+Dataset | Location of root Tupes | Location of histomaker files
+---------|------------|------------
+2016 - ZeroBias| /eos/uscms/store/user/gagarwal/offset/L1Offset2018/Data/2016/Data_Run**X**.root where **X** = B, C, D, E, F | Can't locate
+2016 - SingleNeutrino| /eos/uscms/store/user/gagarwal/offset/L1Offset2018/Data/2016/RunIISummer16_MC_Tree.root | Can't locate
+2017| Under development | Under development
+2018| Under development | Under development
