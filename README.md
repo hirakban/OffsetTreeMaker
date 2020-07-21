@@ -184,7 +184,7 @@ nohup histomaker true 0.4(0.8) Total_Data.root  Total_MC.root  (Total_Data.root 
 ```
     
 ## Step 4: Create histograms, profiles, stack plots
-Use ./produce_plots.sh to create plots. Make changes to _**produce_scalefactors.sh**_ as needed.
+Use ./produce_plots.sh to create plots. Make changes to _**produce_plots.sh**_ as needed.
 
 We will have to run this shell script twice:
 
@@ -207,7 +207,8 @@ Once the MCTruth information is available we can produce the L1FastJet files for
 2. SemiSimple
 3. Complex
 
-Make the required changes to _**l1fastjet_adapted2020.c**_ as needed.
+Make the changes to _**l1fastjet_adapted2020.c**_ as needed. For running this you'll need L1FastJet MC file. 
+This script also produces scalefactor vs. eta plots for each era with uncertainties.
 
 ```console
 root -l -b -q 'l1fastjet_adapted.c("chs")' 
