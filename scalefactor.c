@@ -129,19 +129,21 @@ void scalefactor(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TSt
 
   for (int i=0; i<ETA_BINS; i++){
 
+    //cout << "./text_files/scalefactor/R4/"+pf_type+Form("/%sscalefactor_AK%iPF",outName.Data(),Rlabel)+ pf_type + Form("_eta%4.3f.pdf", eta1[i]) << endl;
     vector<double> rho, scale_factor, sf_error;
 
     for (int n=n1; n<n2; n++){
 
       double data_rho = data_rho_nPU->GetBinContent( data_rho_nPU->FindBin(n) );
-      rho.push_back( data_rho );
       double data_offset = data_p0[i] + data_p1[i]*data_rho + data_p2[i]*data_rho*data_rho;
 
       double mc_rho = mc_rho_nPU->GetBinContent( mc_rho_nPU->FindBin(n) );
       double mc_offset = mc_p0[i] + mc_p1[i]*mc_rho + mc_p2[i]*mc_rho*mc_rho;
 
+      if (data_rho >0){
+      rho.push_back( data_rho );
       scale_factor.push_back( data_offset / mc_offset );
-      sf_error.push_back( 0.02*scale_factor.back() );
+      sf_error.push_back( 0.02*scale_factor.back() );}
     }
 
     TGraphErrors* graph = new TGraphErrors(rho.size(), &rho[0], &scale_factor[0], 0, &sf_error[0]);
@@ -153,7 +155,7 @@ void scalefactor(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TSt
     TCanvas* c = new TCanvas("c", "c", 600, 600);
     int start = rho[0]; int end = int(rho[rho.size()-1])+1;
     TH1F* h = new TH1F("h", "h", (end-start)*2, start, end);
-    int topY = 2;
+    int topY = 4;
 
     h->GetXaxis()->SetTitle("#rho_{Data} (GeV)");
     h->GetYaxis()->SetTitle("Scale Factor");
@@ -185,8 +187,8 @@ void scalefactor(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TSt
     text.DrawLatex(0.8, 0.96, "#sqrt{s} = 13 TeV");
 
     //cout << fit->GetChisquare() / fit->GetNDF() << endl;
-    
-    c->Print("./text_files/scalefactor/R4/"+pf_type+Form("/%sscalefactor_AK%iPF",outName.Data(),Rlabel)+ pf_type + Form("_eta%4.3f.pdf", eta1[i]) );
+    //cout << "./text_files/scalefactor/R4/"+pf_type+Form("/%sscalefactor_AK%iPF",outName.Data(),Rlabel)+ pf_type + Form("_eta%4.3f.pdf", eta1[i]) << endl;
+    c->Print(Form("./text_files/scalefactor/R%i/",Rlabel) + pf_type + Form("/%sscalefactor_AK%iPF",outName.Data(),Rlabel)+ pf_type + Form("_eta%4.3f.pdf", eta1[i]) );
     delete h;
     delete c;
   }
