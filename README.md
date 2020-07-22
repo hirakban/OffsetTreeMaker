@@ -184,7 +184,7 @@ nohup histomaker true 0.4(0.8) Total_Data.root  Total_MC.root  (Total_Data.root 
 ```
     
 ## Step 4: Create histograms, profiles, stack plots
-Use ./produce_plots.sh to create plots. Make changes to _**produce_scalefactors.sh**_ as needed.
+Use ./produce_plots.sh to create plots. Make changes to _**produce_plots.sh**_ as needed.
 
 We will have to run this shell script twice:
 
@@ -207,7 +207,8 @@ Once the MCTruth information is available we can produce the L1FastJet files for
 2. SemiSimple
 3. Complex
 
-Make the required changes to _**l1fastjet_adapted2020.c**_ as needed.
+Make the changes to _**l1fastjet_adapted2020.c**_ as needed. For running this you'll need L1FastJet MC file. 
+This script also produces scalefactor vs. eta plots for each era with uncertainties.
 
 ```console
 root -l -b -q 'l1fastjet_adapted.c("chs")' 
@@ -245,3 +246,20 @@ File/Folder | Purpose
 ---------|------------
 bin| Contains histomaker.cc and its build file
 Adding other files| Under development
+
+# Appendix C
+Here is a record of the dataset processed and their location on lpc.
+Dataset | Location of root tuples 
+---------|------------
+2016 - ZeroBias| /eos/uscms/store/user/gagarwal/offset/L1Offset2018/Data/2016/Data_Run**X**.root where **X** = B, C, D, E, F, G, H
+2016 - SingleNeutrino| /eos/uscms/store/user/gagarwal/offset/L1Offset2018/Data/2016/RunIISummer16_MC_Tree.root 
+UL2016 - ZeroBias| Location not known
+UL2016 - SingleNeutrino| Location not known
+2017 - ZeroBias| /eos/uscms/store/user/gagarwal/offset/L1Offset2018/Data/2018/Total_Data17Nov2017**X**.root where **X** = B, C, D, E, F
+2017 - SingleNeutrino|  /eos/uscms/store/user/gagarwal/offset/L1Offset2018/Data/2018/Total_MC_Fall2017.root
+UL2017 - ZeroBias| /eos/uscms/store/group/lpcjme/L1Offset/UltraLegacy17_scalefactors/jetSort/Run**X**_try2/Total_Data_UL2017**X**.root where **X** = B, C, D, E, F
+UL2017 - SingleNeutrino| /eos/uscms/store/group/lpcjme/L1Offset/UltraLegacy17_scalefactors/jetSort/MC_try3/Total_MC_UL2017.root 
+2018 - ZeroBias|  /eos/uscms/store/user/gagarwal/offset/L1Offset2018/Data/2018/Total_Data17Sep2018**X**.root where **X** = A, B, C, D
+2018 - SingleNeutrino| /eos/uscms/store/user/gagarwal/offset/L1Offset2018/MC/2018/Total_MC_Autumn2018.root
+UL2018 - ZeroBias| /eos/uscms/store/group/lpcjme/L1Offset/UltraLegacy18_scalefactors/Total_Data_UL2018**X**.root where **X** = A, B, C, D
+UL2018 - SingleNeutrino| /eos/uscms/store/group/lpcjme/L1Offset/UltraLegacy18_scalefactors/Total_MC_UL2018.root
