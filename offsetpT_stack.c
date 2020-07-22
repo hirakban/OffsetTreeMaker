@@ -262,7 +262,7 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
   leg->SetTextSize(0.04);
   leg->SetTextFont(42);
 
-  TLegend* leg2 = new TLegend(.6,.65,.75,.8);
+  TLegend* leg2 = new TLegend(.5,.45,.65,.6);
   leg2->SetBorderSize(0);
   leg2->SetFillColor(0);
   leg2->SetFillStyle(0);
@@ -331,7 +331,7 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
     v_Data[chm]  ->SetAxisRange(-2.9,2.9);
     v_Data[untrk]->SetAxisRange(-2.9,2.9);
 
-    h1->GetYaxis()->SetRangeUser( 0, 0.8 ); //dataStack->GetMaximum()*1.7 );
+    h1->GetYaxis()->SetRangeUser( 0, dataStack->GetMaximum()*2.2 );
     
     h1->GetYaxis()->SetTitle(yTitle);
     h1->GetYaxis()->SetTitleOffset(1.1);
@@ -518,7 +518,7 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
     if (ratio) h1->GetYaxis()->SetTitleOffset(0.8);
     else h1->GetYaxis()->SetTitleOffset(0.4);
 
-    h1->GetYaxis()->SetRangeUser(0, 0.5);
+    //h1->GetYaxis()->SetRangeUser(0, 0.5);
 
     TH1D* hist_MC;
     TH1D* hist_Data;
@@ -570,6 +570,8 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
 
     h1->GetYaxis()->SetTitle(yTitle_Mikko);
     h1->GetYaxis()->SetTitleOffset(1.1);
+    float maxY_2 = hist_Data->GetMaximum() > hist_MC->GetMaximum() ? hist_Data->GetMaximum() : hist_MC->GetMaximum();
+    h1->GetYaxis()->SetRangeUser(0, maxY_2*2.5);
 
     hist_MC->Draw("samehist");
 
@@ -652,6 +654,8 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
 
 
     h1->GetYaxis()->SetTitleOffset(1.1);
+    float maxY = hist_Data_Mikko->GetMaximum() > hist_MC_Mikko->GetMaximum() ? hist_Data_Mikko->GetMaximum() : hist_MC_Mikko->GetMaximum();
+    h1->GetYaxis()->SetRangeUser(0, maxY*2.5);
 
     h1->Draw();
     hist_MC_Mikko->Draw("samehist");
