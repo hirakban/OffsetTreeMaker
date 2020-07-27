@@ -33,6 +33,7 @@
 #include <SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h>
 #include "DataFormats/JetReco/interface/PFJet.h"
 #include "parsePileUpJSON2.h"
+#include "jetVetoMap.h "
 #include <vector>
 #include "TMath.h"
 #include "CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h"
@@ -145,6 +146,8 @@ OffsetTreeMaker::OffsetTreeMaker(const edm::ParameterSet& iConfig)
   numSkip_ = iConfig.getParameter<int> ("numSkip");
   RootFileName_ = iConfig.getParameter<string>("RootFileName");
   puFileName_ = iConfig.getParameter<string>("puFileName");
+  jetVetoMapFileName_ = iConfig.getParameter<TString>("jetVetoMapFileName");
+  mapName_ = iConfig.getParameter<TString>("mapName");
   isMC_ = iConfig.getParameter<bool>("isMC");
   writeCands_ = iConfig.getParameter<bool>("writeCands");
   pvTag_ = consumes< vector<reco::Vertex> >( iConfig.getParameter<edm::InputTag>("pvTag") );
@@ -159,6 +162,7 @@ OffsetTreeMaker::OffsetTreeMaker(const edm::ParameterSet& iConfig)
   era_ = iConfig.getParameter<string>("era");
   jet_type_ = iConfig.getParameter<string>("jet_type");
   doL1L2L3Res_ = iConfig.getParameter<bool>("doL1L2L3Res");
+  dojetVetoMap_ = iConfig.getParameter<bool>("dojetVetoMap");
 }
 
 // ------------ method called once each job just before starting event loop  ------------
@@ -177,6 +181,11 @@ void  OffsetTreeMaker::beginJob() {
   h_nFoundVertex = new TH1F ("nFoundVertex", "nFoundVertex", 3, -0.5, 2.5);
   h_bestweight = new TH1F ("bestweight", "bestweight", 50, 0., 1.);
   h_bestweight1 = new TH1F ("bestweight1", "bestweight1", 50, 0., 1.);
+  
+  if (dojetVetoMap_){
+    jetVetoMap( jetVetoMapFileName_,mapName_ );
+  }
+
   if (!isMC_){
     parsePileUpJSON2( puFileName_ );
 
@@ -525,10 +534,17 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   jetCorrectors = new FactorizedJetCorrector( jetPars );
 
   vector<pair<int, double> > jet_index_corrpt; // Pair of jet index and corrected jet pT
+  vector<float> eta_low, eta_high, phi_low, phi_high = getVetoMap();
 
   nJets = pfJets->size();
   for (int i=0; i != nJets; ++i){ // Looping through ALL the jets
     reco::PFJet jet = pfJets->at(i);
+    bool jetVeto = false;
+    for(int j=0; j != eta_low.size(); ++j){
+      if (jet.eta()>= eta_low[i]) && (jet.eta()<= eta_high[i]) && (jet.phi()>= phi_low[i]) && (jet.phi()>= phi_low[i])
+        jetVeto=true;
+    }
+    if (jetVeto) continue;
 
     // Applying L1 corrections
     jetCorrectors->setJetEta( jet.eta() );
