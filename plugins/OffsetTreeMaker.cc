@@ -146,7 +146,7 @@ OffsetTreeMaker::OffsetTreeMaker(const edm::ParameterSet& iConfig)
   numSkip_ = iConfig.getParameter<int> ("numSkip");
   RootFileName_ = iConfig.getParameter<string>("RootFileName");
   puFileName_ = iConfig.getParameter<string>("puFileName");
-  jetVetoMapFileName_ = iConfig.getParameter<TString>("jetVetoMapFileName");
+  jetVetoMapFileName_ = iConfig.getParameter<string>("jetVetoMapFileName");
   mapName_ = iConfig.getParameter<TString>("mapName");
   isMC_ = iConfig.getParameter<bool>("isMC");
   writeCands_ = iConfig.getParameter<bool>("writeCands");
@@ -296,6 +296,8 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     if (mu==0) return;
   }
 
+  if (dojetVetoMap_){vector<float> eta_low, eta_high, phi_low, phi_high = getVetoMap();}
+
 //------------ Primary Vertices ------------//
 
   edm::Handle< vector<reco::Vertex> > primaryVertices;
@@ -360,6 +362,15 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
   vector<reco::PFCandidate>::const_iterator i_pf, endpf = pfCandidates->end();
   for (i_pf = pfCandidates->begin(); i_pf != endpf; ++i_pf) {
+
+    bool pfVeto = false;
+    if (dojetVetoMap_){
+      for(int j=0; j != eta_low.size(); ++j){
+        if (i_pf->eta()>= eta_low[i]) && (i_pf->eta()<= eta_high[i]) && (i_pf->phi()>= phi_low[i]) && (i_pf->phi()>= phi_low[i])
+          pfVeto=true;
+      } 
+    }
+    if (pfVeto) continue;
 
     int etaIndex = getEtaIndex( i_pf->eta() );
     Flavor flavor = getFlavor( i_pf->particleId() );
@@ -534,15 +545,17 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   jetCorrectors = new FactorizedJetCorrector( jetPars );
 
   vector<pair<int, double> > jet_index_corrpt; // Pair of jet index and corrected jet pT
-  vector<float> eta_low, eta_high, phi_low, phi_high = getVetoMap();
 
   nJets = pfJets->size();
   for (int i=0; i != nJets; ++i){ // Looping through ALL the jets
     reco::PFJet jet = pfJets->at(i);
+
     bool jetVeto = false;
-    for(int j=0; j != eta_low.size(); ++j){
-      if (jet.eta()>= eta_low[i]) && (jet.eta()<= eta_high[i]) && (jet.phi()>= phi_low[i]) && (jet.phi()>= phi_low[i])
-        jetVeto=true;
+    if (dojetVetoMap_){
+      for(int j=0; j != eta_low.size(); ++j){
+        if (jet.eta()>= eta_low[i]) && (jet.eta()<= eta_high[i]) && (jet.phi()>= phi_low[i]) && (jet.phi()>= phi_low[i])
+          jetVeto=true;
+      }
     }
     if (jetVeto) continue;
 

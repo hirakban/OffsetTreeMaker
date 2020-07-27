@@ -16,31 +16,31 @@ process.options.allowUnscheduled = cms.untracked.bool(True)
 readFiles = cms.untracked.vstring()
 process.source = cms.Source ("PoolSource", fileNames = readFiles)
 readFiles.extend( [
-  '/store/data/Run2018A/ZeroBias/AOD/ForValUL2018-v1/60000/FFD11034-32CB-7048-B09B-A57DA99BD130.root'
+  '/store/mc/RunIISummer19UL18RECO/SingleNeutrino/AODSIM/FlatPU0to70_106X_upgrade2018_realistic_v11_L1v1-v1/40000/FFBAA035-9896-174A-9477-FFBA1DE40542.root'
 ] );
 
-isMC = cms.bool(False)
+isMC = cms.bool(True)
 
 if isMC:
   OutputName = "_MC_UL2018"
-  eraName = "Summer19UL18_V2_SimpleL1_MC"
+  eraName = "Autumn18_V19_MC"
   jetType_name = "AK4PFchs" # or "AK4PF"
 
   process.load( "Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff" )
   from Configuration.AlCa.GlobalTag import GlobalTag
-  process.GlobalTag = GlobalTag( process.GlobalTag, '106X_mc2017_realistic_v6' )
+  process.GlobalTag = GlobalTag( process.GlobalTag, '106X_upgrade2018_realistic_v11_L1v1' )
 
 else:
-  run = "A"
+  run = "C"
   OutputName = "_Data_UL2018"+run
-  eraName = "Summer19UL18_Run"+run+"_V2_SimpleL1_DATA"
-  jetType_name = "AK4PFchs" # or "AK4PF"
+  #eraName = "Autumn18_Run"+run+"_V19_DATA"
+  #jetType_name = "AK4PFchs" # or "AK4PF"
 
-  process.load( "Configuration.Geometry.GeometryIdeal_cff" )
-  process.load( "Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cff" )
-  process.load( "Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff" )
-  from Configuration.AlCa.GlobalTag import GlobalTag
-  process.GlobalTag = GlobalTag( process.GlobalTag, '106X_dataRun2_v24' )
+  #process.load( "Configuration.Geometry.GeometryIdeal_cff" )
+  #process.load( "Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cff" )
+  #process.load( "Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff" )
+  #from Configuration.AlCa.GlobalTag import GlobalTag
+  #process.GlobalTag = GlobalTag( process.GlobalTag, '106X_dataRun2_v24' )
 
   # ZeroBias Trigger
   process.HLTZeroBias =cms.EDFilter("HLTHighLevel",
@@ -63,11 +63,13 @@ else:
   )
 
 process.pf = cms.EDAnalyzer("OffsetTreeMaker",
-    numSkip = cms.int32(1),
+    numSkip = cms.int32(5),
     RootFileName = cms.string("Offset" + OutputName + ".root"),
     puFileName = cms.string("pileup_2018.txt"),
+    jetVetoMapFileName = cms.string("hotjets-UL18.root"),
+    mapName = cms.string("h2hot_ul18_plus_hem1516_and_hbp2m1"),
     isMC = isMC,
-    writeCands = cms.bool(True),
+    writeCands = cms.bool(False),
     trackTag = cms.InputTag("generalTracks"),
     pfTag = cms.InputTag("particleFlow"),
     pvTag = cms.InputTag("offlinePrimaryVertices"),
@@ -79,7 +81,8 @@ process.pf = cms.EDAnalyzer("OffsetTreeMaker",
     pfJetTag = cms.InputTag("ak4PFJetsCHS"),
     era = cms.string(eraName),
     jet_type = cms.string(jetType_name),
-    doL1L2L3Res = cms.bool(True)
+    doL1L2L3Res = cms.bool(True),
+    dojetVetoMap = cms.bool(True)
     #miniAOD
     #trackTag = cms.InputTag("lostTracks"),
     #pfTag = cms.InputTag("packedPFCandidates"),
