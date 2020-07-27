@@ -33,7 +33,7 @@
 #include <SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h>
 #include "DataFormats/JetReco/interface/PFJet.h"
 #include "parsePileUpJSON2.h"
-#include "jetVetoMap.h "
+#include "jetVetoMap.h"
 #include <vector>
 #include "TMath.h"
 #include "CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h"
@@ -122,10 +122,10 @@ class OffsetTreeMaker : public edm::EDAnalyzer {
     vector<float> pf_pt, pf_eta, pf_phi, pf_et;
     //vector<string> eras;
 
-    TString RootFileName_;
+    TString RootFileName_, jetVetoMapFileName_, mapName_;
     string puFileName_, era_, jet_type_;
     int numSkip_;
-    bool isMC_, writeCands_, doL1L2L3Res_;
+    bool isMC_, writeCands_, doL1L2L3Res_, dojetVetoMap_;
 
     //string jet_type;
 
@@ -147,7 +147,7 @@ OffsetTreeMaker::OffsetTreeMaker(const edm::ParameterSet& iConfig)
   RootFileName_ = iConfig.getParameter<string>("RootFileName");
   puFileName_ = iConfig.getParameter<string>("puFileName");
   jetVetoMapFileName_ = iConfig.getParameter<string>("jetVetoMapFileName");
-  mapName_ = iConfig.getParameter<TString>("mapName");
+  mapName_ = iConfig.getParameter<string>("mapName");
   isMC_ = iConfig.getParameter<bool>("isMC");
   writeCands_ = iConfig.getParameter<bool>("writeCands");
   pvTag_ = consumes< vector<reco::Vertex> >( iConfig.getParameter<edm::InputTag>("pvTag") );
@@ -296,7 +296,7 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     if (mu==0) return;
   }
 
-  if (dojetVetoMap_){vector<float> eta_low, eta_high, phi_low, phi_high = getVetoMap();}
+  if (dojetVetoMap_){vector<vector<float>> JetVetoMap = getVetoMap();}
 
 //------------ Primary Vertices ------------//
 
@@ -365,8 +365,8 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
     bool pfVeto = false;
     if (dojetVetoMap_){
-      for(int j=0; j != eta_low.size(); ++j){
-        if (i_pf->eta()>= eta_low[i]) && (i_pf->eta()<= eta_high[i]) && (i_pf->phi()>= phi_low[i]) && (i_pf->phi()>= phi_low[i])
+      for(int j=0; j != int((JetVetoMap[0]).size()); ++j){
+        if ((i_pf->eta()>= JetVetoMap[0][j]) && (i_pf->eta()<= JetVetoMap[1][j]) && (i_pf->phi()>= JetVetoMap[2][j]) && (i_pf->phi()<= JetVetoMap[3][j]))
           pfVeto=true;
       } 
     }
@@ -552,8 +552,8 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
     bool jetVeto = false;
     if (dojetVetoMap_){
-      for(int j=0; j != eta_low.size(); ++j){
-        if (jet.eta()>= eta_low[i]) && (jet.eta()<= eta_high[i]) && (jet.phi()>= phi_low[i]) && (jet.phi()>= phi_low[i])
+      for(int j=0; j != int((JetVetoMap[0]).size()); ++j){
+        if ((jet.eta()>= JetVetoMap[0][j]) && (jet.eta()<= JetVetoMap[1][j]) && (jet.phi()>= JetVetoMap[2][j]) && (jet.phi()<= JetVetoMap[3][j]))
           jetVeto=true;
       }
     }

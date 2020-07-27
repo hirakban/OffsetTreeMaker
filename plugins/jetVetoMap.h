@@ -5,6 +5,8 @@
 #include <fstream>
 #include <string>
 #include <map>
+#include <vector>
+#include <tuple>
 #include <utility>
 
 #include "TFile.h"
@@ -14,10 +16,10 @@
 
 using namespace std;
 
-vector<float> eta_low, eta_high, phi_low, phi_high;
+vector<vector<float>> JetVetoMap(4); 
 
-float getVetoMap() {
-  return eta_low, eta_high, phi_low, phi_high;
+vector<vector<float>> getVetoMap() {
+  return JetVetoMap;
 }
 
 void jetVetoMap(TString filename="jetveto.root", TString map_name = "h2hot_ul18_plus_hem1516_and_hbp2m1" ) {
@@ -33,10 +35,10 @@ void jetVetoMap(TString filename="jetveto.root", TString map_name = "h2hot_ul18_
   for (int i = 1; i != h2->GetNbinsX()+1; ++i) {
     for (int j = 1; j !=  h2->GetNbinsY()+1; ++j) {
       if (h2->GetBinContent(i,j) >0){
-        eta_low.push_back(h2->GetXaxis()->GetBinLowEdge(i)); 
-        eta_high.push_back(h2->GetXaxis()->GetBinLowEdge(i) + h2->GetXaxis()->GetBinWidth(i));
-        phi_low.push_back(h2->GetYaxis()->GetBinLowEdge(j));
-        phi_high.push_back(h2->GetYaxis()->GetBinLowEdge(j) + h2->GetYaxis()->GetBinWidth(j));
+        JetVetoMap[0].push_back(h2->GetXaxis()->GetBinLowEdge(i)); 
+        JetVetoMap[1].push_back(h2->GetXaxis()->GetBinLowEdge(i) + h2->GetXaxis()->GetBinWidth(i));
+        JetVetoMap[2].push_back(h2->GetYaxis()->GetBinLowEdge(j));
+        JetVetoMap[3].push_back(h2->GetYaxis()->GetBinLowEdge(j) + h2->GetYaxis()->GetBinWidth(j));
 
         // std::cout<< "eta_low: " << h2->GetXaxis()->GetBinLowEdge(i) << " eta_high: " << (h2->GetXaxis()->GetBinLowEdge(i) + h2->GetXaxis()->GetBinWidth(i))
         //          << " phi_low: " << h2->GetYaxis()->GetBinLowEdge(j) << " phi_high: " << (h2->GetYaxis()->GetBinLowEdge(j) + h2->GetYaxis()->GetBinWidth(j))
