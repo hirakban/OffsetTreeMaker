@@ -9,38 +9,43 @@ process = cms.Process("Ana")
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 process.options.allowUnscheduled = cms.untracked.bool(True)
 
 readFiles = cms.untracked.vstring()
 process.source = cms.Source ("PoolSource", fileNames = readFiles)
 readFiles.extend( [
-  '/store/mc/RunIISummer19UL18RECO/SingleNeutrino/AODSIM/FlatPU0to70_106X_upgrade2018_realistic_v11_L1v1-v1/40000/FFBAA035-9896-174A-9477-FFBA1DE40542.root'
+  #'/store/data/Run2016H/ZeroBias/AOD/21Feb2020_UL2016-v1/10000/0006A32E-2FBB-0E41-AEDC-09C6567AF6BB.root'
+  #'/store/mc/RunIISummer19UL16RECO/SingleNeutrino/AODSIM/FlatPU0to70_106X_mcRun2_asymptotic_v13-v3/00000/004AFBFB-E370-3348-9647-935ED2280698.root'
+  '/store/mc/RunIISummer20UL16RECOAPV/SingleNeutrino/AODSIM/FlatPU0to75_106X_mcRun2_asymptotic_preVFP_v8_ext1-v2/260000/004863CA-6D89-1C4E-8256-4849476EEAEE.root'
 ] );
 
 isMC = cms.bool(True)
 
 if isMC:
-  OutputName = "_MC_UL2018"
-  eraName = "Autumn18_V19_MC"
+  #OutputName = "_MC_UL2016_"
+  OutputName = "_MC_Summer20UL16_preVFP_APV"
+  eraName = "Summer19UL18_V5_MC"
   jetType_name = "AK4PFchs" # or "AK4PF"
 
   process.load( "Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff" )
   from Configuration.AlCa.GlobalTag import GlobalTag
-  process.GlobalTag = GlobalTag( process.GlobalTag, '106X_upgrade2018_realistic_v11_L1v1' )
+  #process.GlobalTag = GlobalTag( process.GlobalTag, '106X_mcRun2_asymptotic_v13' )
+  process.GlobalTag = GlobalTag( process.GlobalTag, '106X_mcRun2_asymptotic_preVFP_v8' )
+
 
 else:
-  run = "C"
-  OutputName = "_Data_UL2018"+run
-  #eraName = "Autumn18_Run"+run+"_V19_DATA"
-  #jetType_name = "AK4PFchs" # or "AK4PF"
+  run = "B_ver2"
+  OutputName = "_Data_UL2016"+run
+  eraName = "Summer16_07Aug2017"+"BCD"+"_V11_DATA"
+  jetType_name = "AK4PFchs" # or "AK4PF"
 
-  #process.load( "Configuration.Geometry.GeometryIdeal_cff" )
-  #process.load( "Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cff" )
-  #process.load( "Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff" )
-  #from Configuration.AlCa.GlobalTag import GlobalTag
-  #process.GlobalTag = GlobalTag( process.GlobalTag, '106X_dataRun2_v24' )
+  process.load( "Configuration.Geometry.GeometryIdeal_cff" )
+  process.load( "Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cff" )
+  process.load( "Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff" )
+  from Configuration.AlCa.GlobalTag import GlobalTag
+  process.GlobalTag = GlobalTag( process.GlobalTag, '106X_dataRun2_v27' )
 
   # ZeroBias Trigger
   process.HLTZeroBias =cms.EDFilter("HLTHighLevel",
@@ -65,9 +70,10 @@ else:
 process.pf = cms.EDAnalyzer("OffsetTreeMaker",
     numSkip = cms.int32(5),
     RootFileName = cms.string("Offset" + OutputName + ".root"),
-    puFileName = cms.string("pileup_2018.txt"),
-    jetVetoMapFileName = cms.string("hotjets-UL18.root"),
-    mapName = cms.string("h2hot_ul18_plus_hem1516_and_hbp2m1"),
+    puFileName = cms.string("pileup_2016.txt"),
+    jetVetoMapFileName = cms.string("hotjets-UL16.root"),
+    mapName2 = cms.string("h2hot_ul16_plus_hbm2_hbp12_qie11"),
+    mapName6 = cms.string("h2hot_mc"),
     isMC = isMC,
     writeCands = cms.bool(False),
     trackTag = cms.InputTag("generalTracks"),

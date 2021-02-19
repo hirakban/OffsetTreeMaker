@@ -29,18 +29,15 @@ void compare_sf(int Rlabel=4, TString pf_type="all"){
 
   map<TString, TString> files;
 
-  files["Bahareh"] = "plots/scalefactor/A/Fall18_17Sep2018A_V1_DataMcSF_L1RC_AK4PFall.txt";
-  files["Garvita"] = "GARVITA_files/Garvita_Fall18_17Sep2018A_V1_DataMcSF_L1RC_AK4PF.txt";
+  files["ULRun2016preVFP_APV"] = "/uscms/home/hirakban/nobackup/l10ffset/l1offset_UL16/CMSSW_10_6_12/src/test/OffsetTreeMaker/text_files/scalefactor/R4/chs/UL16_RunpreVFP_APV_V1_DataMcSF_L1RC_AK4PFchs.txt";
+
+  files["ULRun2016postVFP"] = "/uscms/home/hirakban/nobackup/l10ffset/l1offset_UL16/CMSSW_10_6_12/src/test/OffsetTreeMaker/text_files/scalefactor/R4/chs/UL16_RunpostVFP_V1_DataMcSF_L1RC_AK4PFchs.txt";
 
   map<TString, TString> rootfiles;
 
-  //rootfiles["Run2016BCD"] = "nov10/Legacy_BCD_R4.root";
-  //rootfiles["Run2016EF"] = "nov10/Legacy_EF_R4.root";
+  rootfiles["ULRun2016preVFP_APV"] = "/uscms/home/hirakban/nobackup/l10ffset/l1offset_UL16/CMSSW_10_6_12/src/test/OffsetTreeMaker/Offset_Data_UL2016_preVFP_total_R4.root";
 
-  rootfiles["Bahareh"] = "RunA_rereco_R4.root";
-  rootfiles["Garvita"] = "/uscms_data/d3/gagarwal/offset/CMSSW_10_2_5/src/test/OffsetTreeMaker/Total_Data2018_RunA_R4.root";
-
-
+  rootfiles["ULRun2016postVFP"] = "/uscms/home/hirakban/nobackup/l10ffset/l1offset_UL16/CMSSW_10_6_12/src/test/OffsetTreeMaker/Offset_Data_UL2016_postVFP_total_R4.root";
 
 
   map<TString, float[nEta]> p0, p1, p2;
@@ -109,16 +106,19 @@ void compare_sf(int Rlabel=4, TString pf_type="all"){
 
     hists[version]->SetMarkerStyle(20);
     hists[version]->SetMarkerSize(0.75);
-    //hists[version]->SetMarkerColor(j+1);
-    //hists[version]->Draw("psame");
+    hists[version]->SetMarkerColor(j+1);
+    hists[version]->Draw("psame");
 
     leg->AddEntry(hists[version], version,"p");
   }
 
-    hists["Bahareh"]->SetMarkerColor(kBlack);
-    hists["Bahareh"]->Draw("psame");
-    hists["Garvita"]->SetMarkerColor(kRed);
-    hists["Garvita"]->Draw("psame");
+    hists["ULRun2016preVFP_APV"]->SetMarkerColor(kBlue);
+    hists["ULRun2016preVFP_APV"]->Draw("psame");
+
+    hists["ULRun2016postVFP"]->SetMarkerColor(kRed);
+    hists["ULRun2016postVFP"]->Draw("psame");
+
+
   leg->Draw();
 
   TLatex text;
@@ -126,9 +126,9 @@ void compare_sf(int Rlabel=4, TString pf_type="all"){
   text.SetTextSize(0.03);
 
   if (pf_type.EqualTo("all"))
-    text.DrawLatex(0.8, 0.89, Form("AK%i PF", Rlabel));
+    text.DrawLatex(0.8, 0.89, Form("AK%i PFchs", Rlabel));
   else
-    text.DrawLatex(0.8, 0.89, Form("AK%i PF%s", Rlabel, pf_type.Data()));
+    text.DrawLatex(0.8, 0.89, Form("AK%i PFchs%s", Rlabel, pf_type.Data()));
 
   //text.SetTextSize(0.035);
   //text.SetTextColor(1);
@@ -144,9 +144,10 @@ void compare_sf(int Rlabel=4, TString pf_type="all"){
 
   text.SetTextSize(0.03);
   text.SetTextFont(42);
-  text.DrawLatex(0.62, 0.96, "Run2018 (13 TeV)");
+  text.DrawLatex(0.62, 0.96, "RunUL2016_VFP- 35.9fb^{-1}(13 TeV)");
 
-  c->Print("AK4_compare_sf_PF" + pf_type + ".pdf");
+  c->Print("./scalefactors_compare/AK4_compare_sf_PFchs_UL2016_Run_preVFPAPV_postVFP.pdf");
+//  c->Print("AK4_compare_sf_PFchs_UL18_GH_RunD_RunABCD_" + pf_type + ".pdf");
 }
 
 void setStyle(){

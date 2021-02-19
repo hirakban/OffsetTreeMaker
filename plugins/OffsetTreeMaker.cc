@@ -122,7 +122,9 @@ class OffsetTreeMaker : public edm::EDAnalyzer {
     vector<float> pf_pt, pf_eta, pf_phi, pf_et;
     //vector<string> eras;
 
-    TString RootFileName_, jetVetoMapFileName_, mapName_;
+    TString RootFileName_, jetVetoMapFileName_, mapName2_, mapName6_;
+    vector<vector<double>> JetVetoMap ;
+ 
     string puFileName_, era_, jet_type_;
     int numSkip_;
     bool isMC_, writeCands_, doL1L2L3Res_, dojetVetoMap_;
@@ -147,7 +149,8 @@ OffsetTreeMaker::OffsetTreeMaker(const edm::ParameterSet& iConfig)
   RootFileName_ = iConfig.getParameter<string>("RootFileName");
   puFileName_ = iConfig.getParameter<string>("puFileName");
   jetVetoMapFileName_ = iConfig.getParameter<string>("jetVetoMapFileName");
-  mapName_ = iConfig.getParameter<string>("mapName");
+  mapName2_ = iConfig.getParameter<string>("mapName2");
+  mapName6_ = iConfig.getParameter<string>("mapName6");
   isMC_ = iConfig.getParameter<bool>("isMC");
   writeCands_ = iConfig.getParameter<bool>("writeCands");
   pvTag_ = consumes< vector<reco::Vertex> >( iConfig.getParameter<edm::InputTag>("pvTag") );
@@ -183,7 +186,8 @@ void  OffsetTreeMaker::beginJob() {
   h_bestweight1 = new TH1F ("bestweight1", "bestweight1", 50, 0., 1.);
   
   if (dojetVetoMap_){
-    jetVetoMap( jetVetoMapFileName_,mapName_ );
+    jetVetoMap( jetVetoMapFileName_,mapName2_,mapName6_ );
+    JetVetoMap = getVetoMap();
   }
 
   if (!isMC_){
@@ -253,6 +257,8 @@ void  OffsetTreeMaker::beginJob() {
   tree->Branch("jet_hfh", jet_hfh, "jet_hfh[nJets]/F");
   tree->Branch("jet_hfe", jet_hfe, "jet_hfe[nJets]/F");
   tree->Branch("jet_lep", jet_lep, "jet_lep[nJets]/F");
+
+
 }
 
 // ------------ method called for each event  ------------
@@ -296,7 +302,6 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     if (mu==0) return;
   }
 
-  if (dojetVetoMap_){vector<vector<float>> JetVetoMap = getVetoMap();}
 
 //------------ Primary Vertices ------------//
 
@@ -304,6 +309,7 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   iEvent.getByToken(pvTag_, primaryVertices);
 
   nPVall = primaryVertices->size();
+  if(nPVall > MAXNPV) nPVall = MAXNPV ;
   nPV = 0;
 
   for (int i = 0; i != nPVall; ++i){
@@ -550,6 +556,8 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   for (int i=0; i != nJets; ++i){ // Looping through ALL the jets
     reco::PFJet jet = pfJets->at(i);
 
+
+/*  This part breaks the code. Temporarily commented
     bool jetVeto = false;
     if (dojetVetoMap_){
       for(int j=0; j != int((JetVetoMap[0]).size()); ++j){
@@ -558,6 +566,7 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       }
     }
     if (jetVeto) continue;
+*/
 
     // Applying L1 corrections
     jetCorrectors->setJetEta( jet.eta() );

@@ -54,7 +54,7 @@ int parsePileUpJSON2(string filename="lumi-per-bx.root") {
   }
 
 */
-int parsePileUpJSON2(string filename="pileup.txt") {
+int parsePileUpJSON2(string filename="pileup_2016.txt") {
   //### Using Brilcalc ###//
 /*  cout << "Opening " << filename << "...";
 

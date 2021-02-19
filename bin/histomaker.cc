@@ -10,6 +10,7 @@
 #include "TH2.h"
 #include "TTree.h"
 #include "TMath.h"
+#include "jetVetoMap.h" //newline
 
 #include <string>
 #include <cmath>
@@ -37,6 +38,10 @@ void FillProfile2D(const TString& histName, const Double_t& value1, const Double
 void getGeometry(double (&geo)[nEta][nEta], const float& rCone);
 double areaS(double R, double x1, double x2);
 double dist(double R, double x1, double x2);
+bool dojetVetoMap = true;					//newline
+TString jetVetoMapFileName = "hotjets-UL16.root";		//newline
+TString mapName2 = "h2hot_ul16_plus_hbm2_hbp12_qie11";		//newline
+TString mapName6 = "h2hot_mc";					//newline
 
 map<TString, TH1*> m_Histos1D;
 map<TString, TH2*> m_Histos2D;
@@ -253,12 +258,51 @@ int main(int argc, char* argv[]) {
   tree->SetBranchAddress("rho", &rho);
   tree->SetBranchAddress("nPV", &nPV);
 
+  // JetVetoMap implementation
+
+  double faulty_area[nEta] = {0.} ;
+  double fraction[nEta];  fill_n(fraction, nEta, 1.);
+    int il=0, ir=0 ;
+
+  vector<vector<double>> JetVetoMap ;
+  if (dojetVetoMap){
+    jetVetoMap( jetVetoMapFileName, mapName2, mapName6 );
+    JetVetoMap = getVetoMap();
+
+    for(int j=0;  j != int((JetVetoMap[0]).size());  ++j){  // loop over faulty patches ...  
+      double delta_phi = JetVetoMap[3][j] - JetVetoMap[2][j] ;
+      double delta_eta = 0. ;
+      //cout << j << "\t" << JetVetoMap[0][j] << endl;
+      for(int i = 0; i != nEta; ++i){  // loop over eta strips ...
+        if (etabins[i] <= JetVetoMap[0][j] && etabins[i+1] >= JetVetoMap[0][j] ) il  = i ;
+        if (etabins[i] <= JetVetoMap[1][j] && etabins[i+1] >= JetVetoMap[1][j] ) ir  = i ;
+      }
+      delta_eta = min(JetVetoMap[1][j] - JetVetoMap[0][j],  etabins[il+1] - JetVetoMap[0][j] ) ;
+      faulty_area[il] += delta_eta * delta_phi ;
+      while ( ir > il ){
+        il++ ;
+        delta_eta = min(JetVetoMap[1][j] - etabins[il], etabins[il+1] - etabins[il]) ;
+        faulty_area[il] += delta_eta * delta_phi ;
+      }
+    }
+  }    
+  for(int i = 0; i != nEta; ++i){ 
+    fraction[i] = 1. - faulty_area[i] / (2. * M_PI *( etabins[i+1] - etabins[i] ));
+    //cout << "fraction[" << i << "]= " << fraction[i] << "\t" << "Etabins=" << etabins[i] << endl;
+  }
+
   //Loop Over Entries//
 
   for (Long64_t n=0; n<nEntries; n++) {
     if (n % 100000 == 0) cout << "Processing Event " << n+1 << endl;
     tree->GetEntry(n);
     //if (jet_pt[0] > pt_cut) continue ; //to only select events with pT,corr < pt_cut
+    cout << "Processing Event " << n+1 << endl;
+    for (int ieta=0; ieta<nEta; ieta++){ 
+      //cout << "previous energy[" << ieta  <<"] = "<< energy[ieta] << endl; 
+      energy[ieta] = energy[ieta]/ fraction[ieta] ;
+      //cout << "new energy[" << ieta  <<"] = "<< energy[ieta] << endl;
+    } 
 
     float weight = isMC ? h_weights->GetBinContent( h_weights->FindBin(mu) ) : 1.;
 
