@@ -16,6 +16,7 @@
     luminosity=${args[1]}
 
   fi
+
   mc="Offset_MC_UL2016_${run_era}_total_R4.root"
   data="Offset_Data_UL2016_${run_era}_total_R4.root"
   outname="UL16_Run${run_era}_DataMC_R4_"
@@ -30,9 +31,8 @@
   ratio="true"
   label="Run2016${run_era}MC (13 TeV)"
 #  label="Run2016${run_era}-${luminosity}fb^{-1}(13 TeV)"
-#  pull_subplot="false"
-#  datamc_subplot="false"
-
+  subplot=""     # "pull" or "DataOverMC"
+  
 
 #1) All
 #2) Assoc. Charged Hadron
@@ -45,7 +45,7 @@
 #9) Median Charged Hadron Subtraction
 #10) Median All
 
-  cmds=( "root -l -b -q 'offsetpT.c (\"$mc\", \"$data\", \"$outname\", \"\", \"\", $R, 8, $n1, $n2, $topX, $topY)'"
+  cmds=( "root -l -b -q 'offsetpT.c (\"$mc\", \"$data\", \"$outname\", \"$subplot\", $R, 8, $n1, $n2, $topX, $topY)'"
          #"root -l -b -q 'offsetpT.c (\"$mc\", \"$data\", \"$outname\", $R, 9, $n1, $n2, $topX, $topY)'"
          "root -l -b -q 'scalefactor.c (\"$mc\", \"$data\", \"$outname\", $R, 8, $n1, $n2)'"
          #"root -l -b -q 'scalefactor.c (\"$mc\", \"$data\", \"$outname\", $R, 9, $n1, $n2)'"

@@ -23,7 +23,7 @@ float etabins[ETA_BINS+1] =
    1.566, 1.653, 1.74, 1.83, 1.93, 2.043, 2.172, 2.322, 2.5, 2.65, 2.853, 2.964, 3.139, 3.314, 3.489, 3.664, 3.839, 4.013,
    4.191, 4.363, 4.538, 4.716, 4.889, 5.191};
 
-void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TString dataName="/root_files_R48/Legacy_BCD_R4.root", TString outName = "UL17_RunBCDEF_V1_", TString pull_subplot = "", TString datamc_subplot = "", const double R=0.4, int pf_choice=1, int n1=10, int n2=52, float topX=52, float topY=52){
+void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TString dataName="/root_files_R48/Legacy_BCD_R4.root", TString outName = "UL17_RunBCDEF_V1_", TString subplot = "", const double R=0.4, int pf_choice=1, int n1=10, int n2=52, float topX=52, float topY=52){
   setStyle();
         
   int Rlabel = R*10;
@@ -34,9 +34,9 @@ void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TStrin
   bool isIndirect = true;   // indirectRho
   bool rhoCentral = false;
   bool pull = false;
-  if (pull_subplot == "true") pull = true ;
+  if (subplot == "pull") pull = true ;
   bool DataOverMC = false;
-  if (datamc_subplot == "true") DataOverMC = true;
+  if (subplot == "DataOverMC") DataOverMC = true;
   TString hp = "p";  // profiles (“p”) or histograms (“h”)
                 
   const int nPoints = n2-n1;
@@ -483,12 +483,11 @@ void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TStrin
       h2->GetXaxis()->SetTitleOffset(0.8);
 
       h2->GetYaxis()->SetTitle("Data/MC");
-      h2->GetYaxis()->SetTitleOffset(0.4);
+      h2->GetYaxis()->SetTitleOffset(0.5);
       h2->GetYaxis()->SetRangeUser(0.9, 1.1);
       h2->GetYaxis()->SetNdivisions(5, 3, 0);
       h2->GetYaxis()->SetLabelSize(0.04/b_scale);
-      //h2->GetYaxis()->CenterTitle(true);
-      h2->GetYaxis()->SetTitleSize(0.05/b_scale);
+      h2->GetYaxis()->SetTitleSize(0.04/b_scale);
 
       h2->Draw();
       datamcGraph->SetMarkerStyle(24);
