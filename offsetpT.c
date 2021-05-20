@@ -33,10 +33,6 @@ void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TStrin
   TString var_type = "nPU"; // nPU, nPV
   bool isIndirect = true;   // indirectRho
   bool rhoCentral = false;
-  bool pull = false;
-  if (subplot == "pull") pull = true ;
-  bool DataOverMC = false;
-  if (subplot == "DataOverMC") DataOverMC = true;
   TString hp = "p";  // profiles (“p”) or histograms (“h”)
                 
   const int nPoints = n2-n1;
@@ -211,7 +207,7 @@ void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TStrin
 
       mc_y.push_back( mcProfiles[n]->GetBinContent(i+1) );
       data_y.push_back( dataProfiles[n]->GetBinContent(i+1) );
-      data_to_mc.push_back( mc_y.back()/data_y.back() );
+      data_to_mc.push_back( data_y.back()/mc_y.back() );
 
       mc_error.push_back( 0.02 * mc_y.back() );
       data_error.push_back( 0.02 * data_y.back() );
@@ -248,59 +244,7 @@ void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TStrin
     else if ( var_type.EqualTo("nPU") ) xTitle = "#mu";
     else if ( var_type.EqualTo("indirectRho") ) xTitle = "<#rho> (GeV)";
 
-    if (!pull && !DataOverMC){
-      TCanvas* c = new TCanvas("c", "c", 600, 600);
-      TH1F* h = new TH1F("h", "h", 100, 0, topX);
-
-      h->GetXaxis()->SetTitle(xTitle);
-      h->GetYaxis()->SetTitle("Offset p_{T} (GeV)");
-      h->GetYaxis()->SetTitleOffset(1.05);
-      h->GetYaxis()->SetRangeUser(0, topY);
-
-      h->Draw();
-      dataGraph->SetMarkerStyle(20);
-      dataGraph->SetMarkerColor(1);
-      dataGraph->Draw("Psame");
-      mcGraph->SetMarkerStyle(24);
-      mcGraph->SetMarkerColor(2);
-      mcGraph->SetLineColor(2);
-      mcGraph->Draw("Psame");
-
-      TLatex text;
-      text.SetNDC();
-      text.SetTextSize(0.04);
-
-      if (pf_type.EqualTo("all"))
-        text.DrawLatex(0.17, 0.96, Form("AK%i PF %4.3f #leq #eta #leq %4.3f", Rlabel, etabins[i], etabins[i+1]) );
-      else
-        text.DrawLatex(0.17, 0.96, Form("AK%i PF%s %4.3f #leq #eta #leq %4.3f", Rlabel, pf_type.Data(), etabins[i], etabins[i+1]) );
-
-      text.DrawLatex(0.2, 0.88, "Data");
-      text.DrawLatex(0.2, 0.84, Form("#chi^{2}/ndof = %4.2f/%i", f_data->GetChisquare(), f_data->GetNDF() ) );
-      text.DrawLatex(0.2, 0.8, Form("p0 = %4.3f #pm %4.3f", f_data->GetParameter(0), f_data->GetParError(0) ) );
-      text.DrawLatex(0.2, 0.76, Form("p1 = %4.3f #pm %4.3f", f_data->GetParameter(1), f_data->GetParError(1) ) );
-      text.DrawLatex(0.2, 0.72, Form("p2 = %4.4f #pm %4.4f", f_data->GetParameter(2), f_data->GetParError(2) ) );
-      text.SetTextColor(2);
-      text.DrawLatex(0.2, 0.64, "MC");
-      text.DrawLatex(0.2, 0.6, Form("#chi^{2}/ndof = %4.2f/%i", f_mc->GetChisquare(), f_mc->GetNDF() ) );
-      text.DrawLatex(0.2, 0.56, Form("p0 = %4.3f #pm %4.3f", f_mc->GetParameter(0), f_mc->GetParError(0) ) );
-      text.DrawLatex(0.2, 0.52, Form("p1 = %4.3f #pm %4.3f", f_mc->GetParameter(1), f_mc->GetParError(1) ) );
-      text.DrawLatex(0.2, 0.48, Form("p2 = %4.4f #pm %4.4f", f_mc->GetParameter(2), f_mc->GetParError(2) ) );
-      text.SetTextSize(0.035);
-      text.SetTextFont(42);
-      text.SetTextColor(1);
-      text.DrawLatex( 0.8, 0.96, "#sqrt{s} = 13 TeV" );
-
-      //cout << "Data: " << f_data->GetParameter(0) << "\t" << f_data->GetParameter(1) << "\t" << f_data->GetParameter(2) << endl;
-      //cout << "MC: " << f_mc->GetParameter(0) << "\t" << f_mc->GetParameter(1) << "\t" << f_mc->GetParameter(2) << endl;
-      //cout << f_data->GetChisquare() / f_data->GetNDF() << "\t" << f_mc->GetChisquare() / f_mc->GetNDF() << endl;
-
-      c->Print("./text_files/" + var_type + Form("/R%i/",Rlabel) + pf_type + "/" + outName + pf_type + "_pT_" + var_type + Form("_eta%4.3f", etabins[i]) + ".pdf");
-      delete h;
-      delete c;
-    }
-
-    else if (pull){
+    if (subplot == "pull"){
       TCanvas* c = new TCanvas("c", "c", 600, 600);
       gStyle->SetOptStat(0);
 
@@ -413,7 +357,7 @@ void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TStrin
       delete c;
     }
 
-    else if (!pull && DataOverMC){
+    else if (subplot == "DataOverMC"){
       TCanvas* c = new TCanvas("c", "c", 600, 600);
       TH1F* h = new TH1F("h", "h", 100, 0, topX);
       TH1F* h2 = new TH1F("h2", "h2", 100, 0, topX);
@@ -499,8 +443,60 @@ void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TStrin
 
       c->Print("./text_files/" + var_type + Form("/R%i/",Rlabel) + pf_type + "/" + outName + pf_type + "_pT_" + var_type + Form("_eta%4.3f", etabins[i]) + ".pdf");
       delete h;
-      delete c;
       delete h2;
+      delete c;
+    }
+
+    else {
+      TCanvas* c = new TCanvas("c", "c", 600, 600);
+      TH1F* h = new TH1F("h", "h", 100, 0, topX);
+
+      h->GetXaxis()->SetTitle(xTitle);
+      h->GetYaxis()->SetTitle("Offset p_{T} (GeV)");
+      h->GetYaxis()->SetTitleOffset(1.05);
+      h->GetYaxis()->SetRangeUser(0, topY);
+
+      h->Draw();
+      dataGraph->SetMarkerStyle(20);
+      dataGraph->SetMarkerColor(1);
+      dataGraph->Draw("Psame");
+      mcGraph->SetMarkerStyle(24);
+      mcGraph->SetMarkerColor(2);
+      mcGraph->SetLineColor(2);
+      mcGraph->Draw("Psame");
+
+      TLatex text;
+      text.SetNDC();
+      text.SetTextSize(0.04);
+
+      if (pf_type.EqualTo("all"))
+        text.DrawLatex(0.17, 0.96, Form("AK%i PF %4.3f #leq #eta #leq %4.3f", Rlabel, etabins[i], etabins[i+1]) );
+      else
+        text.DrawLatex(0.17, 0.96, Form("AK%i PF%s %4.3f #leq #eta #leq %4.3f", Rlabel, pf_type.Data(), etabins[i], etabins[i+1]) );
+
+      text.DrawLatex(0.2, 0.88, "Data");
+      text.DrawLatex(0.2, 0.84, Form("#chi^{2}/ndof = %4.2f/%i", f_data->GetChisquare(), f_data->GetNDF() ) );
+      text.DrawLatex(0.2, 0.8, Form("p0 = %4.3f #pm %4.3f", f_data->GetParameter(0), f_data->GetParError(0) ) );
+      text.DrawLatex(0.2, 0.76, Form("p1 = %4.3f #pm %4.3f", f_data->GetParameter(1), f_data->GetParError(1) ) );
+      text.DrawLatex(0.2, 0.72, Form("p2 = %4.4f #pm %4.4f", f_data->GetParameter(2), f_data->GetParError(2) ) );
+      text.SetTextColor(2);
+      text.DrawLatex(0.2, 0.64, "MC");
+      text.DrawLatex(0.2, 0.6, Form("#chi^{2}/ndof = %4.2f/%i", f_mc->GetChisquare(), f_mc->GetNDF() ) );
+      text.DrawLatex(0.2, 0.56, Form("p0 = %4.3f #pm %4.3f", f_mc->GetParameter(0), f_mc->GetParError(0) ) );
+      text.DrawLatex(0.2, 0.52, Form("p1 = %4.3f #pm %4.3f", f_mc->GetParameter(1), f_mc->GetParError(1) ) );
+      text.DrawLatex(0.2, 0.48, Form("p2 = %4.4f #pm %4.4f", f_mc->GetParameter(2), f_mc->GetParError(2) ) );
+      text.SetTextSize(0.035);
+      text.SetTextFont(42);
+      text.SetTextColor(1);
+      text.DrawLatex( 0.8, 0.96, "#sqrt{s} = 13 TeV" );
+
+      //cout << "Data: " << f_data->GetParameter(0) << "\t" << f_data->GetParameter(1) << "\t" << f_data->GetParameter(2) << endl;
+      //cout << "MC: " << f_mc->GetParameter(0) << "\t" << f_mc->GetParameter(1) << "\t" << f_mc->GetParameter(2) << endl;
+      //cout << f_data->GetChisquare() / f_data->GetNDF() << "\t" << f_mc->GetChisquare() / f_mc->GetNDF() << endl;
+
+      c->Print("./text_files/" + var_type + Form("/R%i/",Rlabel) + pf_type + "/" + outName + pf_type + "_pT_" + var_type + Form("_eta%4.3f", etabins[i]) + ".pdf");
+      delete h;
+      delete c;
     }
 
   }
