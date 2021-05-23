@@ -351,7 +351,7 @@ void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TStrin
 
       bottom->SetGrid(0,1);
 
-      c->Print("./text_files/" + var_type + Form("/R%i/",Rlabel) + pf_type + "/pull/" + outName + pf_type + "_pT_" + var_type + Form("_eta%4.3f", etabins[i]) + "_pull.pdf");
+      c->Print("./text_files/" + var_type + Form("/R%i/",Rlabel) + pf_type + "/subplot/" + outName + pf_type + "_pT_" + var_type + Form("_eta%4.3f", etabins[i]) + "_pull.pdf");
       delete h1;
       delete h2;
       delete c;
@@ -420,6 +420,9 @@ void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TStrin
 
       bottom->cd();
 
+      double max_ratio = *max_element(data_to_mc.begin(), data_to_mc.end());
+      double min_ratio = *min_element(data_to_mc.begin(), data_to_mc.end());
+
       h2->GetXaxis()->SetTitle(xTitle);
       h2->GetXaxis()->SetLabelSize(0.035/b_scale);
       h2->GetXaxis()->SetTickLength(0.03/b_scale);
@@ -428,7 +431,7 @@ void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TStrin
 
       h2->GetYaxis()->SetTitle("Data/MC");
       h2->GetYaxis()->SetTitleOffset(0.5);
-      h2->GetYaxis()->SetRangeUser(0.9, 1.1);
+      h2->GetYaxis()->SetRangeUser(0.8*min_ratio, 1.2*max_ratio);
       h2->GetYaxis()->SetNdivisions(5, 3, 0);
       h2->GetYaxis()->SetLabelSize(0.04/b_scale);
       h2->GetYaxis()->SetTitleSize(0.04/b_scale);
@@ -440,11 +443,10 @@ void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TStrin
 
       bottom->SetGrid(0,1);
       
-
-      c->Print("./text_files/" + var_type + Form("/R%i/",Rlabel) + pf_type + "/" + outName + pf_type + "_pT_" + var_type + Form("_eta%4.3f", etabins[i]) + ".pdf");
+      c->Print("./text_files/" + var_type + Form("/R%i/",Rlabel) + pf_type + "/subplot/" + outName + pf_type + "_pT_" + var_type + Form("_eta%4.3f", etabins[i]) + "_DataOverMC.pdf");
       delete h;
-      delete h2;
       delete c;
+      delete h2;
     }
 
     else {
