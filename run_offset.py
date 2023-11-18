@@ -16,41 +16,45 @@ process.options.allowUnscheduled = cms.untracked.bool(True)
 readFiles = cms.untracked.vstring()
 process.source = cms.Source ("PoolSource", fileNames = readFiles)
 readFiles.extend( [
-  #'/store/data/Run2016H/ZeroBias/AOD/21Feb2020_UL2016-v1/10000/0006A32E-2FBB-0E41-AEDC-09C6567AF6BB.root'
-  #'/store/mc/RunIISummer19UL16RECO/SingleNeutrino/AODSIM/FlatPU0to70_106X_mcRun2_asymptotic_v13-v3/00000/004AFBFB-E370-3348-9647-935ED2280698.root'
-  '/store/mc/RunIISummer20UL16RECOAPV/SingleNeutrino/AODSIM/FlatPU0to75_106X_mcRun2_asymptotic_preVFP_v8_ext1-v2/260000/004863CA-6D89-1C4E-8256-4849476EEAEE.root'
+# '/store/data/Run2022C/ZeroBias/AOD/27Jun2023-v1/2820000/0138650f-11ec-401a-bb88-20c87aa0619c.root'
+# '/store/data/Run2022D/ZeroBias/AOD/27Jun2023-v1/2830000/b944540d-d254-48f2-87b2-d2b19062736f.root' 
+# '/store/data/Run2022E/ZeroBias/AOD/27Jun2023-v1/2810000/7c703acf-2195-4823-a33a-7dc912c32609.root'
+# '/store/data/Run2022F/ZeroBias/AOD/PromptReco-v1/000/360/393/00000/67126efe-5df8-4231-affc-9b6174e79547.root'
+# '/store/data/Run2022G/ZeroBias/AOD/PromptReco-v1/000/362/439/00000/41d9f7f2-d0a7-44f3-8b25-6a3a1c859bec.root'
+ '/store/data/Run2023C/ZeroBias/AOD/PromptReco-v1/000/367/095/00000/376d252a-3cd0-4919-a629-d074be68fc05.root'
+# '/store/data/Run2023D/ZeroBias/AOD/PromptReco-v1/000/369/869/00000/a3832f72-9dbc-4b16-8ade-68e02ecc0797.root'
 ] );
 
-isMC = cms.bool(True)
+isMC = cms.bool(False)
 
 if isMC:
-  #OutputName = "_MC_UL2016_"
-  OutputName = "_MC_Summer20UL16_preVFP_APV"
-  eraName = "Summer19UL18_V5_MC"
+  OutputName = "_MC_Summer20UL18"
+  eraName = "Summer20UL18_V2_MC"
   jetType_name = "AK4PFchs" # or "AK4PF"
 
-  process.load( "Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff" )
+  process.load( "Configuration.StandardSequences.FrontierConditions_GlobalTag_cff" )
   from Configuration.AlCa.GlobalTag import GlobalTag
-  #process.GlobalTag = GlobalTag( process.GlobalTag, '106X_mcRun2_asymptotic_v13' )
-  process.GlobalTag = GlobalTag( process.GlobalTag, '106X_mcRun2_asymptotic_preVFP_v8' )
+  process.GlobalTag = GlobalTag( process.GlobalTag, '106X_upgrade2018_realistic_v16_L1v1' )
+  #process.GlobalTag = GlobalTag( process.GlobalTag, '106X_mcRun2_asymptotic_preVFP_v8' )
 
 
 else:
-  run = "B_ver2"
-  OutputName = "_Data_UL2016"+run
-  eraName = "Summer16_07Aug2017"+"BCD"+"_V11_DATA"
+  run = "2023_RunC"
+  OutputName = "_Run3_Data_"+run+"_v4"
+#  eraName = "Winter22Run3"+"_RunD"+"_V2_DATA"
   jetType_name = "AK4PFchs" # or "AK4PF"
 
   process.load( "Configuration.Geometry.GeometryIdeal_cff" )
   process.load( "Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cff" )
-  process.load( "Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff" )
+  process.load( "Configuration.StandardSequences.FrontierConditions_GlobalTag_cff" )
   from Configuration.AlCa.GlobalTag import GlobalTag
-  process.GlobalTag = GlobalTag( process.GlobalTag, '106X_dataRun2_v27' )
+  process.GlobalTag = GlobalTag( process.GlobalTag, '130X_dataRun3_Prompt_v3' )
 
   # ZeroBias Trigger
   process.HLTZeroBias =cms.EDFilter("HLTHighLevel",
     TriggerResultsTag = cms.InputTag("TriggerResults","","HLT"),
-    HLTPaths = cms.vstring('HLT_ZeroBias_part*','HLT_ZeroBias_v*'),
+    #HLTPaths = cms.vstring('HLT_ZeroBias_part*','HLT_ZeroBias_v*'),
+    HLTPaths = cms.vstring('HLT_ZeroBias_v*'),
     eventSetupPathsKey = cms.string(''),
     andOr = cms.bool(True), #----- True = OR, False = AND between the HLTPaths
     throw = cms.bool(False)
@@ -68,12 +72,11 @@ else:
   )
 
 process.pf = cms.EDAnalyzer("OffsetTreeMaker",
-    numSkip = cms.int32(5),
+    numSkip = cms.int32(23),
     RootFileName = cms.string("Offset" + OutputName + ".root"),
-    puFileName = cms.string("pileup_2016.txt"),
-    jetVetoMapFileName = cms.string("hotjets-UL16.root"),
-    mapName2 = cms.string("h2hot_ul16_plus_hbm2_hbp12_qie11"),
-    mapName6 = cms.string("h2hot_mc"),
+    puFileName = cms.string("pileup_2023.txt"),
+    jetVetoMapFileName = cms.string("vetomaps_Summer23Prompt23_RunBC_v1.root"),
+    mapName2 = cms.string("jetvetomap_all"),
     isMC = isMC,
     writeCands = cms.bool(False),
     trackTag = cms.InputTag("generalTracks"),
@@ -85,10 +88,11 @@ process.pf = cms.EDAnalyzer("OffsetTreeMaker",
     rhoC0Tag = cms.InputTag("fixedGridRhoFastjetCentralNeutral"),
     rhoCCTag = cms.InputTag("fixedGridRhoFastjetCentralChargedPileUp"),
     pfJetTag = cms.InputTag("ak4PFJetsCHS"),
-    era = cms.string(eraName),
+    #era = cms.string(eraName),
     jet_type = cms.string(jetType_name),
-    doL1L2L3Res = cms.bool(True),
-    dojetVetoMap = cms.bool(True)
+    doL1L2L3Res = cms.bool(False),
+    dojetVetoMap = cms.bool(True),
+    writeEnergyDeposition = cms.bool(True)
     #miniAOD
     #trackTag = cms.InputTag("lostTracks"),
     #pfTag = cms.InputTag("packedPFCandidates"),

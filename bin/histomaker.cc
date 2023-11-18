@@ -39,9 +39,9 @@ void getGeometry(double (&geo)[nEta][nEta], const float& rCone);
 double areaS(double R, double x1, double x2);
 double dist(double R, double x1, double x2);
 bool dojetVetoMap = true;					//newline
-TString jetVetoMapFileName = "hotjets-UL16.root";		//newline
-TString mapName2 = "h2hot_ul16_plus_hbm2_hbp12_qie11";		//newline
-TString mapName6 = "h2hot_mc";					//newline
+TString jetVetoMapFileName = "vetomaps_Winter22Run3_RunCD_v1.root";		//newline
+TString mapName2 = "jetvetomap_all";		//newline
+//TString mapName6 = "h2hot_mc";					//newline
 
 map<TString, TH1*> m_Histos1D;
 map<TString, TH2*> m_Histos2D;
@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
   //Open Files//
 
   TString inName = isMC ? argv[4] : dataName;
-  TString outName = inName( inName.Last('/')+1, inName.Last('.')-inName.Last('/')-1 );
+  TString outName = "histomaker_outputs/" + inName( inName.Last('/')+1, inName.Last('.')-inName.Last('/')-1 );
   outName += "_R" + to_string( int(rCone*10) ) + ".root";
   cout << "output:" << "\t" << outName << endl;
   cout << "inName:" << "\t" << inName << endl;
@@ -266,7 +266,7 @@ int main(int argc, char* argv[]) {
 
   vector<vector<double>> JetVetoMap ;
   if (dojetVetoMap){
-    jetVetoMap( jetVetoMapFileName, mapName2, mapName6 );
+    jetVetoMap( jetVetoMapFileName, mapName2); // mapName6
     JetVetoMap = getVetoMap();
 
     for(int j=0;  j != int((JetVetoMap[0]).size());  ++j){  // loop over faulty patches ...  
