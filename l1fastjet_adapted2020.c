@@ -63,14 +63,25 @@ void l1fastjet_adapted2020(TString pf_type="chs"){
   if (par == 0) para_choice ="Simple";
   else if (par == 1) para_choice ="SemiSimple";
   else if (par == 2) para_choice ="Complex";
+  cout << para_choice << endl;
 
-  TFile* mc_root = TFile::Open(Form("/eos/uscms/store/group/lpcjme/L1Offset/UltraLegacy17_scalefactors/jetSort/Total_MC_UL2017%s_R%i.root",run_name.c_str(),Rlabel));
-  TFile* data_root = TFile::Open( Form("/eos/uscms/store/group/lpcjme/L1Offset/UltraLegacy17_scalefactors/jetSort/Total_Data_UL2017%s_R%i.root",run_name.c_str(),Rlabel ) );
+//Files for UL16
 
-  ifstream scale_file( Form("plots/scalefactor/Run%s/R%i/UL17_Run%s_DataMcSF_L1RC_AK%iPF", run_name.c_str(), Rlabel, run_name.c_str(), Rlabel) + pf_type + ".txt" );
+  TFile* mc_root = TFile::Open(Form("/uscms/home/hirakban/nobackup/l10ffset/Run3_l1offset/CMSSW_13_0_13/src/test/OffsetTreeMaker/histomaker_outputs/Offset_MC_Run3%s_Offset_Data_Run2022EFG_R%i.root",run_name.c_str(),Rlabel ));
+  TFile* data_root = TFile::Open( Form("/uscms/home/hirakban/nobackup/l10ffset/Run3_l1offset/CMSSW_13_0_13/src/test/OffsetTreeMaker/histomaker_outputs/Offset_Data_Run2022EFG_R%i.root",Rlabel ) );
+
+//  TFile* mc_root = TFile::Open("/uscms/home/hirakban/nobackup/l10ffset/Run3_l1offset/CMSSW_13_0_13/src/test/OffsetTreeMaker/histomaker_outputs/Offset_MC_Run3Summer23BPix_Offset_Data_Run2023D_v2_R4.root");
+//  TFile* data_root = TFile::Open("/uscms/home/hirakban/nobackup/l10ffset/Run3_l1offset/CMSSW_13_0_13/src/test/OffsetTreeMaker/histomaker_outputs/Offset_Data_Run2023D-PromptReco-v1_R4.root" );
+
+//  ifstream scale_file( Form("textfiles_Run3/scalefactor/R%i/chs/Run3-%s_DataMC_R%i_DataMcSF_L1RC_AK%iPF", Rlabel, run_name.c_str(), Rlabel, Rlabel) + pf_type + ".txt" );
+
+  ifstream scale_file( Form("textfiles_Run3/scalefactor/R%i/chs/Run3-%s_DataMC_R%i_DataMcSF_L1RC_AK%iPF", Rlabel, run_name.c_str(), Rlabel, Rlabel) + pf_type + ".txt" );
+
   string pf_type_MC=" ";
   if(pf_type.Contains("chs")) pf_type_MC="chs";
-  ifstream mc_file( Form("ApplicationL1_pt0to6500/%sL1/ParallelMCL1_L1FastJet_AK%iPF", para_choice.c_str(), Rlabel) + pf_type_MC + "_L1"+ para_choice+".txt" );
+
+  ifstream mc_file( "Run3_MC_L1FastJet_files/Summer22EERun3_V1_MC_L1FastJet_AK4PFchs.txt" );
+
   string scale_line, mc_line, mcheader_line;
 
   //read first line
@@ -113,7 +124,7 @@ void l1fastjet_adapted2020(TString pf_type="chs"){
   cout << "MC Formula: " << mc_formula << endl;
 
   if (mc_formula.Contains("pow(y,0)") && (par == 0)){
-    //cout << "L1Simple Parametrisation" << endl;
+    cout << "L1Simple Parametrisation" << endl;
     int lines;
     mc_file.clear();
     mc_file.seekg(0, mc_file.beg);
@@ -142,7 +153,7 @@ void l1fastjet_adapted2020(TString pf_type="chs"){
     }
   }
   else if (mc_formula.Contains("log(y/15.)") && (par == 1)){
-    //cout << "L1SemiSimple Parametrisation" << endl;
+    cout << "L1SemiSimple Parametrisation" << endl;
     int lines;
     mc_file.clear();
     mc_file.seekg(0, mc_file.beg);
@@ -172,7 +183,7 @@ void l1fastjet_adapted2020(TString pf_type="chs"){
     }
   }
   else if (mc_formula.Contains("pow(log(y/30.0),2)") && (par == 2)) {
-    //cout << "L1Complex Parametrisation" << endl;
+    cout << "L1Complex Parametrisation" << endl;
     unsigned first_delim_pos = string(mc_formula).find("*(x-");
     rho_offset_str = string(mc_formula).substr(first_delim_pos+4,4);
     rho_offset = stod(rho_offset_str);
@@ -279,6 +290,9 @@ void l1fastjet_adapted2020(TString pf_type="chs"){
       new_p2[i] = mc_p2[i];
       new_p3[i] = (double(rho_nominal) / double(mc_rho_mean));
       new_p4[i] = sf[i];
+      //new_p4[i] = scale_p0[i];
+      //new_p5[i] = scale_p1[i];
+      //new_p6[i] = scale_p2[i];
     }
     else if ( par == 2 ) {
       //cout << "L1Complex" << endl;
@@ -296,7 +310,8 @@ void l1fastjet_adapted2020(TString pf_type="chs"){
       rho_offset_str = stream.str();*/
     }
   }
-  ofstream writeFile( Form("plots/scalefactor/Run%s/UL17_Run%s_L1%s_L1FastJet_AK%iPF", run_name.c_str(), run_name.c_str(), para_choice.c_str(), Rlabel) + pf_type + ".txt");
+//  ofstream writeFile( Form("Run3_DATA_L1FastJet_files/Run3-%s_L1%s_L1FastJet_AK%iPF", run_name.c_str(), para_choice.c_str(), Rlabel) + pf_type + "_SF_rho.txt");
+  ofstream writeFile( Form("Run3_DATA_L1FastJet_files/Run3-%s_L1%s_L1FastJet_AK%iPF", run_name.c_str(), para_choice.c_str(), Rlabel) + pf_type + ".txt");
 
   if (par==0){
     mc_file.clear();
@@ -346,6 +361,7 @@ void l1fastjet_adapted2020(TString pf_type="chs"){
     getline(mc_file,mc_line);
     boost::replace_all(mc_line, "(x-[0])", "(x/[3]-[0])");
     boost::replace_all(mc_line,"(z/y)","(z/y)*[4]");
+    //boost::replace_all(mc_line,"(z/y)","(z/y)*([4]+[5]*x+[6]*pow(x,2))");  // For calculating SF on the fly.
     writeFile << mc_line << endl;
     cout <<"Data Formula: "<< mc_line << endl;
 
@@ -362,7 +378,8 @@ void l1fastjet_adapted2020(TString pf_type="chs"){
 
         while (!mc_line.empty() && mc_line.at(0) == ' ')  //get rid of white space between columns
           mc_line.erase(0, 1);
-        if (col_num == 3) str = to_string(11);
+        //if (col_num == 3) str = to_string(11);
+        if (col_num == 3) str = to_string(13);
         if (col_num == 10) str = my::to_string(new_p0[i]);
         else if (col_num == 11) str = my::to_string(new_p1[i]);
         int w = (col_num < 9) ? 10 : 17;
@@ -375,6 +392,12 @@ void l1fastjet_adapted2020(TString pf_type="chs"){
       writeFile << right << setprecision(10) << str << setw(17);
       str = my::to_string(new_p4[i]);
       writeFile << right << setprecision(10) << str << endl;
+      //str = my::to_string(new_p4[i]);
+      //writeFile << right << setprecision(10) << str << setw(17);
+      //str = my::to_string(new_p5[i]);
+      //writeFile << right << setprecision(10) << str << setw(17);
+      //str = my::to_string(new_p6[i]);
+      //writeFile << right << setprecision(10) << str << endl;
       //writeFile << mc_line << endl;
     }
     mc_file.close();
@@ -439,7 +462,7 @@ void l1fastjet_adapted2020(TString pf_type="chs"){
   h->GetYaxis()->SetTitle("Scale Factor");
   h->GetYaxis()->SetTitleOffset(1.2);
   if(pf_type=="all") h->GetYaxis()->SetRangeUser(0.6, 1.3);
-  else h->GetYaxis()->SetRangeUser(0.6, 1.3);
+  else h->GetYaxis()->SetRangeUser(0.6, 1.6);
   h->Draw();
 
   graph->SetMarkerStyle(20);
@@ -479,12 +502,12 @@ void l1fastjet_adapted2020(TString pf_type="chs"){
   text.DrawLatex(0.45, leg-0.07, Form( "#bf{#rho_{%sData} = %4.1f^{ #color[2]{%4.1f}}_{ #color[4]{%4.1f}} GeV}" , rho_string.c_str(), rho_nominal, rho_high, rho_low ) );
   text.DrawLatex(0.45, leg-0.14, Form( "#bf{#rho_{%sMC} = %4.1f^{ #color[2]{%4.1f}}_{ #color[4]{%4.1f}} GeV}" , rho_string.c_str(), mc_rho_mean, mc_rho_high, mc_rho_low ) );
 
-  text.SetTextSize(0.04);
+  text.SetTextSize(0.03);
   text.SetTextColor(2);
   text.SetTextFont(42);
-  text.DrawLatex(0.48, 0.96, Form("Run 2017%s  - %2.2f fb^{-1} (13 TeV)", run_name.c_str() , luminosity ) );
+  text.DrawLatex(0.4, 0.96, Form("Run3-%s (13.6 TeV)", run_name.c_str()) );
 
-  c->Print("L1"+para_choice+"_L1fastjet_scalefactor_eta_PF" + pf_type + Form("%s.pdf",run_name.c_str()) );
+//  c->Print(Form("Run3_DATA_L1FastJet_files/Run3-%s_L1", run_name.c_str()) +para_choice+"_L1fastjet_scalefactor_eta_" + Form("AK%i",Rlabel) + "PF" + pf_type + ".pdf" );
 }
 
 void setStyle(){

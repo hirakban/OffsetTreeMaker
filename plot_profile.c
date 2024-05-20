@@ -146,13 +146,15 @@ void plot_profile(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TS
     text.SetNDC();
     text.SetTextSize(0.04);
 
-    text.DrawLatex(0.2, 0.88, "Data");
+//    text.DrawLatex(0.2, 0.88, "Data");
+    text.DrawLatex(0.2, 0.88, "Data: Run2023D");
     text.DrawLatex(0.2, 0.84, Form("#chi^{2}/ndof = %4.2f/%i", f_data->GetChisquare(), f_data->GetNDF() ) );
     text.DrawLatex(0.2, 0.8, Form("p0 = %4.3f #pm %4.3f", f_data->GetParameter(0), f_data->GetParError(0) ) );
     text.DrawLatex(0.2, 0.76, Form("p1 = %4.3f #pm %4.3f", f_data->GetParameter(1), f_data->GetParError(1) ) );
     text.DrawLatex(0.2, 0.72, Form("p2 = %4.4f #pm %4.4f", f_data->GetParameter(2), f_data->GetParError(2) ) );
     text.SetTextColor(2);
-    text.DrawLatex(0.2, 0.64, "MC");
+//    text.DrawLatex(0.2, 0.64, "MC");
+    text.DrawLatex(0.2, 0.64, "MC: Summer23BPix");
     text.DrawLatex(0.2, 0.6, Form("#chi^{2}/ndof = %4.2f/%i", f_mc->GetChisquare(), f_mc->GetNDF() ) );
     text.DrawLatex(0.2, 0.56, Form("p0 = %4.3f #pm %4.3f", f_mc->GetParameter(0), f_mc->GetParError(0) ) );
     text.DrawLatex(0.2, 0.52, Form("p1 = %4.3f #pm %4.3f", f_mc->GetParameter(1), f_mc->GetParError(1) ) );
@@ -161,7 +163,7 @@ void plot_profile(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TS
     text.SetTextColor(1);
     text.SetTextSize(0.045);
     text.SetTextFont(42);
-    text.DrawLatex(0.58, 0.96, label );
+    text.DrawLatex(0.65, 0.96, label );
 
     bottom->cd();
     TH1D* h2 = new TH1D("h2", "h2", 100, n1, topX);
@@ -172,15 +174,16 @@ void plot_profile(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TS
     h2->GetXaxis()->SetTitleOffset(0.75);
     h2->GetXaxis()->SetTitle("#mu");
 
-    if(yvar_type[i].EqualTo("nPV")) h2->GetYaxis()->SetRangeUser(0.4, 2.0);
-    else h2->GetYaxis()->SetRangeUser(0.8, 1.1);
+    if(yvar_type[i].EqualTo("nPV")) h2->GetYaxis()->SetRangeUser(0.9, 1.1);
+    else h2->GetYaxis()->SetRangeUser(0.9, 1.1);
     h2->GetYaxis()->SetNdivisions(5, 3, 0);
 
     h2->GetYaxis()->SetLabelSize(0.12);
     h2->GetYaxis()->SetTitle("Data/MC");
+//    h2->GetYaxis()->SetTitle("S23BPix/S23");
 
-    h2->GetYaxis()->SetTitleSize(0.15);
-    h2->GetYaxis()->SetTitleOffset(0.43);
+    h2->GetYaxis()->SetTitleSize(0.12);
+    h2->GetYaxis()->SetTitleOffset(0.55);
 
     ratioGraph->SetMarkerStyle(24);
     ratioGraph->SetMarkerColor();

@@ -23,6 +23,7 @@ float etabins[ETA_BINS+1] =
    1.566, 1.653, 1.74, 1.83, 1.93, 2.043, 2.172, 2.322, 2.5, 2.65, 2.853, 2.964, 3.139, 3.314, 3.489, 3.664, 3.839, 4.013,
    4.191, 4.363, 4.538, 4.716, 4.889, 5.191};
 
+
 void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TString dataName="/root_files_R48/Legacy_BCD_R4.root", TString outName = "UL17_RunBCDEF_V1_", TString subplot = "", const double R=0.4, int pf_choice=1, int n1=10, int n2=52, float topX=52, float topY=52){
   setStyle();
         
@@ -31,9 +32,9 @@ void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TStrin
   TFile* mcFile = TFile::Open(mcName);
   TFile* dataFile = TFile::Open(dataName);//_pTcut15GeV
   TString var_type = "nPU"; // nPU, nPV
-  bool isIndirect = true;   // indirectRho
+  bool isIndirect = false;   // indirectRho
   bool rhoCentral = false;
-  TString hp = "p";  // profiles (“p”) or histograms (“h”)
+  TString hp = "p";  // profiles (“p”) or histograms (“h”) or "depth"
                 
   const int nPoints = n2-n1;
 
@@ -56,6 +57,12 @@ void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TStrin
   
   vector<TString> ids = {"ne", "hfe", "nh", "hfh", "chu", "chm"};
 
+//----------nh depth------
+
+    int depth_layer = 4 ;
+
+//--------------------------
+
   for (int n=0; n<nPoints; n++){
     if(hp.EqualTo("h")){
       TString hieta = Form("h_ieta_nPU%i", n1+n); 
@@ -69,7 +76,7 @@ void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TStrin
       dataIetas.push_back(h_data);
     }
 
-    if (pf_type.EqualTo("all") || pf_type.EqualTo("chs")){  
+    if (pf_type.EqualTo("all") || pf_type.EqualTo("chs")){
       int kk = pf_type.EqualTo("all")  ? 1 : 2 ; // add up all histograms (“all”) or add up all histograms except chm (“chs”)
       TString hname = hp+Form("_offset_eta_%s%i_", var_type.Data(), n1+n) + ids[ids.size()-kk];
       if(hp.EqualTo("p")){
@@ -116,6 +123,19 @@ void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TStrin
         dataProfiles.push_back(h_data);
       }
     }
+//---------nh depth comparison-----------------
+
+    else if (hp.EqualTo("depth")){
+//      TString hname = Form("p_offset_eta_%s%i_", var_type.Data(), n1+n) + pf_type;
+
+      TString hname1 = pf_type + Form("_p_fract_depth%i_eta_%s%i_HCAL", depth_layer, var_type.Data(), n1+n) ;
+      dataProfiles.push_back( ((TProfile*) dataFile->FindObjectAny(hname1))->ProjectionX( pf_type+Form("%i_data",n1+n) ) );
+
+      TString hname2 = pf_type + Form("_p_fract_depth%i_eta_%s%i_HCAL", depth_layer, var_type.Data(), n1+n) ;
+      mcProfiles.push_back( ((TProfile*) mcFile->FindObjectAny(hname2))->ProjectionX( pf_type+Form("%i_mc",n1+n) ) );
+    }
+
+//--------------------
     else{
       TString hname = hp+Form("_offset_eta_%s%i_", var_type.Data(), n1+n) + pf_type;
       if(hp.EqualTo("p")){
@@ -163,10 +183,16 @@ void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TStrin
   }
 
   //cout<<"MC txt: ./text_files/" + var_type + Form("/R%i/",Rlabel) + pf_type + Form("/%sMC_L1RC_AK%iPF", outName.Data(), Rlabel) + pf_type + ".txt"<<endl;
-  ofstream writeMC("./text_files/" + var_type + Form("/R%i/",Rlabel) + pf_type + Form("/%sMC_L1RC_AK%iPF", outName.Data(), Rlabel) + pf_type + ".txt");
+//  ofstream writeMC("./textfiles_Summer20UL18/" + var_type + Form("/R%i/",Rlabel) + pf_type + Form("/%sMC_L1RC_AK%iPF", outName.Data(), Rlabel) + pf_type + ".txt");
   
   //cout<<"Data txt: ./text_files/" + var_type + Form("/R%i/",Rlabel) + pf_type + Form("/%sDATA_L1RC_AK%iPF", outName.Data(), Rlabel) + pf_type + ".txt"<<endl;
-  ofstream writeData("./text_files/" + var_type + Form("/R%i/",Rlabel) + pf_type + Form("/%sDATA_L1RC_AK%iPF",outName.Data(), Rlabel) + pf_type + ".txt");
+//  ofstream writeData("./textfiles_Summer20UL18/" + var_type + Form("/R%i/",Rlabel) + pf_type + Form("/%sDATA_L1RC_AK%iPF",outName.Data(), Rlabel) + pf_type + ".txt");
+
+//--------Update for Run3-----------
+  ofstream writeMC("./textfiles_Run3/" + var_type + Form("/R%i/",Rlabel) + pf_type + Form("/%sMC_L1RC_AK%iPF", outName.Data(), Rlabel) + pf_type + ".txt");
+  ofstream writeData("./textfiles_Run3/" + var_type + Form("/R%i/",Rlabel) + pf_type + Form("/%sDATA_L1RC_AK%iPF",outName.Data(), Rlabel) + pf_type + ".txt");
+
+
 
   TString header;
   // changes w.r.t previous versions: 1) TFormula had a bug and we modified accordingly 2) based on Mikko's calculation 1.519 changed to 2.00
@@ -351,7 +377,7 @@ void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TStrin
 
       bottom->SetGrid(0,1);
 
-      c->Print("./text_files/" + var_type + Form("/R%i/",Rlabel) + pf_type + "/subplot/" + outName + pf_type + "_pT_" + var_type + Form("_eta%4.3f", etabins[i]) + "_pull.pdf");
+      c->Print("./textfiles_Summer20UL18/" + var_type + Form("/R%i/",Rlabel) + pf_type + "/subplot/" + outName + pf_type + "_pT_" + var_type + Form("_eta%4.3f", etabins[i]) + "_pull.pdf");
       delete h1;
       delete h2;
       delete c;
@@ -443,7 +469,7 @@ void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TStrin
 
       bottom->SetGrid(0,1);
       
-      c->Print("./text_files/" + var_type + Form("/R%i/",Rlabel) + pf_type + "/subplot/" + outName + pf_type + "_pT_" + var_type + Form("_eta%4.3f", etabins[i]) + "_DataOverMC.pdf");
+      c->Print("./textfiles_Summer20UL18/" + var_type + Form("/R%i/",Rlabel) + pf_type + "/subplot/" + outName + pf_type + "_pT_" + var_type + Form("_eta%4.3f", etabins[i]) + "_DataOverMC.pdf");
       delete h;
       delete c;
       delete h2;
@@ -456,7 +482,7 @@ void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TStrin
       h->GetXaxis()->SetTitle(xTitle);
       h->GetYaxis()->SetTitle("Offset p_{T} (GeV)");
       h->GetYaxis()->SetTitleOffset(1.05);
-      h->GetYaxis()->SetRangeUser(0, topY);
+      h->GetYaxis()->SetRangeUser(0, topY/2);
 
       h->Draw();
       dataGraph->SetMarkerStyle(20);
@@ -473,16 +499,25 @@ void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TStrin
 
       if (pf_type.EqualTo("all"))
         text.DrawLatex(0.17, 0.96, Form("AK%i PF %4.3f #leq #eta #leq %4.3f", Rlabel, etabins[i], etabins[i+1]) );
-      else
-        text.DrawLatex(0.17, 0.96, Form("AK%i PF%s %4.3f #leq #eta #leq %4.3f", Rlabel, pf_type.Data(), etabins[i], etabins[i+1]) );
+      else if (pf_type.EqualTo("nh")){
+        text.SetTextSize(0.03);
+        text.DrawLatex(0.17, 0.96, Form("AK%i Neutral Hadronic %4.3f #leq #eta #leq %4.3f", Rlabel, etabins[i], etabins[i+1]) );}
+      else{
+        text.SetTextSize(0.03);
+        text.DrawLatex(0.17, 0.96, Form("AK%i PF%s %4.3f #leq #eta #leq %4.3f", Rlabel, pf_type.Data(), etabins[i], etabins[i+1]) );}
 
-      text.DrawLatex(0.2, 0.88, "Data");
+      text.DrawLatex(0.2, 0.88, "Data: Run2023D");
+//      text.DrawLatex(0.2, 0.88, "Run 2022FG");
+//      text.DrawLatex(0.2, 0.88, "Run UL18");
+//      text.DrawLatex(0.2, 0.88, Form("Run 2022FG depth%i", depth_layer) );
       text.DrawLatex(0.2, 0.84, Form("#chi^{2}/ndof = %4.2f/%i", f_data->GetChisquare(), f_data->GetNDF() ) );
       text.DrawLatex(0.2, 0.8, Form("p0 = %4.3f #pm %4.3f", f_data->GetParameter(0), f_data->GetParError(0) ) );
       text.DrawLatex(0.2, 0.76, Form("p1 = %4.3f #pm %4.3f", f_data->GetParameter(1), f_data->GetParError(1) ) );
       text.DrawLatex(0.2, 0.72, Form("p2 = %4.4f #pm %4.4f", f_data->GetParameter(2), f_data->GetParError(2) ) );
       text.SetTextColor(2);
-      text.DrawLatex(0.2, 0.64, "MC");
+      text.DrawLatex(0.2, 0.64, "MC: Summer23BPix");
+//      text.DrawLatex(0.2, 0.64, Form("Run 2022E depth%i", depth_layer) );
+//      text.DrawLatex(0.2, 0.64, "Run 2022E");
       text.DrawLatex(0.2, 0.6, Form("#chi^{2}/ndof = %4.2f/%i", f_mc->GetChisquare(), f_mc->GetNDF() ) );
       text.DrawLatex(0.2, 0.56, Form("p0 = %4.3f #pm %4.3f", f_mc->GetParameter(0), f_mc->GetParError(0) ) );
       text.DrawLatex(0.2, 0.52, Form("p1 = %4.3f #pm %4.3f", f_mc->GetParameter(1), f_mc->GetParError(1) ) );
@@ -490,13 +525,17 @@ void offsetpT(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TStrin
       text.SetTextSize(0.035);
       text.SetTextFont(42);
       text.SetTextColor(1);
-      text.DrawLatex( 0.8, 0.96, "#sqrt{s} = 13 TeV" );
+      text.DrawLatex( 0.75, 0.96, "#sqrt{s} = 13.6 TeV" );
 
       //cout << "Data: " << f_data->GetParameter(0) << "\t" << f_data->GetParameter(1) << "\t" << f_data->GetParameter(2) << endl;
       //cout << "MC: " << f_mc->GetParameter(0) << "\t" << f_mc->GetParameter(1) << "\t" << f_mc->GetParameter(2) << endl;
       //cout << f_data->GetChisquare() / f_data->GetNDF() << "\t" << f_mc->GetChisquare() / f_mc->GetNDF() << endl;
 
-      c->Print("./text_files/" + var_type + Form("/R%i/",Rlabel) + pf_type + "/" + outName + pf_type + "_pT_" + var_type + Form("_eta%4.3f", etabins[i]) + ".pdf");
+//      c->Print("./textfiles_Run3/" + var_type + Form("/R%i/",Rlabel) + pf_type + "/depth/" + outName + pf_type + "_pT_" + var_type + Form("_eta%4.3f", etabins[i]) + ".pdf");
+
+      c->Print("./textfiles_Run3/" + var_type + Form("/R%i/",Rlabel) + pf_type + "/" + outName + pf_type + "_pT_" + var_type + Form("_eta%4.3f", etabins[i]) + ".pdf");
+
+//      c->Print("./textfiles_Summer20UL18/" + var_type + Form("/R%i/",Rlabel) + pf_type + "/" + outName + pf_type + "_pT_" + var_type + Form("_eta%4.3f", etabins[i]) + ".pdf");
       delete h;
       delete c;
     }

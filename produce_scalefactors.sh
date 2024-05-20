@@ -17,20 +17,23 @@
 
   fi
 
-  mc="Offset_MC_UL2016_${run_era}_total_R4.root"
-  data="Offset_Data_UL2016_${run_era}_total_R4.root"
-  outname="UL16_Run${run_era}_DataMC_R4_"
+  data="/uscms/home/hirakban/nobackup/l10ffset/Run3_l1offset/CMSSW_13_0_13/src/test/OffsetTreeMaker/histomaker_outputs/Offset_Data_Run2022CD-ReReco_R4.root"
+  mc="/uscms/home/hirakban/nobackup/l10ffset/Run3_l1offset/CMSSW_13_0_13/src/test/OffsetTreeMaker/histomaker_outputs/Offset_MC_Run3Summer22_Offset_Data_Run2022CD_R4.root"
+  outname="Run3-${run_era}_DataMC_R4_"
+
+#  outname="Run3-${run_era}_DatatoData_NHdepth4_R4_"
 
   R=0.4
-  n1=10
-  n2=60
-  topX=64
-  topY=20
+  n1=18
+  n2=52
+  topX=62
+  topY=62
 
   var="nPU"
   ratio="true"
-  label="Run2016${run_era}MC (13 TeV)"
-#  label="Run2016${run_era}-${luminosity}fb^{-1}(13 TeV)"
+#  label="Run2018${run_era}-${luminosity}fb^{-1}(13 TeV)"
+  label="Run3-${run_era} (13.6 TeV)"
+#  label="${run_era}"
   subplot=""     # "pull" or "DataOverMC"
   
 
@@ -45,7 +48,7 @@
 #9) Median Charged Hadron Subtraction
 #10) Median All
 
-  cmds=( "root -l -b -q 'offsetpT.c (\"$mc\", \"$data\", \"$outname\", \"$subplot\", $R, 8, $n1, $n2, $topX, $topY)'"
+  cmds=( #"root -l -b -q 'offsetpT.c (\"$mc\", \"$data\", \"$outname\", \"$subplot\", $R, 8, $n1, $n2, $topX, $topY)'"
          #"root -l -b -q 'offsetpT.c (\"$mc\", \"$data\", \"$outname\", $R, 9, $n1, $n2, $topX, $topY)'"
          "root -l -b -q 'scalefactor.c (\"$mc\", \"$data\", \"$outname\", $R, 8, $n1, $n2)'"
          #"root -l -b -q 'scalefactor.c (\"$mc\", \"$data\", \"$outname\", $R, 9, $n1, $n2)'"

@@ -38,10 +38,13 @@ void FillProfile2D(const TString& histName, const Double_t& value1, const Double
 void getGeometry(double (&geo)[nEta][nEta], const float& rCone);
 double areaS(double R, double x1, double x2);
 double dist(double R, double x1, double x2);
-bool dojetVetoMap = true;					//newline
-TString jetVetoMapFileName = "hotjets-UL16.root";		//newline
-TString mapName2 = "h2hot_ul16_plus_hbm2_hbp12_qie11";		//newline
-TString mapName6 = "h2hot_mc";					//newline
+bool dojetVetoMap = true;						//newline
+//TString jetVetoMapFileName = "hotjets-UL17_v2.root" ;              	//newline	
+TString jetVetoMapFileName = "hotjets-UL18.root" ;              	//newline	
+//TString mapName2 = "h2hot_ul17_plus_hep17_plus_hbpw89";		//newline
+TString mapName2 = "h2hot_ul18_plus_hem1516_and_hbp2m1";		//newline
+//TString mapName2 = "h2hot_ul16_plus_hbm2_hbp12_qie11";		//newline
+//TString mapName6 = "h2hot_mc";					//newline
 
 map<TString, TH1*> m_Histos1D;
 map<TString, TH2*> m_Histos2D;
@@ -64,7 +67,9 @@ int main(int argc, char* argv[]) {
 
   TString inName = isMC ? argv[4] : dataName;
   TString outName = inName( inName.Last('/')+1, inName.Last('.')-inName.Last('/')-1 );
-  outName += "_R" + to_string( int(rCone*10) ) + ".root";
+//  outName += "_R" + to_string( int(rCone*10) ) + ".root";
+  TString newName = dataName( dataName.Last('/')+1, dataName.Last('.')-dataName.Last('/')-1 );
+  outName += "_" + newName + "_R" + to_string( int(rCone*10) ) + ".root";
   cout << "output:" << "\t" << outName << endl;
   cout << "inName:" << "\t" << inName << endl;
 
@@ -158,12 +163,12 @@ int main(int argc, char* argv[]) {
     m_Histos2D[hname] = new TH2F(hname, hname, nEta, etabins, 100, 0., 20.);
   }
 
-  //hname = "nPV_all";
-  //m_Histos1D[hname] = new TH1F(hname,hname,MAXNPV,0,MAXNPV);
+  hname = "nPV_all";
+  m_Histos1D[hname] = new TH1F(hname,hname,MAXNPV,0,MAXNPV);
   hname = "nPV";
   m_Histos1D[hname] = new TH1F(hname,hname,MAXNPV,0,MAXNPV);
-  //hname = "pv_z";
-  //m_Histos1D[hname] = new TH1F(hname,hname,100,-50,50);
+  hname = "pv_z";
+  m_Histos1D[hname] = new TH1F(hname,hname,MAXNPV,-MAXNPV*0.5,MAXNPV*0.5);
   hname = "nPU";
   m_Histos1D[hname] = new TH1F(hname,hname,2*MAXNPU,0,MAXNPU);
   hname = "rho";
@@ -233,8 +238,8 @@ int main(int argc, char* argv[]) {
 
   UChar_t f[numFlavors][nEta];
   float energy[nEta], etMEAN[nEta], etMED[nEta], etMEANchs[nEta], etMEDchs[nEta];
-  int nJets;
-  float jet_pt[nJets], jet_eta[nJets];
+  int nJets, nPVall;
+  float jet_pt[nJets], jet_eta[nJets], pv_z[MAXNPV];
   float mu, rho;
   int nPV;
 
@@ -257,6 +262,8 @@ int main(int argc, char* argv[]) {
   tree->SetBranchAddress("mu", &mu);
   tree->SetBranchAddress("rho", &rho);
   tree->SetBranchAddress("nPV", &nPV);
+  tree->SetBranchAddress("nPVall", &nPVall);
+  tree->SetBranchAddress("pv_z", pv_z);
 
   // JetVetoMap implementation
 
@@ -266,13 +273,13 @@ int main(int argc, char* argv[]) {
 
   vector<vector<double>> JetVetoMap ;
   if (dojetVetoMap){
-    jetVetoMap( jetVetoMapFileName, mapName2, mapName6 );
+    jetVetoMap( jetVetoMapFileName, mapName2); //mapName6
     JetVetoMap = getVetoMap();
 
     for(int j=0;  j != int((JetVetoMap[0]).size());  ++j){  // loop over faulty patches ...  
       double delta_phi = JetVetoMap[3][j] - JetVetoMap[2][j] ;
       double delta_eta = 0. ;
-      //cout << j << "\t" << JetVetoMap[0][j] << endl;
+
       for(int i = 0; i != nEta; ++i){  // loop over eta strips ...
         if (etabins[i] <= JetVetoMap[0][j] && etabins[i+1] >= JetVetoMap[0][j] ) il  = i ;
         if (etabins[i] <= JetVetoMap[1][j] && etabins[i+1] >= JetVetoMap[1][j] ) ir  = i ;
@@ -297,7 +304,7 @@ int main(int argc, char* argv[]) {
     if (n % 100000 == 0) cout << "Processing Event " << n+1 << endl;
     tree->GetEntry(n);
     //if (jet_pt[0] > pt_cut) continue ; //to only select events with pT,corr < pt_cut
-    cout << "Processing Event " << n+1 << endl;
+    //cout << "Processing Event " << n+1 << endl;
     for (int ieta=0; ieta<nEta; ieta++){ 
       //cout << "previous energy[" << ieta  <<"] = "<< energy[ieta] << endl; 
       energy[ieta] = energy[ieta]/ fraction[ieta] ;
@@ -309,9 +316,14 @@ int main(int argc, char* argv[]) {
     FillHist1D("nPU", mu, weight);
     FillHist1D("nPV", nPV, weight);
     FillHist1D("rho", rho, weight);
+    FillHist1D("nPV_all", nPVall, weight);
     FillProfile("p_nPV_nPU", mu, nPV, weight);
     FillProfile("p_rho_nPU", mu, rho, weight);
     FillProfile("p_rho_nPV", nPV, rho, weight);
+
+    for (int i=0; i != nPVall; ++i){ 
+      FillHist1D("pv_z", pv_z[i], 1.0);
+    }
 
     int intmu = mu + 0.5;
 

@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -29,16 +28,32 @@ void compare_sf(int Rlabel=4, TString pf_type="all"){
 
   map<TString, TString> files;
 
-  files["ULRun2016preVFP_APV"] = "/uscms/home/hirakban/nobackup/l10ffset/l1offset_UL16/CMSSW_10_6_12/src/test/OffsetTreeMaker/text_files/scalefactor/R4/chs/UL16_RunpreVFP_APV_V1_DataMcSF_L1RC_AK4PFchs.txt";
+  files["Summer22_R4"] = "/uscms/home/hirakban/nobackup/l10ffset/l1offset_UL16/CMSSW_10_6_12/src/test/OffsetTreeMaker/textfiles_Run3/scalefactor/R4/chs/Run3-Summer22_DataMC_R4_DataMcSF_L1RC_AK4PFchs.txt";
 
-  files["ULRun2016postVFP"] = "/uscms/home/hirakban/nobackup/l10ffset/l1offset_UL16/CMSSW_10_6_12/src/test/OffsetTreeMaker/text_files/scalefactor/R4/chs/UL16_RunpostVFP_V1_DataMcSF_L1RC_AK4PFchs.txt";
+  files["Summer22EE_R4"] = "/uscms/home/hirakban/nobackup/l10ffset/l1offset_UL16/CMSSW_10_6_12/src/test/OffsetTreeMaker/textfiles_Run3/scalefactor/R4/chs/Run3-Summer22EE_DataMC_R4_DataMcSF_L1RC_AK4PFchs.txt";
 
+  files["Summer23_R4"] = "/uscms/home/hirakban/nobackup/l10ffset/l1offset_UL16/CMSSW_10_6_12/src/test/OffsetTreeMaker/textfiles_Run3/scalefactor/R4/chs/Run3-Summer23_DataMC_R4_DataMcSF_L1RC_AK4PFchs.txt";
+
+  files["Summer23BPix_R4"] = "/uscms/home/hirakban/nobackup/l10ffset/l1offset_UL16/CMSSW_10_6_12/src/test/OffsetTreeMaker/textfiles_Run3/scalefactor/R4/chs/Run3-Summer23BPix_DataMC_R4_DataMcSF_L1RC_AK4PFchs.txt";
+
+
+//-------------------------------------------------------------------------------
   map<TString, TString> rootfiles;
 
-  rootfiles["ULRun2016preVFP_APV"] = "/uscms/home/hirakban/nobackup/l10ffset/l1offset_UL16/CMSSW_10_6_12/src/test/OffsetTreeMaker/Offset_Data_UL2016_preVFP_total_R4.root";
 
-  rootfiles["ULRun2016postVFP"] = "/uscms/home/hirakban/nobackup/l10ffset/l1offset_UL16/CMSSW_10_6_12/src/test/OffsetTreeMaker/Offset_Data_UL2016_postVFP_total_R4.root";
 
+  rootfiles["Summer22_R4"] = "/uscms/home/hirakban/nobackup/l10ffset/Run3_l1offset/CMSSW_13_0_13/src/test/OffsetTreeMaker/histomaker_outputs/Offset_Data_Run2022CD-ReReco_R4.root";
+
+  rootfiles["Summer22EE_R4"] = "/uscms/home/hirakban/nobackup/l10ffset/Run3_l1offset/CMSSW_13_0_13/src/test/OffsetTreeMaker/histomaker_outputs/Offset_Data_Run2022EFG_R4.root";
+
+  rootfiles["Summer23_R4"] = "/uscms/home/hirakban/nobackup/l10ffset/Run3_l1offset/CMSSW_13_0_13/src/test/OffsetTreeMaker/histomaker_outputs/Offset_Data_Run2023C-PromptReco_R4.root";
+
+  rootfiles["Summer23BPix_R4"] = "/uscms/home/hirakban/nobackup/l10ffset/Run3_l1offset/CMSSW_13_0_13/src/test/OffsetTreeMaker/histomaker_outputs/Offset_Data_Run2023D-PromptReco_R4.root";
+
+
+
+
+//---------------------------------------------------------------------------------------------
 
   map<TString, float[nEta]> p0, p1, p2;
   map<TString, TH1F*> hists;
@@ -50,15 +65,22 @@ void compare_sf(int Rlabel=4, TString pf_type="all"){
   h->GetXaxis()->SetTitle("#eta");
   h->GetYaxis()->SetTitle("Scale Factor");
   h->GetYaxis()->SetTitleOffset(1.2);
-  h->GetYaxis()->SetRangeUser(0.7, 1.4);
+  h->GetYaxis()->SetRangeUser(0.6, 1.9);
   h->Draw();
 
-  TLegend* leg = new TLegend(.4,.73,.6,.9);
+  TLegend* leg = new TLegend(.65,.65,.85,.85);
   leg->SetBorderSize(0);
   leg->SetFillColor(0);
   leg->SetFillStyle(0);
-  leg->SetTextSize(0.04);
-  leg->SetTextFont(42);
+  leg->SetTextSize(0.03);
+  leg->SetTextFont(62);
+
+// If we want the stackplots in a root file
+/*
+  TString outName = "compare_sf.root";
+  TFile* outFile = new TFile(outName,"RECREATE");
+  TDirectory* dir = (TDirectory*) outFile;
+*/
 
   for (map<TString, TString>::iterator it = files.begin(); it != files.end(); it++){
 
@@ -101,22 +123,41 @@ void compare_sf(int Rlabel=4, TString pf_type="all"){
     float rho = p_rho_nPU->GetBinContent( p_rho_nPU->FindBin( mu ) );
 
     int j = distance( files.begin(), it );
-    hists[version] = new TH1F( Form("h%i",j), Form("h%i",j), nEta, etabins);
+//    hists[version] = new TH1F( Form("h%i",j), Form("h%i",j), nEta, etabins);
+    hists[version] = new TH1F( version, version, nEta, etabins);
+
     for (int i=0; i<nEta; i++) hists[version]->SetBinContent(i+1, p0[version][i] + p1[version][i]*rho + p2[version][i]*rho*rho);
+
+// If we want the stackplots in a root file
+//    outFile->cd();
 
     hists[version]->SetMarkerStyle(20);
     hists[version]->SetMarkerSize(0.75);
     hists[version]->SetMarkerColor(j+1);
     hists[version]->Draw("psame");
 
+// If we want the stackplots in a root file
+//    hists[version]->Write();
+
     leg->AddEntry(hists[version], version,"p");
   }
 
-    hists["ULRun2016preVFP_APV"]->SetMarkerColor(kBlue);
-    hists["ULRun2016preVFP_APV"]->Draw("psame");
 
-    hists["ULRun2016postVFP"]->SetMarkerColor(kRed);
-    hists["ULRun2016postVFP"]->Draw("psame");
+    hists["Summer22_R4"]->SetMarkerColor(kRed);
+    hists["Summer22_R4"]->SetMarkerStyle(20);
+    hists["Summer22_R4"]->Draw("psame");
+
+    hists["Summer22EE_R4"]->SetMarkerColor(kRed+1);
+    hists["Summer22EE_R4"]->SetMarkerStyle(21);
+    hists["Summer22EE_R4"]->Draw("psame");
+
+    hists["Summer23_R4"]->SetMarkerColor(kBlue);
+    hists["Summer23_R4"]->SetMarkerStyle(20);
+    hists["Summer23_R4"]->Draw("psame");
+
+    hists["Summer23BPix_R4"]->SetMarkerColor(kBlue+2);
+    hists["Summer23BPix_R4"]->SetMarkerStyle(21);
+    hists["Summer23BPix_R4"]->Draw("psame");
 
 
   leg->Draw();
@@ -126,7 +167,7 @@ void compare_sf(int Rlabel=4, TString pf_type="all"){
   text.SetTextSize(0.03);
 
   if (pf_type.EqualTo("all"))
-    text.DrawLatex(0.8, 0.89, Form("AK%i PFchs", Rlabel));
+    text.DrawLatex(0.8, 0.89, Form("AK%i PFchs", Rlabel));    // Form("AK%i PFchs", Rlabel)
   else
     text.DrawLatex(0.8, 0.89, Form("AK%i PFchs%s", Rlabel, pf_type.Data()));
 
@@ -144,10 +185,17 @@ void compare_sf(int Rlabel=4, TString pf_type="all"){
 
   text.SetTextSize(0.03);
   text.SetTextFont(42);
-  text.DrawLatex(0.62, 0.96, "RunUL2016_VFP- 35.9fb^{-1}(13 TeV)");
+  text.DrawLatex(0.62, 0.96, "(13.6 TeV)");
 
-  c->Print("./scalefactors_compare/AK4_compare_sf_PFchs_UL2016_Run_preVFPAPV_postVFP.pdf");
-//  c->Print("AK4_compare_sf_PFchs_UL18_GH_RunD_RunABCD_" + pf_type + ".pdf");
+
+// If we want the stackplots in a root file
+/*
+  outFile->Write();
+  delete outFile;
+  outFile = 0;
+*/
+
+  c->Print("Run3_DATA_L1FastJet_files/compare_sf_Run3_AK4PFchs.pdf");
 }
 
 void setStyle(){

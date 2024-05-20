@@ -7,24 +7,26 @@ using namespace std;
 
 void skim(){
   
-  int numSkip = 1013;
+  int numSkip = 1003;
 
-  TFile* file = TFile::Open("bigFile.root");
+  TFile* file = TFile::Open("/eos/uscms/store/user/hbandyop/l1offsetUL16_result/MC_Summer19UL2016/Offset_MC_UL2016_total.root");
 
   TTree* tree = (TTree*) file->Get("T");
-  Long64_t nEntries = tree->GetEntries();
+  ULong64_t nEntries = tree->GetEntries();
 
-  ULong64_t event;
-  tree->SetBranchAddress("event", &event);
+//  ULong64_t event;
+//  tree->SetBranchAddress("event", &event);
+  Int_t mua;
+  tree->SetBranchAddress("mua", &mua);
   tree->SetBranchStatus("*",1);
 
-  TFile *newfile = new TFile("skimmedTree.root","recreate");
+  TFile *newfile = new TFile("/eos/uscms/store/user/hbandyop/l1offsetUL16_result/MC_Summer19UL2016/Offset_MC_UL2016_postVFP_reduced.root","recreate");
   TTree *newtree = tree->CloneTree(0);
 
-  for (Long64_t n=0; n<nEntries; n++) {
+  for (ULong64_t n=0; n<nEntries; n++) {
     tree->GetEntry(n);
 
-    if (event % numSkip == 0) newtree->Fill();
+//    if (mua % numSkip == 0) newtree->Fill();
   }
 
   newtree->Print();

@@ -43,8 +43,8 @@ void scalefactor(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TSt
   bool nPU_derived = true;
   bool rhoCentral = false;
 
-  ifstream mc_file(Form("./text_files/indirectRho/R%i/",Rlabel) + pf_type + Form("/%sMC_L1RC_AK%iPF", outName.Data(), Rlabel) + pf_type + ".txt");
-  ifstream data_file(Form("./text_files/indirectRho/R%i/",Rlabel) + pf_type + Form("/%sDATA_L1RC_AK%iPF", outName.Data(), Rlabel) + pf_type + ".txt");
+  ifstream mc_file(Form("./textfiles_Run3/indirectRho/R%i/",Rlabel) + pf_type + Form("/%sMC_L1RC_AK%iPF", outName.Data(), Rlabel) + pf_type + ".txt");
+  ifstream data_file(Form("./textfiles_Run3/indirectRho/R%i/",Rlabel) + pf_type + Form("/%sDATA_L1RC_AK%iPF", outName.Data(), Rlabel) + pf_type + ".txt");
   //cout << "Opening: "<< Form("./text_files/indirectRho/R%i/",Rlabel) + pf_type + Form("/%sMC_L1RC_AK%iPF", outName.Data(), Rlabel) + pf_type + ".txt" <<endl;
   //cout << "Opening: "<< Form("./text_files/indirectRho/R%i/",Rlabel) + pf_type + Form("/%sDATA_L1RC_AK%iPF", outName.Data(), Rlabel) + pf_type + ".txt" <<endl;
   string data_line, mc_line;
@@ -120,7 +120,7 @@ void scalefactor(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TSt
   TProfile* data_rho_nPU = (TProfile*) data_root->Get(hname);
   TProfile* mc_rho_nPU = (TProfile*) mc_root->Get(hname);
 
-  ofstream writeFile(Form("./text_files/scalefactor/R%i/",Rlabel) + pf_type + Form("/%sDataMcSF_L1RC_AK%iPF", outName.Data(), Rlabel) + pf_type + ".txt");
+  ofstream writeFile(Form("./textfiles_Run3/scalefactor/R%i/",Rlabel) + pf_type + Form("/%sDataMcSF_L1RC_AK%iPF", outName.Data(), Rlabel) + pf_type + ".txt");
   writeFile << "{1   JetEta   1   Rho   [0]+[1]*x+[2]*pow(x,2)   Data/MC   L1FastJet}" << endl;
 
   TF1* fit = new TF1("fit", "1++x++x*x");
@@ -184,11 +184,11 @@ void scalefactor(TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root", TSt
     text.SetTextSize(0.035);
     text.SetTextColor(1);
     text.SetTextFont(42);
-    text.DrawLatex(0.8, 0.96, "#sqrt{s} = 13 TeV");
+    text.DrawLatex(0.78, 0.96, "#sqrt{s} = 13.6 TeV");
 
     //cout << fit->GetChisquare() / fit->GetNDF() << endl;
     //cout << "./text_files/scalefactor/R4/"+pf_type+Form("/%sscalefactor_AK%iPF",outName.Data(),Rlabel)+ pf_type + Form("_eta%4.3f.pdf", eta1[i]) << endl;
-    c->Print(Form("./text_files/scalefactor/R%i/",Rlabel) + pf_type + Form("/%sscalefactor_AK%iPF",outName.Data(),Rlabel)+ pf_type + Form("_eta%4.3f.pdf", eta1[i]) );
+    c->Print(Form("./textfiles_Run3/scalefactor/R%i/",Rlabel) + pf_type + Form("/%sscalefactor_AK%iPF",outName.Data(),Rlabel)+ pf_type + Form("_eta%4.3f.pdf", eta1[i]) );
     delete h;
     delete c;
   }

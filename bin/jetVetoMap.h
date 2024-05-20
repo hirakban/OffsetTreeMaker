@@ -22,7 +22,7 @@ vector<vector<double>> getVetoMap() {
   return JetVetoMap;
 }
 
-void jetVetoMap(TString filename="hotjets-UL16.root", TString map_name2 = "h2hot_ul16_plus_hbm2_hbp12_qie11", TString map_name6 = "h2hot_mc" ) {
+void jetVetoMap(TString filename="hotjets-UL16.root", TString map_name2 = "h2hot_ul16_plus_hbm2_hbp12_qie11" ) {
   TDirectory *curdir = gDirectory;
 
   TFile *f0 = new TFile(filename,"READ");
@@ -31,8 +31,8 @@ void jetVetoMap(TString filename="hotjets-UL16.root", TString map_name2 = "h2hot
 
   TH2D *h2 = (TH2D*)f0->Get(map_name2);
   assert(h2);
-  TH2D *h6 = (TH2D*)f0->Get(map_name6);
-  assert(h6);
+//  TH2D *h6 = (TH2D*)f0->Get(map_name6);
+//  assert(h6);
 
   for (int i = 1; i != h2->GetNbinsX()+1; ++i) {
     for (int j = 1; j !=  h2->GetNbinsY()+1; ++j) {
@@ -44,7 +44,7 @@ void jetVetoMap(TString filename="hotjets-UL16.root", TString map_name2 = "h2hot
       }
     }
   }
-
+/*
   for (int i = 1; i != h6->GetNbinsX()+1; ++i) {
     for (int j = 1; j !=  h6->GetNbinsY()+1; ++j) {
       if (h6->GetBinContent(i,j) >0){
@@ -55,7 +55,7 @@ void jetVetoMap(TString filename="hotjets-UL16.root", TString map_name2 = "h2hot
       }
     }
   }
-
+*/
 
 }
 

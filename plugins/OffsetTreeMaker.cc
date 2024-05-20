@@ -122,7 +122,7 @@ class OffsetTreeMaker : public edm::EDAnalyzer {
     vector<float> pf_pt, pf_eta, pf_phi, pf_et;
     //vector<string> eras;
 
-    TString RootFileName_, jetVetoMapFileName_, mapName2_, mapName6_;
+    TString RootFileName_, jetVetoMapFileName_, mapName2_; //mapName6_;
     vector<vector<double>> JetVetoMap ;
  
     string puFileName_, era_, jet_type_;
@@ -150,7 +150,7 @@ OffsetTreeMaker::OffsetTreeMaker(const edm::ParameterSet& iConfig)
   puFileName_ = iConfig.getParameter<string>("puFileName");
   jetVetoMapFileName_ = iConfig.getParameter<string>("jetVetoMapFileName");
   mapName2_ = iConfig.getParameter<string>("mapName2");
-  mapName6_ = iConfig.getParameter<string>("mapName6");
+  //mapName6_ = iConfig.getParameter<string>("mapName6");
   isMC_ = iConfig.getParameter<bool>("isMC");
   writeCands_ = iConfig.getParameter<bool>("writeCands");
   pvTag_ = consumes< vector<reco::Vertex> >( iConfig.getParameter<edm::InputTag>("pvTag") );
@@ -186,7 +186,7 @@ void  OffsetTreeMaker::beginJob() {
   h_bestweight1 = new TH1F ("bestweight1", "bestweight1", 50, 0., 1.);
   
   if (dojetVetoMap_){
-    jetVetoMap( jetVetoMapFileName_,mapName2_,mapName6_ );
+    jetVetoMap( jetVetoMapFileName_,mapName2_); //mapName6_ 
     JetVetoMap = getVetoMap();
   }
 

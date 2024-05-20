@@ -13,18 +13,20 @@
     luminosity=${args[1]}
 
   fi
-  mc="Offset_MC_UL2016_${run_era}_total_R4.root"
-  data="Offset_Data_UL2016_${run_era}_total_R4.root"
-  outname="UL16${run_era}_DataMC_R4_"
 
-  n1=10
-  n2=42
-  topX=44
-  topY=44
+  data="/uscms/home/hirakban/nobackup/l10ffset/Run3_l1offset/CMSSW_13_0_13/src/test/OffsetTreeMaker/histomaker_outputs/Offset_Data_Run2023D-PromptReco_R4.root"
+  mc="/uscms/home/hirakban/nobackup/l10ffset/Run3_l1offset/CMSSW_13_0_13/src/test/OffsetTreeMaker/histomaker_outputs/Offset_MC_Run3Summer23BPix_Offset_Data_Run2023D_v2_R4.root"
+  outname="Run3-${run_era}_DataMC_R4_"
 
-  var="nPU"
+  n1=18
+  n2=56
+  topX=58
+  topY=58
+
+  var="nPU"  #"nPU"
   ratio="true"
-  label="Run2016${run_era}-${luminosity}fb^{-1}(13 TeV)"
+#  label="Run2018${run_era}_${luminosity}fb^{-1} (13.6 TeV)"
+  label="${run_era} (13.6 TeV)"
 
   cmds=( "root -l -b -q 'plot_histos.c (\"$mc\", \"$data\", \"$outname\", \"$label\")'"
          "root -l -b -q 'plot_profile.c (\"$mc\", \"$data\", \"$outname\", $n1, $n2, $topX, $topY, \"$label\")'"
