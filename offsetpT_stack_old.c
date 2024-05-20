@@ -405,7 +405,7 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
 
     }
 
-    c->Print("presentation_plots/stack_"+ outName + ids[id] + "_" + bin_var + to_string(n1) + ".pdf");
+    c->Print("./presentation_plots/stack_"+ outName + ids[id] + "_" + bin_var + to_string(n1) + ".pdf");
 
     leg->Clear();
     leg2->Clear();

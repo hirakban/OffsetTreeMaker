@@ -23,7 +23,7 @@ using namespace std;
 
 const double pt_cut = 15.;
 const int nEta = 82;
-const double etabins[nEta+1] =
+const Double_t etabins[nEta+1] =
   {-5.191, -4.889, -4.716, -4.538, -4.363, -4.191, -4.013, -3.839, -3.664, -3.489, -3.314, -3.139, -2.964, -2.853, -2.65,
    -2.5, -2.322, -2.172, -2.043, -1.93, -1.83, -1.74, -1.653, -1.566, -1.479, -1.392, -1.305, -1.218, -1.131, -1.044, -0.957,
    -0.879, -0.783, -0.696, -0.609, -0.522, -0.435, -0.348, -0.261, -0.174, -0.087, 0,
@@ -39,10 +39,11 @@ void getGeometry(double (&geo)[nEta][nEta], const float& rCone);
 double areaS(double R, double x1, double x2);
 double dist(double R, double x1, double x2);
 bool dojetVetoMap = true;					//newline
-TString jetVetoMapFileName;                     		//newline
-//TString mapName2 = "jetvetomap_all";				//newline
-TString mapName2 = "jetvetomap_nobpix";				//newline
-bool writeEnergyDeposition = true;
+TString jetVetoMapFileName = "vetomaps_Winter22Run3_RunCD_v1.root";		//newline
+TString mapName2 = "jetvetomap_all";		//newline
+//TString mapName6 = "h2hot_mc";					//newline
+bool writeEnergyDeposition = false;
+
 
 map<TString, TH1*> m_Histos1D;
 map<TString, TH2*> m_Histos2D;
@@ -66,14 +67,7 @@ int main(int argc, char* argv[]) {
   //Open Files//
 
   TString inName = isMC ? argv[4] : dataName;
-  jetVetoMapFileName = isMC ? argv[5] : argv[4];
-  cout << "JetVetoMap used: " << jetVetoMapFileName << endl;
-
   TString outName = "histomaker_outputs/" + inName( inName.Last('/')+1, inName.Last('.')-inName.Last('/')-1 );
-  if (isMC){
-    TString add_dataName = dataName(dataName.Last('/')+1, dataName.Last('.')-dataName.Last('/')-1);
-    cout << add_dataName << endl;
-    outName += "_" + add_dataName ;}
   outName += "_R" + to_string( int(rCone*10) ) + ".root";
   cout << "output:" << "\t" << outName << endl;
   cout << "inName:" << "\t" << inName << endl;
@@ -166,10 +160,42 @@ int main(int argc, char* argv[]) {
 
     hname = Form("h2_offsetMEANchs_eta_nPU%i",i_nPU);
     m_Histos2D[hname] = new TH2F(hname, hname, nEta, etabins, 100, 0., 20.);
+  }
+
+  //hname = "nPV_all";
+  //m_Histos1D[hname] = new TH1F(hname,hname,MAXNPV,0,MAXNPV);
+  hname = "nPV";
+  m_Histos1D[hname] = new TH1F(hname,hname,MAXNPV,0,MAXNPV);
+  //hname = "pv_z";
+  //m_Histos1D[hname] = new TH1F(hname,hname,100,-50,50);
+  hname = "nPU";
+  m_Histos1D[hname] = new TH1F(hname,hname,2*MAXNPU,0,MAXNPU);
+  hname = "rho";
+  m_Histos1D[hname] = new TH1F(hname,hname,2*MAXRHO,0,MAXRHO);
+
+  //hname = "2h_nPV_nPU";
+  //m_Histos2D[hname] = new TH2F(hname,hname,2*MAXNPU,0,MAXNPU,MAXNPV,0,MAXNPV);
+  hname = "p_nPV_nPU";
+  m_Profiles[hname] = new TProfile(hname,hname,2*MAXNPU,0,MAXNPU);
+
+  //hname = "2h_rho_nPU";
+  //m_Histos2D[hname] = new TH2F(hname,hname,2*MAXNPU,0,MAXNPU,2*MAXRHO,0,MAXRHO);
+  hname = "p_rho_nPU";
+  m_Profiles[hname] = new TProfile(hname,hname,2*MAXNPU,0,MAXNPU);
+
+  //hname = "2h_rho_nPV";
+  //m_Histos2D[hname] = new TH2F(hname,hname,MAXNPV,0,MAXNPV,2*MAXRHO,0,MAXRHO);
+  hname = "p_rho_nPV";
+  m_Profiles[hname] = new TProfile(hname,hname,MAXNPV,0,MAXNPV);
 
 
-    //------Modification for hcal depth analysis--------
-    if (writeEnergyDeposition){
+//  enum hnames{nh_eta=0, nh_energy, nh_ECAL, nh_HCAL, nh_HO, nh_rawECAL, nh_rawHCAL, nh_rawHO, nh_HCAL_depth1_fraction, nh_HCAL_depth2_fraction, nh_HCAL_depth3_fraction, nh_HCAL_depth4_fraction, nh_HCAL_depth5_fraction, nh_HCAL_depth6_fraction, nh_HCAL_depth7_fraction, ne_eta, ne_energy, ne_ECAL, ne_HCAL, ne_HO, ne_rawECAL, ne_rawHCAL, ne_rawHO, numhnames};
+
+//  TString hname1[] = {"nh_eta", "ne_eta", "nh_energy", "nh_ECAL", "nh_HCAL", "nh_HO", "nh_rawECAL", "nh_rawHCAL", "nh_rawHO", "nh_HCAL_depth1_fraction", "nh_HCAL_depth2_fraction", "nh_HCAL_depth3_fraction", "nh_HCAL_depth4_fraction", "nh_HCAL_depth5_fraction", "nh_HCAL_depth6_fraction", "nh_HCAL_depth7_fraction",  "ne_energy", "ne_ECAL", "ne_HCAL", "ne_HO", "ne_rawECAL", "ne_rawHCAL", "ne_rawHO"};
+
+//----------------------------Modification for hcal depth analysis----------------------------------
+
+    for (int i_nPU=0; i_nPU<MAXNPU; i_nPU++){
       hname = Form("nh_p_mikko_eta_nPU%i_ECAL",i_nPU);
       m_Profiles[hname] = new TProfile(hname, hname, nEta, etabins);
       hname = Form("nh_p_mikko_eta_nPU%i_HCAL",i_nPU);
@@ -270,9 +296,7 @@ int main(int argc, char* argv[]) {
       hname = Form("profilerawEtorawH_HH_nPU%i", i_nPU);
       m_Profiles[hname] =  new TProfile (hname,hname,nEta,etabins);
     }
-  }
 
-  if (writeEnergyDeposition){
 
     hname = "nh_ratio_energy";
     m_Histos2D[hname] = new TH2F (hname,hname,nEta,etabins,330,0.0,3.3);
@@ -342,32 +366,8 @@ int main(int argc, char* argv[]) {
     m_Profiles[hname] = new TProfile (hname,hname,nEta,etabins);
     hname = "profile_ne_rawEtorawH";
     m_Profiles[hname] = new TProfile (hname,hname,nEta,etabins);
-  }
+
 //--------------------------------------------------------------------------------------
-
-  //hname = "nPV_all";
-  //m_Histos1D[hname] = new TH1F(hname,hname,MAXNPV,0,MAXNPV);
-  //hname = "pv_z";
-  //m_Histos1D[hname] = new TH1F(hname,hname,100,-50,50);
-  //hname = "2h_nPV_nPU";
-  //m_Histos2D[hname] = new TH2F(hname,hname,2*MAXNPU,0,MAXNPU,MAXNPV,0,MAXNPV);
-  //hname = "2h_rho_nPU";
-  //m_Histos2D[hname] = new TH2F(hname,hname,2*MAXNPU,0,MAXNPU,2*MAXRHO,0,MAXRHO);
-  //hname = "2h_rho_nPV";
-  //m_Histos2D[hname] = new TH2F(hname,hname,MAXNPV,0,MAXNPV,2*MAXRHO,0,MAXRHO);
-  hname = "nPV";
-  m_Histos1D[hname] = new TH1F(hname,hname,MAXNPV,0,MAXNPV);
-  hname = "nPU";
-  m_Histos1D[hname] = new TH1F(hname,hname,2*MAXNPU,0,MAXNPU);
-  hname = "rho";
-  m_Histos1D[hname] = new TH1F(hname,hname,2*MAXRHO,0,MAXRHO);
-  hname = "p_nPV_nPU";
-  m_Profiles[hname] = new TProfile(hname,hname,2*MAXNPU,0,MAXNPU);
-  hname = "p_rho_nPU";
-  m_Profiles[hname] = new TProfile(hname,hname,2*MAXNPU,0,MAXNPU);
-  hname = "p_rho_nPV";
-  m_Profiles[hname] = new TProfile(hname,hname,MAXNPV,0,MAXNPV);
-
 
   //Get Areas//
 
@@ -418,7 +418,7 @@ int main(int argc, char* argv[]) {
 
   UChar_t f[numFlavors][nEta];
   float energy[nEta], etMEAN[nEta], etMED[nEta], etMEANchs[nEta], etMEDchs[nEta];
-  int nJets=4;
+  int nJets;
   float jet_pt[nJets], jet_eta[nJets];
   float mu, rho;
   int nPV;
@@ -444,45 +444,41 @@ int main(int argc, char* argv[]) {
   tree->SetBranchAddress("nPV", &nPV);
 
 
-//--------Modification for hcal depth analysis---------
+//----------------------------Modification for hcal depth analysis----------------------------------
 
+    vector<double> *nh_eta = 0;
+    vector<double> *nh_energy = 0;
+    vector<double> *nh_ECAL = 0;
+    vector<double> *nh_HCAL = 0;
+    vector<double> *nh_rawECAL = 0;
+    vector<double> *nh_rawHCAL = 0;
+    vector<double> *nh_HO = 0;
+    vector<double> *nh_rawHO = 0;
 
-  vector<double> *nh_eta = 0;
-  vector<double> *nh_energy = 0;
-  vector<double> *nh_ECAL = 0;
-  vector<double> *nh_HCAL = 0;
-  vector<double> *nh_rawECAL = 0;
-  vector<double> *nh_rawHCAL = 0;
-  vector<double> *nh_HO = 0;
-  vector<double> *nh_rawHO = 0;
+    vector<double> *ne_eta = 0;
+    vector<double> *ne_energy = 0;
+    vector<double> *ne_ECAL = 0;
+    vector<double> *ne_HCAL = 0;
+    vector<double> *ne_rawECAL = 0;
+    vector<double> *ne_rawHCAL = 0;
+    vector<double> *ne_HO = 0;
+    vector<double> *ne_rawHO = 0;
 
-  vector<double> *ne_eta = 0;
-  vector<double> *ne_energy = 0;
-  vector<double> *ne_ECAL = 0;
-  vector<double> *ne_HCAL = 0;
-  vector<double> *ne_rawECAL = 0;
-  vector<double> *ne_rawHCAL = 0;
-  vector<double> *ne_HO = 0;
-  vector<double> *ne_rawHO = 0;
+    vector<double> *nh_HCAL_depth1_fraction = 0;
+    vector<double> *nh_HCAL_depth2_fraction = 0;
+    vector<double> *nh_HCAL_depth3_fraction = 0;
+    vector<double> *nh_HCAL_depth4_fraction = 0;
+    vector<double> *nh_HCAL_depth5_fraction = 0;
+    vector<double> *nh_HCAL_depth6_fraction = 0;
+    vector<double> *nh_HCAL_depth7_fraction = 0;
 
-  float nh_sum_HCAL[nEta], nh_sum_ECAL[nEta], nh_sum_HO[nEta];
-  float nh_sum_rawHCAL[nEta], nh_sum_rawECAL[nEta], nh_sum_rawHO[nEta];
+    float nh_sum_HCAL[nEta], nh_sum_ECAL[nEta], nh_sum_HO[nEta];
+//    float nh_sum_rawHCAL[nEta], nh_sum_rawECAL[nEta], nh_sum_rawHO[nEta];
 
-  float nh_HCAL_depth1_fraction_SUM[nEta], nh_HCAL_depth2_fraction_SUM[nEta], nh_HCAL_depth3_fraction_SUM[nEta], nh_HCAL_depth4_fraction_SUM[nEta],
-        nh_HCAL_depth5_fraction_SUM[nEta], nh_HCAL_depth6_fraction_SUM[nEta], nh_HCAL_depth7_fraction_SUM[nEta];
+//    float nh_HCAL_depth1_fraction_SUM[nEta], nh_HCAL_depth2_fraction_SUM[nEta], nh_HCAL_depth3_fraction_SUM[nEta], nh_HCAL_depth4_fraction_SUM[nEta], nh_HCAL_depth5_fraction_SUM[nEta], nh_HCAL_depth6_fraction_SUM[nEta], nh_HCAL_depth7_fraction_SUM[nEta];
 
-  vector<double> *nh_HCAL_depth1_fraction = 0;
-  vector<double> *nh_HCAL_depth2_fraction = 0;
-  vector<double> *nh_HCAL_depth3_fraction = 0;
-  vector<double> *nh_HCAL_depth4_fraction = 0;
-  vector<double> *nh_HCAL_depth5_fraction = 0;
-  vector<double> *nh_HCAL_depth6_fraction = 0;
-  vector<double> *nh_HCAL_depth7_fraction = 0;
-
-  float ne_sum_HCAL[nEta], ne_sum_ECAL[nEta], ne_sum_HO[nEta];
-  float ne_sum_rawHCAL[nEta], ne_sum_rawECAL[nEta], ne_sum_rawHO[nEta];
-
-  if (writeEnergyDeposition){
+//    float ne_sum_HCAL[nEta], ne_sum_ECAL[nEta], ne_sum_HO[nEta];
+//    float ne_sum_rawHCAL[nEta], ne_sum_rawECAL[nEta], ne_sum_rawHO[nEta];
 
     tree->SetBranchAddress("nh_eta", &nh_eta);
     tree->SetBranchAddress("nh_energy", &nh_energy);
@@ -510,15 +506,11 @@ int main(int argc, char* argv[]) {
     tree->SetBranchAddress("nh_HCAL_depth6_fraction",  &nh_HCAL_depth6_fraction);
     tree->SetBranchAddress("nh_HCAL_depth7_fraction",  &nh_HCAL_depth7_fraction);
 
-
     tree->SetBranchAddress("nh_sum_HCAL", nh_sum_HCAL);
-    tree->SetBranchAddress("nh_sum_ECAL", nh_sum_ECAL);
-    tree->SetBranchAddress("nh_sum_HO", nh_sum_HO);
-    tree->SetBranchAddress("nh_sum_rawHCAL", nh_sum_rawHCAL);
-    tree->SetBranchAddress("nh_sum_rawECAL", nh_sum_rawECAL);
-    tree->SetBranchAddress("nh_sum_rawHO", nh_sum_rawHO);
+//    tree->SetBranchAddress("nh_sum_ECAL", nh_sum_ECAL);
+//    tree->SetBranchAddress("nh_sum_HO", nh_sum_HO);
 
-
+/*
     tree->SetBranchAddress("nh_HCAL_depth1_fraction_SUM",  nh_HCAL_depth1_fraction_SUM);
     tree->SetBranchAddress("nh_HCAL_depth2_fraction_SUM",  nh_HCAL_depth2_fraction_SUM);
     tree->SetBranchAddress("nh_HCAL_depth3_fraction_SUM",  nh_HCAL_depth3_fraction_SUM);
@@ -528,16 +520,23 @@ int main(int argc, char* argv[]) {
     tree->SetBranchAddress("nh_HCAL_depth7_fraction_SUM",  nh_HCAL_depth7_fraction_SUM);
 
 
+
+    tree->SetBranchAddress("nh_sum_rawHCAL", nh_sum_rawHCAL);
+    tree->SetBranchAddress("nh_sum_rawECAL", nh_sum_rawECAL);
+    tree->SetBranchAddress("nh_sum_rawHO", nh_sum_rawHO);
+
     tree->SetBranchAddress("ne_sum_HCAL", ne_sum_HCAL);
     tree->SetBranchAddress("ne_sum_ECAL", ne_sum_ECAL);
     tree->SetBranchAddress("ne_sum_HO", ne_sum_HO);
+
     tree->SetBranchAddress("ne_sum_rawHCAL", ne_sum_rawHCAL);
     tree->SetBranchAddress("ne_sum_rawECAL", ne_sum_rawECAL);
     tree->SetBranchAddress("ne_sum_rawHO", ne_sum_rawHO);
 
-  }
 
-//--------------------------------------------------------------------------------
+*/
+
+//--------------------------------------------------------------------------------------
 
 
   // JetVetoMap implementation
@@ -577,7 +576,8 @@ int main(int argc, char* argv[]) {
 
   for (Long64_t n=0; n<nEntries; n++) {
     int entry_num = tree->GetEntry(n);
-    if (n % 10000 == 0){ cout << "Processing Event: " << n+1 << ", Total events = "<< entry_num <<endl;
+    if (n % 100 == 0){ cout << "Processing Event: " << n+1 << ", Total events = "<< entry_num <<endl;
+      cout << nEntries << " Events" << endl;
     }
     //if (jet_pt[0] > pt_cut) continue ; //to only select events with pT,corr < pt_cut
     //cout << "Processing Event " << n+1 << endl;
@@ -707,10 +707,16 @@ int main(int argc, char* argv[]) {
           hname = Form("h_mikko_eta_nPU%i_", intmu) + ids[i_id];
           FillHist1D(hname, eta, mikko_offpt); 
 
-          
-         //--------Modification for hcal depth analysis-----------------
-          if (writeEnergyDeposition){
+         //----------------------------Modification for hcal depth analysis----------------------------------
+            double nh_mikko_offpt_HCAL = nh_sum_HCAL[ieta] * 1 * M_PI*rCone*rCone / 1. / cosh(eta) / area;
+            hname = Form("nh_p_mikko_eta_nPU%i_HCAL", intmu);
+            FillProfile(hname, eta, nh_mikko_offpt_HCAL, weight);
+//            if (n % 100 == 0 && nh_sum_HCAL[ieta]>0) cout << "nh_sum_HCAL[ieta]: " << nh_sum_HCAL[ieta] << ", for eta = " << etabins[ieta] <<endl;
+            if (n % 100 == 0 && nh_sum_HCAL[ieta]>0) cout << ieta ;
+
              
+/*
+          if (writeEnergyDeposition) {
             double nh_mikko_offpt_HCAL = nh_sum_HCAL[ieta] * 1 * M_PI*rCone*rCone / 1. / cosh(eta) / area;
             hname = Form("nh_p_mikko_eta_nPU%i_HCAL", intmu);
             FillProfile(hname, eta, nh_mikko_offpt_HCAL, weight);
@@ -814,8 +820,9 @@ int main(int argc, char* argv[]) {
             FillProfile(hname, eta, nh_mikko_offpt_rawECAL+ne_mikko_offpt_rawECAL, weight);
             hname = Form("nhplusne_p_mikko_eta_nPU%i_rawHO", intmu);
             FillProfile(hname, eta, nh_mikko_offpt_rawHO+ne_mikko_offpt_rawHO, weight);
-          }     
-          //------------------------------------------------------------------------
+          }  //end WriteEnergyDeposition
+*/
+          //--------------------------------------------------------------------------------------
 
           double ptdensity_permu_in_eta_stripe = mikko_offpt / (M_PI*rCone*rCone) / mu ;
           ptdensity_permu_in_eta_stripe = (ptdensity_permu_in_eta_stripe>5 ? 4.99 : ptdensity_permu_in_eta_stripe) ;
@@ -831,9 +838,10 @@ int main(int argc, char* argv[]) {
         }
       }
     } // end eta loop
-    
-    //------------Modification for hcal depth analysis------------------
-    if (writeEnergyDeposition){
+
+    //----------------------------Modification for hcal depth analysis----------------------------------
+/*
+    if (writeEnergyDeposition) {
 
       for (int inh=0 ; inh<int(nh_energy->size()); inh++){
         int etaIndex = getEtaIndex( (*nh_eta)[inh] );
@@ -854,17 +862,13 @@ int main(int argc, char* argv[]) {
 
 
         hname = "profile_nh_ratio_energy";
-        if (double((*nh_rawECAL)[inh]+(*nh_rawHCAL)[inh]+(*nh_rawHO)[inh])!=0){
-        FillProfile(hname, eta, double((*nh_energy)[inh])/double((*nh_rawECAL)[inh]+(*nh_rawHCAL)[inh]+(*nh_rawHO)[inh]), weight);}
+        FillProfile(hname, eta, double((*nh_energy)[inh])/double((*nh_rawECAL)[inh]+(*nh_rawHCAL)[inh]+(*nh_rawHO)[inh]), weight);
         hname = "profile_nh_ratio_ECAL";
-        if (double((*nh_rawECAL)[inh])!=0){
-        FillProfile(hname, eta, double((*nh_ECAL)[inh])/double((*nh_rawECAL)[inh]), weight);}
+        FillProfile(hname, eta, double((*nh_ECAL)[inh])/double((*nh_rawECAL)[inh]), weight);
         hname = "profile_nh_ratio_HCAL";
-        if (double((*nh_rawHCAL)[inh])!=0){
-        FillProfile(hname, eta, double((*nh_HCAL)[inh])/double((*nh_rawHCAL)[inh]), weight);}
+        FillProfile(hname, eta, double((*nh_HCAL)[inh])/double((*nh_rawHCAL)[inh]), weight);
         hname = "profile_nh_ratio_HO";
-        if (double((*nh_rawHO)[inh])!=0){
-        FillProfile(hname, eta, double((*nh_HO)[inh])/double((*nh_rawHO)[inh]), weight);}
+        FillProfile(hname, eta, double((*nh_HO)[inh])/double((*nh_rawHO)[inh]), weight);
         hname = "profile_nh_rawEtorawH";
         FillProfile(hname, eta, nh_EovHraw, weight);
 
@@ -913,27 +917,23 @@ int main(int argc, char* argv[]) {
         FillHist2D(hname, eta, ne_EovHraw, weight);
 
         hname = "profile_ne_ratio_energy";
-        if (double((*ne_rawECAL)[ine]+(*ne_rawHCAL)[ine]+(*ne_rawHO)[ine])!=0){
-        FillProfile(hname, eta, double((*ne_energy)[ine])/double((*ne_rawECAL)[ine]+(*ne_rawHCAL)[ine]+(*ne_rawHO)[ine]), weight);}
+        FillProfile(hname, eta, double((*ne_energy)[ine])/double((*ne_rawECAL)[ine]+(*ne_rawHCAL)[ine]+(*ne_rawHO)[ine]), weight);
         hname = "profile_ne_ratio_ECAL";
-        if (double((*ne_rawECAL)[ine])!=0){
-        FillProfile(hname, eta, double((*ne_ECAL)[ine])/double((*ne_rawECAL)[ine]), weight);}
+        FillProfile(hname, eta, double((*ne_ECAL)[ine])/double((*ne_rawECAL)[ine]), weight);
         hname = "profile_ne_ratio_HCAL";
-        if (double((*ne_rawHCAL)[ine])!=0){
-        FillProfile(hname, eta, double((*ne_HCAL)[ine])/double((*ne_rawHCAL)[ine]), weight);}
+        FillProfile(hname, eta, double((*ne_HCAL)[ine])/double((*ne_rawHCAL)[ine]), weight);
         hname = "profile_ne_ratio_HO";
-        if (double((*ne_rawHO)[ine])!=0){
-        FillProfile(hname, eta, double((*ne_HO)[ine])/double((*ne_rawHO)[ine]), weight);}
+        FillProfile(hname, eta, double((*ne_HO)[ine])/double((*ne_rawHO)[ine]), weight);
         hname = "profile_ne_rawEtorawH";
         FillProfile(hname, eta, ne_EovHraw, weight);
       }
-    }
-    //---------------------------------------------------------------
-    
+    }  // end writeEnergyDeposition
+*/
+    //--------------------------------------------------------------------------------------
+
 
   } //end event loop
 
-  cout << "Processed all events, writing histograms . . ." << endl;
   //Write Histos//
 
   TFile* outFile = new TFile(outName,"RECREATE");
@@ -945,20 +945,21 @@ int main(int argc, char* argv[]) {
     outFile->mkdir( "offset_nPV/" + ids[i_id] );
     outFile->mkdir( "mikko_nPU/"  + ids[i_id] );
   }
-  outFile->mkdir( "mikko_nPU/HCAL" );
-  outFile->mkdir( "mikko_nPU/ECAL" );
-  outFile->mkdir( "mikko_nPU/HO" );
-
-  outFile->mkdir( "mikko_nPU/rawHCAL" );
-  outFile->mkdir( "mikko_nPU/rawECAL" );
-  outFile->mkdir( "mikko_nPU/rawHO" );
-  outFile->mkdir("map/multivseta");
-
   outFile->mkdir( "ptdensity_/" );
   outFile->mkdir( "offsetMED/" );
   outFile->mkdir( "offsetMEAN/" );
   outFile->mkdir( "mikkoMED/" );
   outFile->mkdir( "mikkoMEAN/" );
+  outFile->mkdir( "mikko_nPU/" );
+  outFile->mkdir( "mikko_nPU/HCAL/" );
+  outFile->mkdir( "mikko_nPU/ECAL/" );
+  outFile->mkdir( "mikko_nPU/HO/" );
+
+  outFile->mkdir( "mikko_nPU/rawHCAL/" );
+  outFile->mkdir( "mikko_nPU/rawECAL/" );
+  outFile->mkdir( "mikko_nPU/rawHO/" );
+  outFile->mkdir( "map/");
+  outFile->mkdir( "map/multivseta/");
   outFile->mkdir( "EH_HH/" );
 
 
@@ -966,6 +967,10 @@ int main(int argc, char* argv[]) {
     hname = hid->first;
     if ( hname.Contains( "ptdensity_" ) ){
       outFile->cd(outName + ":/ptdensity_/" );
+      hid->second->Write();
+    }
+    else if ( hname.Contains("N_") ){
+      outFile->cd(outName + ":map/multivseta/");
       hid->second->Write();
     }
     else if ( hname.Contains( "offsetMED" ) ){
@@ -984,55 +989,36 @@ int main(int argc, char* argv[]) {
       outFile->cd(outName + ":/mikkoMEAN/" );
       hid->second->Write();
     }
-    else if ( hname.Contains("N_") ){
-      outFile->cd(outName + ":map/multivseta");
-      hid->second->Write();
-    }
     else{
       dir->cd(outName+":");
       hid->second->Write();
     }
   }
-
-  for (map<TString, TH2*>::iterator hid = m_Histos2D.begin(); hid != m_Histos2D.end(); hid++){
-    hname = hid->first;
+  for (map<TString, TH2*>::iterator hid = m_Histos2D.begin(); hid != m_Histos2D.end(); hid++) {
     if ( hname.Contains("2drawEtorawH_HH_nPU") || hname.Contains("2drawEtorawH_EH_nPU")){ 
       outFile->cd(outName + ":/EH_HH/");
-      hid->second->Write();
     }
-    else { 
-      dir->cd(outName+":");
-      hid->second->Write();
-    }
+    hid->second->Write();
   }
-
   for (map<TString, TProfile*>::iterator hid = m_Profiles.begin(); hid != m_Profiles.end(); hid++){
     outFile->cd();
     hname = hid->first;
-
     if ( hname.Contains("p_offset_eta_nPU") ){
       TString id = hname( hname.Last('_')+1, hname.Length() );
       outFile->cd(outName + ":/offset_nPU/" + id);
-      hid->second->Write();
     }
     else if ( hname.Contains("p_offset_eta_nPV") ){
       TString id = hname( hname.Last('_')+1, hname.Length() );
       outFile->cd(outName + ":/offset_nPV/" + id);
-      hid->second->Write();
     }
     else if ( hname.Contains("p_mikko_eta_nPU") ){
       TString id = hname( hname.Last('_')+1, hname.Length() );
       outFile->cd(outName + ":/mikko_nPU/" + id);
-      hid->second->Write();
     }
     else if ( hname.Contains("profilerawEtorawH_HH_nPU") || hname.Contains("profilerawEtorawH_EH_nPU")){
       outFile->cd(outName + ":/EH_HH/");
-      hid->second->Write();
     }
-    else { 
-      dir->cd(outName+":");
-      hid->second->Write();
-    }
+    hid->second->Write();
   }
 
   for (map<TString, TProfile2D*>::iterator hid = m_Profiles2D.begin(); hid != m_Profiles2D.end(); hid++){
@@ -1042,9 +1028,6 @@ int main(int argc, char* argv[]) {
   outFile->Write();
   delete outFile;
   outFile = 0;
-
-  cout << "Histograms saved, finished processing!" << endl;
-
 }
 
 //------------------------------------------------------------------------------------------------------
@@ -1052,36 +1035,36 @@ int main(int argc, char* argv[]) {
 void FillHist1D(const TString& histName, const Double_t& value, const double& weight) 
 {
   map<TString, TH1*>::iterator hid=m_Histos1D.find(histName);
-  if (hid!=m_Histos1D.end())
-  //  cout << "%FillHist1D -- Could not find histogram with name: " << histName << endl;
-//  else
+  if (hid==m_Histos1D.end())
+    cout << "%FillHist1D -- Could not find histogram with name: " << histName << endl;
+  else
     hid->second->Fill(value, weight);
 }
 
 void FillHist2D(const TString& histName, const Double_t& value1, const Double_t& value2, const double& weight) 
 {
   map<TString, TH2*>::iterator hid=m_Histos2D.find(histName);
-  if (hid!=m_Histos2D.end())
-  //  cout << "%FillHist2D -- Could not find histogram with name: " << histName << endl;
-//  else
+  if (hid==m_Histos2D.end())
+    cout << "%FillHist2D -- Could not find histogram with name: " << histName << endl;
+  else
     hid->second->Fill(value1, value2, weight);
 }
 
 void FillProfile(const TString& histName, const Double_t& value1, const Double_t& value2, const double& weight) 
 {
   map<TString, TProfile*>::iterator hid=m_Profiles.find(histName);
-  if (hid!=m_Profiles.end())
-  //  cout << "%FillProfile -- Could not find profile with name: " << histName << endl;
-//  else
+  if (hid==m_Profiles.end())
+    cout << "%FillProfile -- Could not find profile with name: " << histName << endl;
+  else
     hid->second->Fill(value1, value2, weight);
 }
 
 void FillProfile2D(const TString& histName, const Double_t& value1, const Double_t& value2, const Double_t& value3, const double& weight) 
 {
   map<TString, TProfile2D*>::iterator hid=m_Profiles2D.find(histName);
-  if (hid!=m_Profiles2D.end())
-  //  cout << "%FillProfile2D -- Could not find profile with name: " << histName << endl;
-//  else
+  if (hid==m_Profiles2D.end())
+    cout << "%FillProfile2D -- Could not find profile with name: " << histName << endl;
+  else
     hid->second->Fill(value1, value2, value3, weight);
 }
 

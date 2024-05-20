@@ -16,31 +16,27 @@ process.options.allowUnscheduled = cms.untracked.bool(True)
 readFiles = cms.untracked.vstring()
 process.source = cms.Source ("PoolSource", fileNames = readFiles)
 readFiles.extend( [
-# '/store/data/Run2022C/ZeroBias/AOD/27Jun2023-v1/2820000/0138650f-11ec-401a-bb88-20c87aa0619c.root'
-# '/store/data/Run2022D/ZeroBias/AOD/27Jun2023-v1/2830000/b944540d-d254-48f2-87b2-d2b19062736f.root' 
-# '/store/data/Run2022E/ZeroBias/AOD/27Jun2023-v1/2810000/7c703acf-2195-4823-a33a-7dc912c32609.root'
-# '/store/data/Run2022F/ZeroBias/AOD/PromptReco-v1/000/360/393/00000/67126efe-5df8-4231-affc-9b6174e79547.root'
-# '/store/data/Run2022G/ZeroBias/AOD/PromptReco-v1/000/362/439/00000/41d9f7f2-d0a7-44f3-8b25-6a3a1c859bec.root'
- '/store/data/Run2023C/ZeroBias/AOD/PromptReco-v1/000/367/095/00000/376d252a-3cd0-4919-a629-d074be68fc05.root'
-# '/store/data/Run2023D/ZeroBias/AOD/PromptReco-v1/000/369/869/00000/a3832f72-9dbc-4b16-8ade-68e02ecc0797.root'
+  '/store/mc/Run3Summer23DR/SingleNeutrino_E-10_gun/AODSIM/FlatPU0to100_130X_mcRun3_2023_realistic_v15_ext1-v3/2550000/2fd4ab3f-2b10-45ca-a323-ac67ed3983d6.root'
 ] );
 
-isMC = cms.bool(False)
+isMC = cms.bool(True)
 
 if isMC:
-  OutputName = "_MC_Summer20UL18"
-  eraName = "Summer20UL18_V2_MC"
+  OutputName = "_MC_Run3Summer23"           
+#  eraName = "Summer20UL18_V2_MC"
   jetType_name = "AK4PFchs" # or "AK4PF"
 
+  process.load( "Configuration.Geometry.GeometryIdeal_cff" )
+  process.load( "Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cff" )
   process.load( "Configuration.StandardSequences.FrontierConditions_GlobalTag_cff" )
   from Configuration.AlCa.GlobalTag import GlobalTag
-  process.GlobalTag = GlobalTag( process.GlobalTag, '106X_upgrade2018_realistic_v16_L1v1' )
-  #process.GlobalTag = GlobalTag( process.GlobalTag, '106X_mcRun2_asymptotic_preVFP_v8' )
+  process.GlobalTag = GlobalTag( process.GlobalTag, '132X_mcRun3_2023_realistic_v5' )
 
 
 else:
-  run = "2023_RunC"
-  OutputName = "_Run3_Data_"+run+"_v4"
+  run = "D"
+  OutputName = "_Run2_Data_UL2018"+run
+
 #  eraName = "Winter22Run3"+"_RunD"+"_V2_DATA"
   jetType_name = "AK4PFchs" # or "AK4PF"
 
@@ -48,13 +44,13 @@ else:
   process.load( "Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cff" )
   process.load( "Configuration.StandardSequences.FrontierConditions_GlobalTag_cff" )
   from Configuration.AlCa.GlobalTag import GlobalTag
-  process.GlobalTag = GlobalTag( process.GlobalTag, '130X_dataRun3_Prompt_v3' )
+  process.GlobalTag = GlobalTag( process.GlobalTag, '106X_dataRun2_v26' )
 
   # ZeroBias Trigger
   process.HLTZeroBias =cms.EDFilter("HLTHighLevel",
     TriggerResultsTag = cms.InputTag("TriggerResults","","HLT"),
-    #HLTPaths = cms.vstring('HLT_ZeroBias_part*','HLT_ZeroBias_v*'),
-    HLTPaths = cms.vstring('HLT_ZeroBias_v*'),
+    HLTPaths = cms.vstring('HLT_ZeroBias_part*','HLT_ZeroBias_v*'),
+    #HLTPaths = cms.vstring('HLT_ZeroBias_v*'),
     eventSetupPathsKey = cms.string(''),
     andOr = cms.bool(True), #----- True = OR, False = AND between the HLTPaths
     throw = cms.bool(False)
@@ -72,11 +68,11 @@ else:
   )
 
 process.pf = cms.EDAnalyzer("OffsetTreeMaker",
-    numSkip = cms.int32(23),
+    numSkip = cms.int32(3),                                        
     RootFileName = cms.string("Offset" + OutputName + ".root"),
-    puFileName = cms.string("pileup_2023.txt"),
-    jetVetoMapFileName = cms.string("vetomaps_Summer23Prompt23_RunBC_v1.root"),
-    mapName2 = cms.string("jetvetomap_all"),
+    puFileName = cms.string("pileup_2023_new.txt"),
+    jetVetoMapFileName = cms.string("Vetomap_Summer23Prompt23_RunC_v1.root"),       
+    mapName2 = cms.string("jetvetomap_all"),   
     isMC = isMC,
     writeCands = cms.bool(False),
     trackTag = cms.InputTag("generalTracks"),

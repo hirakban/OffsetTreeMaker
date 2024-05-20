@@ -19,7 +19,6 @@
 <use   name="TBDataFormats/HcalTBObjects"/>
 <use   name="SimDataFormats/GeneratorProducts"/>
 <use   name="JetMETCorrections/Objects"/>
-<use   name="JetMETCorrections/MCJet"/>
 <use   name="CommonTools/UtilAlgos"/>
 <use   name="FWCore/ServiceRegistry"/>
 <use   name="PhysicsTools/PatUtils"/>
