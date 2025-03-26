@@ -1,6 +1,6 @@
 # Calculating L1Offset scale factor
 
-In this analyzer, L1RC Jet Energy Corrections(JECs) are derived using root tuples. The documentaion of all available files and their purpose can be found in [Appendix B](https://github.com/garvitaa/OffsetTreeMaker#appendix-b).
+In this analyzer, L1RC Jet Energy Corrections(JECs) are derived using root tuples. The documentaion of all available files and their purpose can be found in [Appendix B](https://github.com/hirakban/OffsetTreeMaker#appendix-b).
 
 For more information on L1Offset see Section 4 of https://iopscience.iop.org/article/10.1088/1748-0221/12/02/P02014/pdf .
 
@@ -15,7 +15,7 @@ cd CMSSW_10_6_2/src
 cmsenv
 mkdir test
 cd test
-git clone https://github.com/garvitaa/OffsetTreeMaker.git
+git clone https://github.com/hirakban/OffsetTreeMaker.git
 cd OffsetTreeMaker
 scram b
 cmsenv
@@ -28,7 +28,7 @@ Here we are running the framework /plugins/OffsetTreeMaker.cc using the configur
 Another option is to copy a segment of data locally to test the file. This can be done using the code copy_cfg.py or xrdcp command.
 
 ### For Data:
-1. Extract corresponding pileup JSON from this site: https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/
+1. Extract corresponding pileup JSON from this site: https://cms-service-dqmdc.web.cern.ch/CAF/certification/
 
 **OR** on lxplus at: /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/   
 
@@ -67,7 +67,7 @@ Another option is to copy a segment of data locally to test the file. This can b
      ```python
      numSkip = cms.int32(***),
      ```
-     Change the pileup file name. 
+     Change the pileup file name, and include appropriate jet veto maps. 
      ```python
      puFileName = cms.string("pileup_20**XX**.txt"),
      ```  
@@ -112,7 +112,7 @@ Modify crab_run_offset.py
      ```python
      config.Data.splitting = 'LumiBased'
      ```
-5. Apply lumi-mask to the input dataset analysis. The golden-json file can be found at: https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/ Download the certificate into the present working directory.
+5. Apply lumi-mask to the input dataset analysis. The golden-json file can be found at: https://cms-service-dqmdc.web.cern.ch/CAF/certification/ Download the certificate into the present working directory.
      ```python
      config.Data.lumiMask = 'Cert_--*golden json file*--.txt'
      ```
@@ -244,22 +244,33 @@ brilcalc lumi -b "STABLE BEAMS" --byls --normtag /cvmfs/cms-bril.cern.ch/cms-lum
 List of all files in this folder along with the purpose of each.
 File/Folder | Purpose
 ---------|------------
-bin| Contains histomaker.cc and its build file
-Adding other files| Under development
+plugins | Contains OffsetTreeMaker.cc and parsePileUpJSON2.h
+bin | Contains histomaker.cc and its build file
+offsetpT_stack.c | Creates stackplots
+offsetpT_stack_depth.c | Creates HCAL depth dependent plots
+offsetpT.c | Creates DATA and MC L1RC files
+scalefactor.c | Creates DATA/MC scalefactors
+compare_sf.c | Creates scalefactor comparison plots
+l1fastjet_adapted2020.c | Creates MC L1FastJet parametrization textfiles
 
 # Appendix C
 Here is a record of the dataset processed and their location on lpc.
-Dataset | Location of root tuples 
+Run3 Datasets | Location of root tuples 
 ---------|------------
-2016 - ZeroBias| /eos/uscms/store/user/gagarwal/offset/L1Offset2018/Data/2016/Data_Run**X**.root where **X** = B, C, D, E, F, G, H
-2016 - SingleNeutrino| /eos/uscms/store/user/gagarwal/offset/L1Offset2018/Data/2016/RunIISummer16_MC_Tree.root 
-UL2016 - ZeroBias| Location not known
-UL2016 - SingleNeutrino| Location not known
-2017 - ZeroBias| /eos/uscms/store/user/gagarwal/offset/L1Offset2018/Data/2018/Total_Data17Nov2017**X**.root where **X** = B, C, D, E, F
-2017 - SingleNeutrino|  /eos/uscms/store/user/gagarwal/offset/L1Offset2018/Data/2018/Total_MC_Fall2017.root
-UL2017 - ZeroBias| /eos/uscms/store/group/lpcjme/L1Offset/UltraLegacy17_scalefactors/jetSort/Run**X**_try2/Total_Data_UL2017**X**.root where **X** = B, C, D, E, F
-UL2017 - SingleNeutrino| /eos/uscms/store/group/lpcjme/L1Offset/UltraLegacy17_scalefactors/jetSort/MC_try3/Total_MC_UL2017.root 
-2018 - ZeroBias|  /eos/uscms/store/user/gagarwal/offset/L1Offset2018/Data/2018/Total_Data17Sep2018**X**.root where **X** = A, B, C, D
-2018 - SingleNeutrino| /eos/uscms/store/user/gagarwal/offset/L1Offset2018/MC/2018/Total_MC_Autumn2018.root
-UL2018 - ZeroBias| /eos/uscms/store/group/lpcjme/L1Offset/UltraLegacy18_scalefactors/Total_Data_UL2018**X**.root where **X** = A, B, C, D
-UL2018 - SingleNeutrino| /eos/uscms/store/group/lpcjme/L1Offset/UltraLegacy18_scalefactors/Total_MC_UL2018.root
+Data - ZeroBias| /eos/uscms/store/user/hirakban/Run3\_L1Offset/Data\_with\_depth/
+MC - SingleNeutrino| /eos/uscms/store/user/hirakban/Run3\_L1Offset/MC\_New/ 
+
+# Appendix D
+To understand the neutral hadronic contribution to Offset from different HCAL layers, a depth dependent study can also be performed.
+
+Use ./produce_plots.sh to create plots. Make changes to _**produce_plots.sh**_ to run _**offsetpT_stack_depth.c**_.
+
+# Appendix E
+In case, the pileup JSON files are unavailable centrally, this is how to produce it using Bril.
+
+1. Search for it here: https://twiki.cern.ch/twiki/bin/viewauth/CMS/PileupJSONFileforData#Location_of_central_pileup_JSON
+2. If they are not available, then use this instructions to derive your own pileup files. (Be aware, this will consume a lot of space)
+https://twiki.cern.ch/twiki/bin/viewauth/CMS/PileupJSONFileforData#Creating_the_pileup_files
+3. The normtag file can also be found here (https://github.com/CMS-LUMI-POG/Normtags). Please use the most updated version.
+4. The json_DCSONLY.txt file can be found here (https://cms-service-dqmdc.web.cern.ch/CAF/certification/Collisions24/DCSOnly_JSONS/). This file is provided under the Run year folder for each year. 
+
