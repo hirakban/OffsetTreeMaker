@@ -86,6 +86,7 @@ class OffsetTreeMaker : public edm::one::EDAnalyzer<> {
     TTree* tree;
 
     TH1F* h;
+    TH1F* h1;
     TH2F* h2_GME; // 2d ET_eta_phi histo 
     TH2F* et_etaphi;
     TH2F* et_etaphi_chs;
@@ -104,7 +105,9 @@ class OffsetTreeMaker : public edm::one::EDAnalyzer<> {
 
     ULong64_t event;
     int run, lumi, bx;
+//    int PileUpbx = 1;
     float mu;
+//    float mubx;  // uncomment for lumibx
     float rho, rhoC0, rhoCC, rhoC;
 
     int mua[16];
@@ -150,7 +153,7 @@ class OffsetTreeMaker : public edm::one::EDAnalyzer<> {
     TString RootFileName_, jetVetoMapFileName_, mapName2_; // mapName6_;
     vector<vector<double>> JetVetoMap ;
  
-    string puFileName_, jet_type_; //era_,
+    string puFileName_, pubxFileName_, jet_type_; //era_,
     int numSkip_;
     bool isMC_, writeCands_, doL1L2L3Res_, dojetVetoMap_;
 
@@ -173,6 +176,7 @@ OffsetTreeMaker::OffsetTreeMaker(const edm::ParameterSet& iConfig)
   numSkip_ = iConfig.getParameter<int> ("numSkip");
   RootFileName_ = iConfig.getParameter<string>("RootFileName");
   puFileName_ = iConfig.getParameter<string>("puFileName");
+//  pubxFileName_ = iConfig.getParameter<string>("pubxFileName");  // uncomment for lumibx
   jetVetoMapFileName_ = iConfig.getParameter<string>("jetVetoMapFileName");
   mapName2_ = iConfig.getParameter<string>("mapName2");
 //  mapName6_ = iConfig.getParameter<string>("mapName6");
@@ -199,6 +203,10 @@ OffsetTreeMaker::OffsetTreeMaker(const edm::ParameterSet& iConfig)
 // ------------ method called once each job just before starting event loop  ------------
 void  OffsetTreeMaker::beginJob() {
 
+//  if (!isMC_){  // uncomment for lumibx
+//    parsePileUpbxJSON2( pubxFileName_ );
+//    cout << "ParsePileupbx Passed" <<  endl;
+//  }
   root_file = new TFile(RootFileName_,"RECREATE");
   tree = new TTree("T","Offset Tree");
 
@@ -219,7 +227,10 @@ void  OffsetTreeMaker::beginJob() {
   }
 
   if (!isMC_){
+    //parsePileUpbxJSON2( pubxFileName_ ); // uncomment for lumibx
+    //cout << "ParsePileupbx Passed" <<  endl;  // uncomment for lumibx
     parsePileUpJSON2( puFileName_ );
+    cout << "ParsePU Passed" << endl;
 
     tree->Branch("run", &run, "run/I");
     tree->Branch("lumi", &lumi, "lumi/I");
@@ -236,6 +247,7 @@ void  OffsetTreeMaker::beginJob() {
   }
 
   tree->Branch("mu", &mu, "mu/F");
+//  tree->Branch("mubx", &mubx, "mubx/F");  // uncomment for lumibx
   tree->Branch("mua", mua, "mua[16]/I");
   tree->Branch("puz", puz, "puz[50]/F");
 
@@ -356,7 +368,7 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     iEvent.getByToken(muTag_, pileups);
 
     mu = pileups->at(1).getTrueNumInteractions();
-
+    // mubx = mu;  // uncomment for lumibx
     int j = 0;
     std::vector<PileupSummaryInfo>::const_iterator pileupinfo;
     for(pileupinfo = pileups->begin(); pileupinfo != pileups->end(); ++pileupinfo){
@@ -380,10 +392,12 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     bx = iEvent.bunchCrossing();
     event = iEvent.id().event();
 
+    //mubx = getAvgPUbx( run, lumi, bx );  // uncomment for lumibx
+    //cout << "Fetched PUbx = " << mubx << endl;
     mu = getAvgPU( run, lumi );
+    //cout << "Fetched PU = " << mu << endl;
     if (mu==0) return;
-  }
-
+  }  
 
 //------------ Primary Vertices ------------//
 
@@ -804,7 +818,9 @@ void OffsetTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 void OffsetTreeMaker::endJob() {
   
   if (root_file !=0) {
+    cout << "About to write histograms" << endl;
     h_nFoundVertex->Write();
+    cout << "nFoundVertex written..." << endl;
     h_bestweight->Write();
     h_bestweight1->Write();
     
@@ -812,6 +828,7 @@ void OffsetTreeMaker::endJob() {
     delete root_file;
     root_file = 0;
   }
+  else {cout << "No files to write" << endl;}
 }
 
 int OffsetTreeMaker::getEtaIndex(float eta){

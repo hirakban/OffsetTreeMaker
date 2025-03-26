@@ -17,19 +17,24 @@ map<int, map<int, float> > m_PU;
 map<int, map<int, map<int, float> > > m_PUbx;
 const float MINBIAS_XS = 69200;
 
-float getAvgPU(int run, int ls) {
+float getAvgPU(int run, int ls) {    // mu-per-BX averaged over LS 
   return m_PU[run][ls];
 }
 
-//float getAvgPU(int run, int ls, int bx) {
-//  return m_PUbx[run][ls][bx];
-//}
-/*
-int parsePileUpJSON2(string filename="lumi-per-bx.root") {
+float getAvgPUbx(int run, int ls, int bx) {   // mu-per-BX not-averaged over LS
+  return m_PUbx[run][ls][bx];
+}
+
+int parsePileUpbxJSON2(string filename="") {
 
   //### Lumi per BX ###//
 
-  TFile* file = TFile::Open( filename.data() );
+  TFile* file = TFile::Open( filename.data(), "READ" );
+  if (!file || file->IsZombie()) {
+     std::cerr << "Error opening file!" << std::endl;
+     return 1;
+  } 
+  cout << "Opened lumiPU file: " << filename << endl;
   int nBuckets = 3564;
 
   TIter nextkey(file->GetListOfKeys());
@@ -53,8 +58,12 @@ int parsePileUpJSON2(string filename="lumi-per-bx.root") {
     }
   }
 
-*/
-int parsePileUpJSON2(string filename="pileup_2023.txt") {
+  file->Close();
+  return 0;
+}
+
+
+int parsePileUpJSON2(string filename="pileup_2024_1010.txt") {
   //### Using Brilcalc ###//
 /*  cout << "Opening " << filename << "...";
 

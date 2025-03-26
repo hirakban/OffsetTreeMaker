@@ -11,6 +11,7 @@
 #include "TTree.h"
 #include "TMath.h"
 #include "jetVetoMap.h" //newline
+#include "parsePileUpJSON2.h"
 
 #include <string>
 #include <cmath>
@@ -40,10 +41,13 @@ double areaS(double R, double x1, double x2);
 double dist(double R, double x1, double x2);
 bool dojetVetoMap = true;					//newline
 TString jetVetoMapFileName;                     		//newline
-//TString mapName2 = "jetvetomap_all";				//newline
-TString mapName2 = "jetvetomap_nobpix";				//newline
+TString mapName2 = "jetvetomap_all";				//newline
+//TString mapName2 = "jetvetomap_nobpix";				//newline
 bool writeEnergyDeposition = true;
-
+bool PileUpbx = false;
+bool splitnibs = false;
+const float minBiasxsSF = 75.3/69.2 ;
+bool update_minbias_xs = false;
 map<TString, TH1*> m_Histos1D;
 map<TString, TH2*> m_Histos2D;
 map<TString, TProfile*> m_Profiles;
@@ -54,7 +58,8 @@ const int MAXNPV = 100;
 const int MAXRHO = 100;
 
 int getEtaIndex(float eta);
-
+int run_begin;
+int run_end;
 int main(int argc, char* argv[]) {
 
   bool isMC = false;
@@ -62,18 +67,28 @@ int main(int argc, char* argv[]) {
   float rCone = stof( argv[2] );
 
   TString dataName = argv[3];
-
+  PileUpbx = isMC ? argv[7] : argv[6];
+  //cout << "Pileupbx: " << PileUpbx << endl;
+  if (splitnibs){
+    run_begin = stoi(isMC ? argv[8] : argv[7]);
+    run_end = stoi(isMC ? argv[9] : argv[8]);
+    cout << "run begin: " << run_begin << endl;}
   //Open Files//
 
   TString inName = isMC ? argv[4] : dataName;
-  jetVetoMapFileName = isMC ? argv[5] : argv[4];
-  cout << "JetVetoMap used: " << jetVetoMapFileName << endl;
+  if (dojetVetoMap){
+      jetVetoMapFileName = isMC ? argv[5] : argv[4];
+      cout << "JetVetoMap used: " << jetVetoMapFileName << endl;
+      mapName2 = isMC ? argv[6] : argv[5];
+      cout << "Mapname: " << mapName2 << endl;
+  }
 
   TString outName = "histomaker_outputs/" + inName( inName.Last('/')+1, inName.Last('.')-inName.Last('/')-1 );
   if (isMC){
     TString add_dataName = dataName(dataName.Last('/')+1, dataName.Last('.')-dataName.Last('/')-1);
     cout << add_dataName << endl;
     outName += "_" + add_dataName ;}
+  if (update_minbias_xs) outName += "-new-MinbiasXS";
   outName += "_R" + to_string( int(rCone*10) ) + ".root";
   cout << "output:" << "\t" << outName << endl;
   cout << "inName:" << "\t" << inName << endl;
@@ -359,6 +374,8 @@ int main(int argc, char* argv[]) {
   m_Histos1D[hname] = new TH1F(hname,hname,MAXNPV,0,MAXNPV);
   hname = "nPU";
   m_Histos1D[hname] = new TH1F(hname,hname,2*MAXNPU,0,MAXNPU);
+  hname = "nPUbx";
+  m_Histos1D[hname] = new TH1F(hname,hname,2*MAXNPU+20,-10,MAXNPU);
   hname = "rho";
   m_Histos1D[hname] = new TH1F(hname,hname,2*MAXRHO,0,MAXRHO);
   hname = "p_nPV_nPU";
@@ -368,6 +385,8 @@ int main(int argc, char* argv[]) {
   hname = "p_rho_nPV";
   m_Profiles[hname] = new TProfile(hname,hname,MAXNPV,0,MAXNPV);
 
+  hname = "pubx_vs_pu";
+  m_Histos2D[hname] = new TH2F(hname,hname, 2*MAXNPU,0,MAXNPU, 2*MAXNPU+20,-10,MAXNPU);
 
   //Get Areas//
 
@@ -384,7 +403,28 @@ int main(int argc, char* argv[]) {
     TTree* dTree = (TTree*) dataFile->Get("T");
 
     h_weights = new TH1F("h_weights","h_weights",2*MAXNPU,0,MAXNPU);
-    dTree->Draw("mu>>h_weights");
+    //dTree->Draw("mu>>h_weights");
+    if(PileUpbx) dTree->Draw("mubx>>h_weights");
+    if(update_minbias_xs){
+	// Access the mu values from the tree
+	float mu;
+	dTree->SetBranchAddress("mu", &mu);
+
+	// Loop over all events in the data tree
+	Long64_t nEntries = dTree->GetEntries();
+	for (Long64_t i = 0; i < nEntries; i++) {
+	    dTree->GetEntry(i);
+	    float mu_shifted = minBiasxsSF * mu;  // Apply the scaling factor
+	    
+	    // Cap the value at MAXNPU
+	    if (mu_shifted > MAXNPU) {
+		mu_shifted = MAXNPU;
+	    }
+	    h_weights->Fill(mu_shifted);  // Fill the new histogram with the shifted value
+	}
+        cout << " Applied new minBiasXS to data PU:" << "\t" << endl;
+    }
+    else dTree->Draw("mu>>h_weights");
 
     TH1F* h_muMC = new TH1F("h_muMC","h_muMC",2*MAXNPU,0,MAXNPU);
     tree->Draw("mu>>h_muMC");
@@ -394,7 +434,7 @@ int main(int argc, char* argv[]) {
   }
 
   //Set Branches//
-/*
+
   ULong64_t event;
   int run, lumi, bx;
 
@@ -405,7 +445,7 @@ int main(int argc, char* argv[]) {
     tree->SetBranchAddress("lumi", &lumi);
     tree->SetBranchAddress("bx", &bx);
   }
-
+/*
   float eRMS[nEta], et[nEta];
   float rhoC0, rhoCC;
   int nPVall;
@@ -420,7 +460,7 @@ int main(int argc, char* argv[]) {
   float energy[nEta], etMEAN[nEta], etMED[nEta], etMEANchs[nEta], etMEDchs[nEta];
   int nJets=4;
   float jet_pt[nJets], jet_eta[nJets];
-  float mu, rho;
+  float mu, mubx, rho;
   int nPV;
 
   tree->SetBranchAddress("energy", energy);
@@ -440,6 +480,7 @@ int main(int argc, char* argv[]) {
   tree->SetBranchAddress("flep", f[lep]);
   tree->SetBranchAddress("funtrk", f[untrk]);
   tree->SetBranchAddress("mu", &mu);
+  if (!isMC && PileUpbx) tree->SetBranchAddress("mubx", &mubx);
   tree->SetBranchAddress("rho", &rho);
   tree->SetBranchAddress("nPV", &nPV);
 
@@ -577,28 +618,35 @@ int main(int argc, char* argv[]) {
 
   for (Long64_t n=0; n<nEntries; n++) {
     int entry_num = tree->GetEntry(n);
-    if (n % 10000 == 0){ cout << "Processing Event: " << n+1 << ", Total events = "<< entry_num <<endl;
+    if (splitnibs){
+       if (run < run_begin || run > run_end) continue ; // 2024 nib splitting
     }
+    if (n % 10000 == 0){ cout << "Processing Event: " << n+1 << ", Total entries = "<< entry_num <<endl;}
     //if (jet_pt[0] > pt_cut) continue ; //to only select events with pT,corr < pt_cut
     //cout << "Processing Event " << n+1 << endl;
+
     for (int ieta=0; ieta<nEta; ieta++){ 
       //cout << "previous energy[" << ieta  <<"] = "<< energy[ieta] << endl; 
       energy[ieta] = energy[ieta]/ fraction[ieta] ;
       //cout << "new energy[" << ieta  <<"] = "<< energy[ieta] << endl;
     } 
 
+    if (!isMC && update_minbias_xs) mu = minBiasxsSF * mu ;
+    if (!isMC && PileUpbx) mu = mubx ;
+
     float weight = isMC ? h_weights->GetBinContent( h_weights->FindBin(mu) ) : 1.;
 
     FillHist1D("nPU", mu, weight);
+    if (!isMC && PileUpbx) FillHist1D("nPUbx", mubx, weight);
+    if (!isMC && PileUpbx) FillHist2D("pubx_vs_pu", mu, mubx, weight);
     FillHist1D("nPV", nPV, weight);
     FillHist1D("rho", rho, weight);
+
     FillProfile("p_nPV_nPU", mu, nPV, weight);
     FillProfile("p_rho_nPU", mu, rho, weight);
     FillProfile("p_rho_nPV", nPV, rho, weight);
 
-
     int intmu = mu + 0.5;
-
     for (int ieta=0; ieta<nEta; ieta++){
       double eta = 0.5*(etabins[ieta] + etabins[ieta+1]);
 
