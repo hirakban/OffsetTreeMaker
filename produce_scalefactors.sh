@@ -17,20 +17,31 @@
 
   fi
 
-  mc="Offset_MC_UL2016_${run_era}_total_R4.root"
-  data="Offset_Data_UL2016_${run_era}_total_R4.root"
-  outname="UL16_Run${run_era}_DataMC_R4_"
+  data="histomaker_outputs/new-MinbiasXS/Offset_Data_Run2025C-promptreco-v1v2-total-new-MinbiasXS_R4.root"
+  mc="histomaker_outputs/new-MinbiasXS/Offset_MC_Run3Summer24DRPremix_Offset_Data_Run2025C-promptreco-v1v2-total-new-MinbiasXS_R4.root"
+
+#  data="/uscms/home/hirakban/nobackup/l10ffset/Run3_l1offset/CMSSW_15_0_0/src/test/OffsetTreeMaker/histomaker_outputs/Offset_Data_Run2024G-nib2-PromptReco-v1-withbpixveto_R4.root"
+#  mc="/uscms/home/hirakban/nobackup/l10ffset/Run3_l1offset/CMSSW_15_0_0/src/test/OffsetTreeMaker/histomaker_outputs/Offset_MC_Run3Summer24DRPremix-withbpixveto-jetveto2024BCDE_FG_FPix_Offset_Data_Run2024G-nib2-PromptReco-v1-withbpixveto_R4.root"
+
+#  outname="Run3-${run_era}-DatatoData_R4_"
+  outname="Run3-${run_era}-Summer24_DataMC_R4_"
+#  outname="Run3-${run_era}-Winter25_DataMC_R4_"
+
+#  outname="Run3-${run_era}_DatatoData_R4_"
+#  outname="Run3-${run_era}_DatatoData_NHdepth4_R4_"
 
   R=0.4
-  n1=10
-  n2=60
+  n1=14
+  n2=62
   topX=64
-  topY=20
+  topY=74
 
   var="nPU"
   ratio="true"
-  label="Run2016${run_era}MC (13 TeV)"
-#  label="Run2016${run_era}-${luminosity}fb^{-1}(13 TeV)"
+#  label="Run2016_${run_era}_Summer20 (13 TeV)"
+#  label="Run2018${run_era}-${luminosity}fb^{-1}(13 TeV)"
+  label="Run3-${run_era} (13.6 TeV)"
+#  label="${run_era}"
   subplot=""     # "pull" or "DataOverMC"
   
 
@@ -45,11 +56,11 @@
 #9) Median Charged Hadron Subtraction
 #10) Median All
 
-  cmds=( "root -l -b -q 'offsetpT.c (\"$mc\", \"$data\", \"$outname\", \"$subplot\", $R, 8, $n1, $n2, $topX, $topY)'"
-         #"root -l -b -q 'offsetpT.c (\"$mc\", \"$data\", \"$outname\", $R, 9, $n1, $n2, $topX, $topY)'"
-         "root -l -b -q 'scalefactor.c (\"$mc\", \"$data\", \"$outname\", $R, 8, $n1, $n2)'"
-         #"root -l -b -q 'scalefactor.c (\"$mc\", \"$data\", \"$outname\", $R, 9, $n1, $n2)'"
-         #"root -l -b -q 'offsetpT.c (\"$mc\", \"$data\", \"$outname\", $R, 1, $n1, $n2, $topX, $topY, \"$label\")'"
+  cmds=( "root -l -b -q 'offsetpT.c(\"$mc\", \"$data\", \"$outname\", \"$subplot\", $R, 8, $n1, $n2, $topX, $topY)'"
+         #"root -l -b -q 'offsetpT.c(\"$mc\", \"$data\", \"$outname\", $R, 9, $n1, $n2, $topX, $topY)'"
+         "root -l -b -q 'scalefactor.c(\"$mc\", \"$data\", \"$outname\", $R, 8, $n1, $n2)'"
+         #"root -l -b -q 'scalefactor.c(\"$mc\", \"$data\", \"$outname\", $R, 9, $n1, $n2)'"
+         #"root -l -b -q 'offsetpT.c(\"$mc\", \"$data\", \"$outname\", $R, 1, $n1, $n2, $topX, $topY, \"$label\")'"
        )
 
   for cmd in "${cmds[@]}"

@@ -20,14 +20,14 @@ process.source = cms.Source ("PoolSource", fileNames = readFiles
                  )
 
 readFiles.extend( [
-#  '/store/data/Run2024I/ZeroBias/AOD/PromptReco-v1/000/386/409/00000/1c188dff-7858-47de-bab0-145bc1861e87.root',
-  '/store/mc/RunIII2024Summer24DRPremix/SingleNeutrino_Par-E-10_gun/AODSIM/140X_mcRun3_2024_realistic_v26-v2/100000/0068a5c8-ea42-40b4-9012-a421b1a87d06.root'
+  '/store/data/Run2025D/ZeroBias/AOD/PromptReco-v1/000/394/391/00000/0a06e3f3-5730-481c-808b-65d045cdff27.root'
+#   '/store/mc/Run3Winter25Reco/SingleNeutrino_E-10_gun/AODSIM/142X_mcRun3_2025_realistic_v9-v2/120000/01bdbd7c-4a4c-45e6-a625-243df1901612.root'
 ] );
 
-isMC = cms.bool(False)
+isMC = cms.bool(True)
 
 if isMC:
-  OutputName = "_MC_Run3Summer24DRPremix"           # change
+  OutputName = "_MC_Run3Winter25Reco-new"           # change
 #  eraName = "Summer20UL18_V2_MC"
   jetType_name = "AK4PFchs" # or "AK4PF"
 
@@ -35,11 +35,12 @@ if isMC:
   process.load( "Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cff" )
   process.load( "Configuration.StandardSequences.FrontierConditions_GlobalTag_cff" )
   from Configuration.AlCa.GlobalTag import GlobalTag
-  process.GlobalTag = GlobalTag( process.GlobalTag, '140X_mcRun3_2024_realistic_v26' )
+#  process.GlobalTag = GlobalTag( process.GlobalTag, '140X_mcRun3_2024_realistic_v26' )
+  process.GlobalTag = GlobalTag( process.GlobalTag, '150X_mcRun3_2025_realistic_v6' )
 
 else:
-  run = "2023_RunD"
-  OutputName = "_Run3_Data_"+run+"_v1"
+  run = "2025_RunC-v2"
+  OutputName = "_Run3_Data_"+run        # change
 
 #  eraName = "Winter22Run3"+"_RunD"+"_V2_DATA"
   jetType_name = "AK4PFchs" # or "AK4PF"
@@ -49,7 +50,8 @@ else:
   process.load( "Configuration.StandardSequences.FrontierConditions_GlobalTag_cff" )
 
   from Configuration.AlCa.GlobalTag import GlobalTag
-  process.GlobalTag = GlobalTag( process.GlobalTag, '140X_dataRun3_Prompt_v4' )
+  process.GlobalTag = GlobalTag( process.GlobalTag, '150X_dataRun3_Prompt_v1' )       # change
+#  process.GlobalTag = GlobalTag( process.GlobalTag, '140X_dataRun3_v20' )
 
   # ZeroBias Trigger
   process.HLTZeroBias =cms.EDFilter("HLTHighLevel",
@@ -73,10 +75,11 @@ else:
   )
 
 process.pf = cms.EDAnalyzer("OffsetTreeMaker",
-    numSkip = cms.int32(181),                                        # change num, pufile and lumibxfile (parsepileup also), vetomap
+    numSkip = cms.int32(7),                                        # change num, pufile (parsepileup also), vetomap
     RootFileName = cms.string("Offset" + OutputName + ".root"),
-    puFileName = cms.string("pileup_2024_1010.txt"),
-    jetVetoMapFileName = cms.string("jetveto2024BCDE_FG_FPix_V6M.root"),       
+#    puFileName = cms.string("pileup_2025_0520.txt"),
+    puFileName = cms.string("pileup_391658_398427_1023_2025.txt"),
+    jetVetoMapFileName = cms.string("jetveto2025CDEF_V3M.root"),       
 #    pubxFileName = cms.string("lumi-per-bx_Run2024I-part1.root"),
     mapName2 = cms.string("jetvetomap_all"),   
     isMC = isMC,

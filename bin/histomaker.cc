@@ -42,12 +42,11 @@ double dist(double R, double x1, double x2);
 bool dojetVetoMap = true;					//newline
 TString jetVetoMapFileName;                     		//newline
 TString mapName2 = "jetvetomap_all";				//newline
-//TString mapName2 = "jetvetomap_nobpix";				//newline
 bool writeEnergyDeposition = true;
 bool PileUpbx = false;
 bool splitnibs = false;
 const float minBiasxsSF = 75.3/69.2 ;
-bool update_minbias_xs = false;
+bool update_minbias_xs = true;
 map<TString, TH1*> m_Histos1D;
 map<TString, TH2*> m_Histos2D;
 map<TString, TProfile*> m_Profiles;
@@ -83,7 +82,7 @@ int main(int argc, char* argv[]) {
       cout << "Mapname: " << mapName2 << endl;
   }
 
-  TString outName = "histomaker_outputs/" + inName( inName.Last('/')+1, inName.Last('.')-inName.Last('/')-1 );
+  TString outName = "histomaker_outputs/new-MinbiasXS/" + inName( inName.Last('/')+1, inName.Last('.')-inName.Last('/')-1 );
   if (isMC){
     TString add_dataName = dataName(dataName.Last('/')+1, dataName.Last('.')-dataName.Last('/')-1);
     cout << add_dataName << endl;

@@ -29,7 +29,10 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
   //nPV or nPU
   TH1F* h_bin_var = (TH1F*) dataFile->Get(bin_var);
 
-  int n1 = h_bin_var->GetMean();
+//  int n1 = h_bin_var->GetMean();
+  int n1 = 50;
+
+  TString pu = Form("%i", n1);
 
   vector<TH1D*> v_MC (numId);
   vector<TH1D*> v_Data (numId);
@@ -46,6 +49,7 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
     v_Data[i] = ((TProfile*) dataFile->FindObjectAny(hname))->ProjectionX(ids[i]+"Data");
 
     hname = Form("p_mikko_eta_%s%i_",bin_var.Data(), n1) + ids[i];
+//    hname = Form("p_offset_eta_%s%i_",bin_var.Data(), n1) + ids[i];
 
     v_MC_Mikko[i]   = ((TProfile*) mcFile->FindObjectAny(hname))->ProjectionX(ids[i]+"MC_Mikko");
     v_Data_Mikko[i] = ((TProfile*) dataFile->FindObjectAny(hname))->ProjectionX(ids[i]+"Data_Mikko");
@@ -167,13 +171,36 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
   THStack* dataStack_Mikko = new THStack();
   THStack* cloneStack_Mikko = new THStack();
 
+//-------------stackplots in root file--------------//
+/*
+  TString outName1 = "stack_mikko_depth_"+ outfile_name + "_" + bin_var + TString(to_string(n1)) + ".root";
+  TFile* outFile1 = new TFile(outName1,"RECREATE");
+  TDirectory* dir1 = (TDirectory*) outFile1;
+
+  outFile1->cd();
+*/
+//-------------------------//
+
   for (int i=0; i<numId-1; i++){  //don't add lost tracks
     mcStack->Add(v_MC[i]);
     dataStack->Add(v_Data[i]);
 
+//-----stackplots in root file-------//
+    //v_MC[i]->Write();
+    //v_Data[i]->Write();
+//-------------------------//
+
     mcStack_Mikko->Add(v_MC_Mikko[i]);
     dataStack_Mikko->Add(v_Data_Mikko[i]);
   }
+
+//-----stackplots in root file-------//
+/*
+  outFile1->Write();
+  delete outFile1;
+  outFile1 = 0;
+*/
+//-------------------------//
 
   // HFh and HFe are both copied in the cloneStack - data/MC Stack, but 2.6-5 is drawn using HFh and HFe, -2.6 - -5.0 is drawn using data/mc Stack.
   cloneStack->Add(v_Data[ne]);
@@ -247,25 +274,27 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
   h2->GetYaxis()->SetRangeUser(0, 1.6); //chs_Data->GetMaximum()*1.1 );
   h2->GetYaxis()->SetNdivisions(5, 3, 0);
   h2->GetYaxis()->SetLabelSize(0.04/b_scale);
+//  h2->GetYaxis()->SetTitle("Avg/lumibx");
+//  h2->GetYaxis()->SetTitle("W25/S24");
   h2->GetYaxis()->SetTitle("Data/MC");
   h2->GetYaxis()->CenterTitle(true);
-  h2->GetYaxis()->SetTitleSize(0.05/b_scale);
-  h2->GetYaxis()->SetTitleOffset(0.4);
+  h2->GetYaxis()->SetTitleSize(0.03/b_scale);
+  h2->GetYaxis()->SetTitleOffset(0.5);
 
   h1->Draw();
 
 
-  TLegend* leg = new TLegend(.4,.57,.67,.9);
+  TLegend* leg = new TLegend(.4,.57,.77,.9);
   leg->SetBorderSize(0);
   leg->SetFillColor(0);
   leg->SetFillStyle(0);
-  leg->SetTextSize(0.04);
+  leg->SetTextSize(0.035);
   leg->SetTextFont(42);
 
 
-  TLegend* leg2 = new TLegend(.5,.45,.65,.6);
+  TLegend* leg2 = new TLegend(.88,.7,.95,.84);
 
-  //TLegend* leg2 = new TLegend(.5,.55,.65,.7);
+  //TLegend* leg2 = new TLegend(.5,.45,.65,.6);
 
   leg2->SetBorderSize(0);
   leg2->SetFillColor(0);
@@ -273,12 +302,22 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
   leg2->SetTextSize(0.06);
   leg2->SetTextFont(42);
 
+  TLegend* leg3 = new TLegend(.5,.75,.9,.9);
+
+  //TLegend* leg2 = new TLegend(.5,.45,.65,.6);
+
+  leg3->SetBorderSize(0);
+  leg3->SetFillColor(0);
+  leg3->SetFillStyle(0);
+  leg3->SetTextSize(0.04);
+  leg3->SetTextFont(42);
+
   v_MC[ne]   ->SetMarkerStyle(kMultiply);         v_MC_Mikko[ne]   ->SetMarkerStyle(kMultiply);
   v_MC[hfe]  ->SetMarkerStyle(kOpenStar);         v_MC_Mikko[hfe]  ->SetMarkerStyle(kOpenStar);
   v_MC[nh]   ->SetMarkerStyle(kOpenDiamond);      v_MC_Mikko[nh]   ->SetMarkerStyle(kOpenDiamond);
   v_MC[hfh]  ->SetMarkerStyle(kOpenTriangleUp);   v_MC_Mikko[hfh]  ->SetMarkerStyle(kOpenTriangleUp);
   v_MC[chu]  ->SetMarkerStyle(kOpenCircle);       v_MC_Mikko[chu]  ->SetMarkerStyle(kOpenCircle);
-  v_MC[chm]  ->SetMarkerStyle(kOpenCircle);       v_MC_Mikko[chm]  ->SetMarkerStyle(kOpenCircle);
+  v_MC[chm]  ->SetMarkerStyle(kOpenTriangleDown); v_MC_Mikko[chm]  ->SetMarkerStyle(kOpenTriangleDown);
   v_MC[untrk]->SetMarkerStyle(kOpenCircle);       v_MC_Mikko[untrk]->SetMarkerStyle(kOpenCircle);
 
   v_Data[ne]    ->SetMarkerStyle(kMultiply);         v_Data_Mikko[ne]    ->SetMarkerStyle(kMultiply);
@@ -288,7 +327,7 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
   v_Data[hfh]   ->SetMarkerStyle(kOpenTriangleUp);   v_Data_Mikko[hfh]   ->SetMarkerStyle(kOpenTriangleUp);
   Had_clone     ->SetMarkerStyle(kOpenTriangleUp);   Had_clone_Mikko     ->SetMarkerStyle(kOpenTriangleUp);
   v_Data[chu]   ->SetMarkerStyle(kOpenCircle);       v_Data_Mikko[chu]   ->SetMarkerStyle(kOpenCircle);
-  v_Data[chm]   ->SetMarkerStyle(kOpenCircle);       v_Data_Mikko[chm]   ->SetMarkerStyle(kOpenCircle);
+  v_Data[chm]   ->SetMarkerStyle(kOpenTriangleDown); v_Data_Mikko[chm]   ->SetMarkerStyle(kOpenTriangleDown);
   v_Data[untrk] ->SetMarkerStyle(kOpenCircle);       v_Data_Mikko[untrk] ->SetMarkerStyle(kOpenCircle);
 
   //for error bars
@@ -323,7 +362,31 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
   TLatex text;
   text.SetNDC();
 
+
   if (id == all) {
+
+//-------------------------//
+
+// If we want the stackplots in a root file
+/*
+    TString outName1 = "stack_"+ outName + ids[id] + "_" + bin_var + to_string(n1) + ".root";
+    TFile* outFile1 = new TFile(outName1,"RECREATE");
+    TDirectory* dir1 = (TDirectory*) outFile1;
+
+    outFile1->cd();
+
+    for (int i=0; i<numId-1; i++){  //don't add lost tracks
+      if (i==0) {v_MC[i]->SetName("Photons_MC");      v_Data[i]->SetName("Photons_Data");      }
+      if (i==1) {v_MC[i]->SetName("HF_EM_MC");        v_Data[i]->SetName("HF_EM_Data");        }
+      if (i==2) {v_MC[i]->SetName("Neutral_Had_MC");  v_Data[i]->SetName("Neutral_Had_Data");  }
+      if (i==3) {v_MC[i]->SetName("HF_Had_MC");       v_Data[i]->SetName("HF_Had_Data");       }
+      if (i==4) {v_MC[i]->SetName("Unassoc_CH_MC");     v_Data[i]->SetName("Unassoc_CH_Data");     }
+      if (i==5) {v_MC[i]->SetName("Assoc_CH_MC");       v_Data[i]->SetName("Assoc_CH_Data");       }
+      v_MC[i]->Write();
+      v_Data[i]->Write();
+    }
+*/
+//-------------------------//
 
     v_Data[ne]   ->SetAxisRange(-2.9,2.9);
     v_Data[hfe]  ->SetAxisRange(-5,-2.6);
@@ -335,16 +398,19 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
     v_Data[chm]  ->SetAxisRange(-2.9,2.9);
     v_Data[untrk]->SetAxisRange(-2.9,2.9);
 
-    h1->GetYaxis()->SetRangeUser( 0, dataStack->GetMaximum()*2.2 );
+    h1->GetYaxis()->SetRangeUser( 0, dataStack->GetMaximum()*2.5 );
     
     h1->GetYaxis()->SetTitle(yTitle);
     h1->GetYaxis()->SetTitleOffset(1.1);
+
 
     mcStack->Draw("samehist");
     dataStack->Draw("samepe");
     cloneStack->Draw("samepe");
 
-    leg->SetHeader("#bf{Markers: Data, Histograms: MC}");
+
+//    leg->SetHeader("#bf{Markers: Summer24-HB-1x, Hist: Summer24-baseline}");
+    leg->SetHeader("#bf{Markers:Run2024C, Hist:Summer24}");   //Change
     leg->AddEntry(v_MC[ne],"Photons","PF");
     leg->AddEntry(v_MC[hfe],"EM Deposits","PF");
     leg->AddEntry(v_MC[nh],"Neutral Hadrons","PF");
@@ -356,16 +422,22 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
 
     text.SetTextSize(0.065);
     text.SetTextFont(61);
-    text.DrawLatex(0.22, 0.85, "CMS");
+    text.DrawLatex(0.2, 0.85, "CMS");
 
     text.SetTextSize(0.045);
     text.SetTextFont(42);
 
-    if (ratio) text.DrawLatex(0.58, 0.96, label);
-    else       text.DrawLatex(0.58, 0.96, label);
+    if (ratio) text.DrawLatex(0.6, 0.96, label);
+    else       text.DrawLatex(0.6, 0.96, label);
 
-    //TString coneSize = dataName( dataName.Last('.')-1, 1 );
-    //text.DrawLatex(0.2, 0.8, "R = 0." + coneSize);
+    TString coneSize = dataName( dataName.Last('.')-1, 1 );
+    text.DrawLatex(0.2, 0.8, " R = 0." + coneSize);
+    text.DrawLatex(0.2, 0.75, " #mu  = " + pu);
+//    text.DrawLatex(0.2, 0.7, "lumi Avg #mu");
+    text.DrawLatex(0.7, 0.8, "#sigma_{MB} = 75.3 mb");
+//    text.SetTextColor(2);
+//    text.DrawLatex(0.7, 0.73, "cut = baseline");
+    text.SetTextColor(1);
     gPad->RedrawAxis();
 
     if (ratio) {
@@ -393,19 +465,38 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
       else{
         Ymin = all_Data->GetMinimum();}
 
-      h2->GetYaxis()->SetRangeUser(0.8*Ymin, 1.1*Ymax);
+      //h2->GetYaxis()->SetRangeUser(0.9*Ymin, 1.1*Ymax);
+      h2->GetYaxis()->SetRangeUser(0.0,2.1);
       h2->Draw();
+
       chs_Data->Draw("samePE");
       all_Data->Draw("samePE");
+
+//---------------------------------//
+// If we want the stackplots in a root file
+/*
+      chs_Data->SetName("DataOverMC_pfchs");
+      chs_Data->Write();
+
+      all_Data->SetName("DataOverMC_pf");
+      all_Data->Write();
+*/
+//---------------------------------//
 
       leg2->AddEntry(chs_Data,"PF chs","P");
       leg2->AddEntry(all_Data,"PF","P");
       leg2->Draw();
 
-
     }
-
-    c->Print("presentation_plots/stack_"+ outName + ids[id] + "_" + bin_var + to_string(n1) + ".pdf");
+//---------------------------------//
+// If we want the stackplots in a root file
+/*
+    outFile1->Write();
+    delete outFile1;
+    outFile1 = 0;
+*/
+//---------------------------------//
+    c->Print("./presentation_plots/stack_"+ outName + ids[id] + "_" + bin_var + TString(to_string(n1)) + ".pdf");
 
     leg->Clear();
     leg2->Clear();
@@ -417,6 +508,29 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
     bottom->Draw();
     top->cd();
     h1->Draw();
+
+//-------------------------//
+
+// If we want the stackplots in a root file
+
+    TString outName1 = "stackplots_root_files/stack_mikko_"+ outName + ids[id] + "_" + bin_var + TString(to_string(n1)) + ".root";
+    TFile* outFile1 = new TFile(outName1,"RECREATE");
+    TDirectory* dir1 = (TDirectory*) outFile1;
+
+    outFile1->cd();
+
+    for (int i=0; i<numId-1; i++){  //don't add lost tracks
+      if (i==0) {v_MC_Mikko[i]->SetName("Photons_MC");        v_Data_Mikko[i]->SetName("Photons_Data");      }
+      if (i==1) {v_MC_Mikko[i]->SetName("HF_EM_MC");          v_Data_Mikko[i]->SetName("HF_EM_Data");        }
+      if (i==2) {v_MC_Mikko[i]->SetName("Neutral_Had_MC");    v_Data_Mikko[i]->SetName("Neutral_Had_Data");  }
+      if (i==3) {v_MC_Mikko[i]->SetName("HF_Had_MC");         v_Data_Mikko[i]->SetName("HF_Had_Data");       }
+      if (i==4) {v_MC_Mikko[i]->SetName("Unassoc_CH_MC");     v_Data_Mikko[i]->SetName("Unassoc_CH_Data");     }
+      if (i==5) {v_MC_Mikko[i]->SetName("Assoc_CH_MC");       v_Data_Mikko[i]->SetName("Assoc_CH_Data");       }
+      v_MC_Mikko[i]->Write();
+      v_Data_Mikko[i]->Write();
+    }
+
+//-------------------------//
 
     v_Data_Mikko[ne]   ->SetAxisRange(-2.9,2.9);
     v_Data_Mikko[hfe]  ->SetAxisRange(-5,-2.6);
@@ -431,13 +545,15 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
 
     h1->GetYaxis()->SetTitleOffset(1.1);
     h1->GetYaxis()->SetTitle(yTitle_Mikko);
-
+    h1->GetYaxis()->SetRangeUser( 0, dataStack_Mikko->GetMaximum() > mcStack_Mikko->GetMaximum() ?  dataStack_Mikko->GetMaximum()*1.5 : mcStack_Mikko->GetMaximum()*1.5 );
 
     mcStack_Mikko->Draw("samehist");
     dataStack_Mikko->Draw("samepe");
     cloneStack_Mikko->Draw("samepe");
 
-    leg->SetHeader("#bf{Markers: Data, Histograms: MC}");
+//    leg->SetHeader("#bf{Markers: Summer24-HB-4x, Hist: Summer24-baseline}");
+    leg->SetHeader("#bf{Markers: Run2024C, Histograms: Summer24}");
+//    leg->SetHeader("#bf{Markers:Summer24, Hist:Winter24}");   //Change
     leg->AddEntry(v_MC_Mikko[ne],"Photons","PF");
     leg->AddEntry(v_MC_Mikko[hfe],"EM Deposits","PF");
     leg->AddEntry(v_MC_Mikko[nh],"Neutral Hadrons","PF");
@@ -449,23 +565,30 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
   
     text.SetTextSize(0.065);
     text.SetTextFont(61);
-    text.DrawLatex(0.22, 0.85, "CMS");
+    text.DrawLatex(0.2, 0.85, "CMS");
 
     text.SetTextSize(0.045);
     text.SetTextFont(42);
 
-    if (ratio) text.DrawLatex(0.58, 0.96, label);
-    else       text.DrawLatex(0.58, 0.96, label);
+    if (ratio) text.DrawLatex(0.45, 0.96, label);
+    else       text.DrawLatex(0.45, 0.96, label);
 
-    //TString coneSize = dataName( dataName.Last('.')-1, 1 );
-    //text.DrawLatex(0.2, 0.8, "R = 0." + coneSize);
+//    TString coneSize = dataName( dataName.Last('.')-1, 1 );
+    coneSize = dataName( dataName.Last('.')-1, 1 );
+    text.DrawLatex(0.2, 0.8, " R = 0." + coneSize);
+    text.DrawLatex(0.2, 0.75, " #mu  = " + pu);
+//    text.DrawLatex(0.2, 0.7, "Old HLT");
+    text.DrawLatex(0.7, 0.8, "#sigma_{MB} = 75.3 mb");
+//    text.SetTextColor(2);
+//    text.DrawLatex(0.7, 0.73, "cut = baseline");
+    text.SetTextColor(1);
 
     gPad->RedrawAxis();
 
 
     if (ratio){
       bottom->cd();
-      h2->GetYaxis()->SetRangeUser(0,1.6);
+      h2->GetYaxis()->SetRangeUser(0,2.1);
       h2->Draw();
       vector<TH1D*> v_ratio_Mikko (numId);
       //double Ymax_mikko = 1.5, Ymin_mikko = 0.;
@@ -481,6 +604,17 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
         //v_ratio_Mikko[i]->GetYaxis()->//(0.8*(v_ratio_mikko[i]->GetMinimum()),1.1*(v_ratio_mikko[i]->GetMaximum()));
         //v_ratio_Mikko[i]->GetYaxis()->SetRangeUser(0,1.6);
         v_ratio_Mikko[i]->Draw("sameP");
+
+        //--------- root files stackplots---------- 
+        
+        if (i==0) {v_ratio_Mikko[i]->SetName("ratio_Photons_DataMC");     }
+        if (i==1) {v_ratio_Mikko[i]->SetName("ratio_HF_EM_DataMC");       }
+        if (i==2) {v_ratio_Mikko[i]->SetName("ratio_Neutral_Had_DataMC"); }
+        if (i==3) {v_ratio_Mikko[i]->SetName("ratio_HF_Had_DataMC");      }
+        if (i==4) {v_ratio_Mikko[i]->SetName("ratio_Unassoc_CH_DataMC");  }
+        if (i==5) {v_ratio_Mikko[i]->SetName("ratio_Assoc_CH_DataMC");    }
+        
+        //-----------------------------------
       }
       v_ratio_Mikko[ne]   ->SetMarkerColor(kBlue);
       v_ratio_Mikko[hfe]  ->SetMarkerColor(kViolet+2);
@@ -505,11 +639,21 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
       v_ratio_Mikko[chu]  ->SetAxisRange(-3.1, 3.1);
       v_ratio_Mikko[chm]  ->SetAxisRange(-2.6, 2.6);
       //v_ratio[untrk]->SetAxisRange(-2.9, 2.9);
-      //h2->GetYaxis()->SetRangeUser(0,1.6);
+      //h2->GetYaxis()->SetRangeUser(0.5,1.5);
+      h2->GetYaxis()->SetRangeUser(0.0,2.1);
       //h2->Draw();
-
+      //v_ratio_Mikko[ne]->Write();
     }
-    c_Mikko->Print("./presentation_plots/stack_mikko_" +outName+ ids[id] + "_" + bin_var + to_string(n1) + ".pdf");
+
+    c_Mikko->Print("./presentation_plots/stack_mikko_" +outName+ ids[id] + "_" + bin_var + TString(to_string(n1)) + ".pdf");
+
+    //--------- root files stackplots---------- 
+    
+    outFile1->Write();
+    delete outFile1;
+    outFile1 = 0;
+    
+    //-------------------------//
 
     leg->Clear();
     leg2->Clear();
@@ -573,40 +717,48 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
     else if (id == untrk) { title = "Lost Tracks"; hist_Data->SetAxisRange(-2.9, 2.9); hist_Data_Mikko->SetAxisRange(-2.9, 2.9);}
     else title = "HF Deposits";
 
+    TString coneSize = dataName( dataName.Last('.')-1, 1 );
 
-    h1->GetYaxis()->SetTitle(yTitle_Mikko);
+    h1->GetYaxis()->SetTitle(yTitle);
     h1->GetYaxis()->SetTitleOffset(1.1);
 
     float maxY_2 = hist_Data->GetMaximum() > hist_MC->GetMaximum() ? hist_Data->GetMaximum() : hist_MC->GetMaximum();
     h1->GetYaxis()->SetRangeUser(0, maxY_2*2.5);
 
-    h1->GetYaxis()->SetRangeUser(0, hist_Data->GetMaximum()*1.7);
+//    h1->GetYaxis()->SetRangeUser(0, hist_Data->GetMaximum()*1.7);
 
 
     hist_MC->Draw("samehist");
 
     hist_Data->Draw("sameP");
 
-    leg2->AddEntry(hist_Data,"Data","P");
-    leg2->AddEntry(hist_MC,"MC","F");
-    leg2->Draw();
+    leg3->AddEntry(hist_Data,"Data: Run2024C","P");
+    leg3->AddEntry(hist_MC,"MC: Summer24","F");
+//    leg3->AddEntry(hist_Data,"Summer24","P");
+//    leg3->AddEntry(hist_MC,"Winter24","F");
+    leg3->Draw();
 
+    text.SetNDC();
     text.SetTextSize(0.035/t_scale);
     text.SetTextFont(61);
     text.DrawLatex(0.17, 0.96, title);
 
     text.SetTextSize(0.065);
     text.SetTextFont(61);
-    text.DrawLatex(0.25, 0.8, "CMS");
+    text.DrawLatex(0.2, 0.85, "CMS");
+    text.SetTextSize(0.045);
+    text.SetTextFont(42);
+    text.DrawLatex(0.2, 0.8, " R = 0." + coneSize);
+    text.DrawLatex(0.2, 0.75, " #mu = " + pu);
+    text.DrawLatex(0.2, 0.7, " #sigma_{MB} = 75.3 mb");
 
-
-    text.SetTextSize(0.04);
+    text.SetTextSize(0.035);
     text.SetTextFont(42);
     //if (ratio)     text.SetTextSize(0.035);
-    text.SetTextFont(42);
+    //text.SetTextFont(42);
     //text.DrawLatex(0.6, 0.89, "2018MC: SingleNeutrino");
-    if (ratio) text.DrawLatex(0.62, 0.96, label);
-    else       text.DrawLatex(0.62, 0.96, label);
+    if (ratio) text.DrawLatex(0.6, 0.96, label);
+    else       text.DrawLatex(0.6, 0.96, label);
 
     gPad->RedrawAxis();
 
@@ -648,58 +800,71 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
 
 
       ratio_Data->SetMarkerStyle(24);
-      h2->GetYaxis()->SetRangeUser(0.8*Ymin_ratio, Ymax_ratio*1.1);
+      h2->GetYaxis()->SetRangeUser(0.5*Ymin_ratio, Ymax_ratio*1.5);
+//      h2->GetYaxis()->SetRangeUser(0.1,3.9);
       h2->Draw();
       ratio_Data->Draw("sameP");
     }
-    c->Print("./presentation_plots/stack_" + outName+ ids[id] + "_" + bin_var + to_string(n1) + ".pdf");
+    c->Print("./presentation_plots/stack_" + outName+ ids[id] + "_" + bin_var + TString(to_string(n1)) + ".pdf");
     top->Clear();
     bottom->Clear();
-    leg2->Clear();
+    leg3->Clear();
 
     c_Mikko->cd();
     top->Draw();
     bottom->Draw();
     top->cd();
 
-
+    h1->GetYaxis()->SetTitle(yTitle_Mikko);
     h1->GetYaxis()->SetTitleOffset(1.1);
     float maxY = hist_Data_Mikko->GetMaximum() > hist_MC_Mikko->GetMaximum() ? hist_Data_Mikko->GetMaximum() : hist_MC_Mikko->GetMaximum();
     h1->GetYaxis()->SetRangeUser(0, maxY*2.5);
+//    h1->GetYaxis()->SetRangeUser(0, maxY*1.25);
 
     h1->Draw();
     hist_MC_Mikko->Draw("samehist");
 
     hist_Data_Mikko->Draw("sameP");
 
-    leg2->AddEntry(hist_Data_Mikko,"Data","P");
-    leg2->AddEntry(hist_MC_Mikko,"MC","F");
-    leg2->Draw();
+    leg3->AddEntry(hist_Data_Mikko,"MC: Run2024C","P");
+    leg3->AddEntry(hist_MC_Mikko,"MC: Summer24","F");
+//    leg3->AddEntry(hist_Data_Mikko,"Summer24","P");
+//    leg3->AddEntry(hist_MC_Mikko,"Winter24","F");
+    leg3->Draw();
 
+    text.SetNDC();
     text.SetTextSize(0.035/t_scale);
     text.SetTextFont(61);
     text.DrawLatex(0.17, 0.96, title);
 
     text.SetTextSize(0.065);
     text.SetTextFont(61);
-    text.DrawLatex(0.25, 0.8, "CMS");
+    text.DrawLatex(0.2, 0.85, "CMS");
+    text.SetTextSize(0.045);
+    text.SetTextFont(42);
+    text.DrawLatex(0.2, 0.8, " R = 0." + coneSize);
+    text.DrawLatex(0.2, 0.75, " #mu = " + pu);
+    text.DrawLatex(0.2, 0.7, " #sigma_{MB} = 75.3 mb");
+    text.SetTextColor(2);
+//    text.DrawLatex(0.7, 0.7, "cut = baseline");
+    text.SetTextColor(1);
 
 
-    text.SetTextSize(0.04);
+    text.SetTextSize(0.035);
     text.SetTextFont(42);
     //if (ratio)     text.SetTextSize(0.035);
-    text.SetTextFont(42);
+    //text.SetTextFont(42);
     //text.DrawLatex(0.6, 0.89, "2018MC: SingleNeutrino");
 
-    if (ratio) text.DrawLatex(0.62, 0.96, label);
-    else       text.DrawLatex(0.62, 0.96, label);
+    if (ratio) text.DrawLatex(0.6, 0.96, label);
+    else       text.DrawLatex(0.6, 0.96, label);
 
     gPad->RedrawAxis();
     
     if (ratio){
 
       bottom->cd();
-
+      bottom->SetGrid(0,1);
 
       TH1D* ratio_MC_Mikko = (TH1D*) hist_MC_Mikko->Clone("ratio_MC_Mikko");
       TH1D* ratio_Data_Mikko = (TH1D*) hist_Data_Mikko->Clone("ratio_Data_Mikko");
@@ -733,13 +898,14 @@ void offsetpT_stack( TString mcName="/root_files_R48/SingleNeutrino_MC_R4.root",
       //else
 
 
-
       ratio_Data_Mikko->SetMarkerStyle(24);
-      h2->GetYaxis()->SetRangeUser(0.8*Ymin_ratio_mikko, Ymax_ratio_mikko*1.1);
+//      h2->GetYaxis()->SetRangeUser(0.5*Ymin_ratio_mikko, Ymax_ratio_mikko*1.5);
+//      h2->GetYaxis()->SetRangeUser(0.5,1.5);
+      h2->GetYaxis()->SetRangeUser(0.0,2.1);
       h2->Draw();
       ratio_Data_Mikko->Draw("sameP");
     }
-    c_Mikko->Print("./presentation_plots/stack_mikko"+ outName+ ids[id] + "_" + bin_var + to_string(n1) + ".pdf");
+    c_Mikko->Print("./presentation_plots/stack_mikko_"+ outName+ ids[id] + "_" + bin_var + TString(to_string(n1)) + ".pdf");
   }
 
 

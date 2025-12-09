@@ -20,8 +20,7 @@ enum Depth{depth1=0, depth2, depth3, depth4, depth5, depth6, depth7, all_depths}
 enum HCALDeposition{HCAL=0, ECAL, HO, rawHCAL, rawECAL, rawHO, all_HCALDepo};
 
 
-void offsetpT_stack_depth( TString mcName="SingleNeutrino_MC_R4.root", TString dataName="Legacy_BCD_R4.root", TString bin_var="nPU", Depth depth = all_depths, bool ratio=true, bool do_energy=false,
-           TString label="Run 2018B - 0.15 fb^{-1} (13.6 TeV") {
+void offsetpT_stack_depth( TString mcName="SingleNeutrino_MC_R4.root", TString dataName="Legacy_BCD_R4.root", TString outfile_name= "", TString bin_var="nPU", bool ratio=true, TString label="Run 2018B - 0.15 fb^{-1} (13.6 TeV)", Depth depth = all_depths, bool do_energy=false ) {
 
   TFile* mcFile = TFile::Open(mcName);
   TFile* dataFile = TFile::Open(dataName);
@@ -30,7 +29,8 @@ void offsetpT_stack_depth( TString mcName="SingleNeutrino_MC_R4.root", TString d
   TString HCALDepositions[] ={"HCAL", "ECAL", "HO", "rawHCAL", "rawECAL", "rawHO", "all_HCALDepo"};
 
   TH1F* h_bin_var = (TH1F*) dataFile->Get(bin_var);
-  int n1 = h_bin_var->GetMean();
+//  int n1 = h_bin_var->GetMean();
+  int n1 = 52;        //Change
 
   vector<TH1D*> v_MC (all_depths);
   vector<TH1D*> v_Data (all_depths);
@@ -80,7 +80,6 @@ void offsetpT_stack_depth( TString mcName="SingleNeutrino_MC_R4.root", TString d
 
   TCanvas* c = new TCanvas("c", "c", 600, 600);
   gStyle->SetOptStat(0);
-
   TH1D* h1 = new TH1D("h1", "h1", ETA_BINS, etabins);
   TH1D* h2 = new TH1D("h2", "h2", ETA_BINS, etabins);
 
@@ -91,6 +90,7 @@ void offsetpT_stack_depth( TString mcName="SingleNeutrino_MC_R4.root", TString d
 
   c->cd();
   if (ratio) {
+    top->SetLogy(true);
 
     top->SetTopMargin(0.05);
     top->SetBottomMargin(0.05);
@@ -129,24 +129,26 @@ void offsetpT_stack_depth( TString mcName="SingleNeutrino_MC_R4.root", TString d
   h2->GetYaxis()->SetNdivisions(5, 3, 0);
   h2->GetYaxis()->SetLabelSize(0.04/b_scale);
   h2->GetYaxis()->SetTitle("Data/MC");
+//  h2->GetYaxis()->SetTitle("2024I/2024H");      //Change
   h2->GetYaxis()->CenterTitle(true);
-  h2->GetYaxis()->SetTitleSize(0.05/b_scale);
-  h2->GetYaxis()->SetTitleOffset(0.4);
+  h2->GetYaxis()->SetTitleSize(0.03/b_scale);
+  h2->GetYaxis()->SetTitleOffset(0.5);
 
   h1->Draw();
 
-  TLegend* leg = new TLegend(.55,.57,.67,.9);
+//  TLegend* leg = new TLegend(.55,.57,.67,.9);
+  TLegend* leg = new TLegend(.4,.57,.67,.9);
   leg->SetBorderSize(0);
   leg->SetFillColor(0);
   leg->SetFillStyle(0);
   leg->SetTextSize(0.04);
   leg->SetTextFont(42);
 
-  TLegend* leg2 = new TLegend(.6,.65,.75,.8);
+  TLegend* leg2 = new TLegend(.65,.75,.85,.9);
   leg2->SetBorderSize(0);
   leg2->SetFillColor(0);
   leg2->SetFillStyle(0);
-  leg2->SetTextSize(0.06);
+  leg2->SetTextSize(0.05);
   leg2->SetTextFont(42);
 
   v_MC[depth1] ->SetMarkerStyle(kMultiply);
@@ -207,22 +209,41 @@ void offsetpT_stack_depth( TString mcName="SingleNeutrino_MC_R4.root", TString d
   text.SetNDC();
 
   if (depth == all_depths) {
+
+//-------------------------//
+// If we want the stackplots in a root file
+/*
+    TString outName1 = "stackplots_root_files/stack_mikko_depth_"+ outfile_name + depths[depth] + "_" + bin_var + TString(to_string(n1)) + ".root";
+    TFile* outFile1 = new TFile(outName1,"RECREATE");
+    TDirectory* dir1 = (TDirectory*) outFile1;
+
+    outFile1->cd();
+*/
+//-------------------------//
+
     v_Data[depth1] ->SetAxisRange(-2.95,2.95);
+    v_Data[depth2] ->SetAxisRange(-2.95,2.95);
+    v_Data[depth3] ->SetAxisRange(-2.95,2.95);
+    v_Data[depth4] ->SetAxisRange(-2.95,2.95);
+    v_Data[depth5] ->SetAxisRange(-2.95,2.95);
+    v_Data[depth6] ->SetAxisRange(-2.95,2.95);
+    v_Data[depth7] ->SetAxisRange(-2.95,2.95);
+/*
     v_Data[depth2] ->SetAxisRange(1.0,2.95);
     depth2_clone   ->SetAxisRange(-2.95,-1.0);
     v_Data[depth3] ->SetAxisRange(1.0,2.95);
     depth3_clone   ->SetAxisRange(-2.95,-1.0);
     v_Data[depth4] ->SetAxisRange(1.0,2.95);
     depth4_clone   ->SetAxisRange(-2.95,-1.0);
+
     v_Data[depth5] ->SetAxisRange(1.0,2.95);
     depth5_clone   ->SetAxisRange(-2.95,-1.0);
     v_Data[depth6] ->SetAxisRange(1.0,2.95);
     depth6_clone   ->SetAxisRange(-2.95,-1.0);
     v_Data[depth7] ->SetAxisRange(1.0,2.95);
     depth7_clone   ->SetAxisRange(-2.95,-1.0);
-
-    h1->GetYaxis()->SetRangeUser( 0, 0.35 ); //dataStack->GetMaximum()*1.7 );
-    
+*/
+    h1->GetYaxis()->SetRangeUser( 0.001, dataStack->GetMaximum()*100 ); //0.35  );
     h1->GetYaxis()->SetTitle(yTitle);
     h1->GetYaxis()->SetTitleOffset(1.1);
 
@@ -230,7 +251,8 @@ void offsetpT_stack_depth( TString mcName="SingleNeutrino_MC_R4.root", TString d
     dataStack->Draw("samepe");
     cloneStack->Draw("samepe");
 
-    leg->SetHeader("#bf{Markers: Data, Histograms: MC}");
+    leg->SetHeader("#bf{Markers: Run2025B, Hist: Winter25}");   //Change
+//    leg->SetHeader("#bf{Markers: Data, Histograms: MC}");   //Change
     leg->AddEntry(v_MC[depth1],"Depth 1","PF");
     leg->AddEntry(v_MC[depth2],"Depth 2","PF");
     leg->AddEntry(v_MC[depth3],"Depth 3","PF");
@@ -240,6 +262,25 @@ void offsetpT_stack_depth( TString mcName="SingleNeutrino_MC_R4.root", TString d
     leg->AddEntry(v_MC[depth7],"Depth 7","PF");
 
     leg->Draw();
+
+//-------------------------//
+// If we want the stackplots in a root file
+/*
+    for (int i=0; i<all_depths; i++) {
+      if (i==0) {v_MC[i]->SetName("nh_depth1_MC");    v_Data[i]->SetName("nh_depth1_Data");  }
+      if (i==1) {v_MC[i]->SetName("nh_depth2_MC");    v_Data[i]->SetName("nh_depth2_Data");  }
+      if (i==2) {v_MC[i]->SetName("nh_depth3_MC");    v_Data[i]->SetName("nh_depth3_Data");  }
+      if (i==3) {v_MC[i]->SetName("nh_depth4_MC");    v_Data[i]->SetName("nh_depth4_Data");  }
+      if (i==4) {v_MC[i]->SetName("nh_depth5_MC");    v_Data[i]->SetName("nh_depth5_Data");  }
+      if (i==5) {v_MC[i]->SetName("nh_depth6_MC");    v_Data[i]->SetName("nh_depth6_Data");  }
+      if (i==6) {v_MC[i]->SetName("nh_depth7_MC");    v_Data[i]->SetName("nh_depth7_Data");  }
+
+      v_MC[i]->Write();
+      v_Data[i]->Write();
+    }
+*/
+//-------------------------//
+
 
     TString title;
     title ="Neutral Hadrons";
@@ -254,11 +295,15 @@ void offsetpT_stack_depth( TString mcName="SingleNeutrino_MC_R4.root", TString d
     text.SetTextSize(0.040);
     text.SetTextFont(42);
     text.DrawLatex(0.228, 0.78, Form("#mu = %i",n1));
-    text.SetTextSize(0.045);
+    text.SetTextSize(0.04);
+    text.DrawLatex(0.7, 0.8, "#sigma_{MB} = 69.2 mb");
+    text.SetTextColor(2);
+//    text.DrawLatex(0.7, 0.73, "cut = baseline");
+    text.SetTextColor(1);
     
 
-    if (ratio) text.DrawLatex(0.5, 0.96, label);
-    else       text.DrawLatex(0.5, 0.96, label);
+    if (ratio) text.DrawLatex(0.45, 0.96, label);
+    else       text.DrawLatex(0.45, 0.96, label);
     gPad->RedrawAxis();
 
     if (ratio){
@@ -272,7 +317,20 @@ void offsetpT_stack_depth( TString mcName="SingleNeutrino_MC_R4.root", TString d
         v_ratio[i]->Divide(v_MC[i]);
         v_ratio[i]->SetMarkerSize(0.65);
         v_ratio[i]->Draw("sameP");
+       //-------------------------//
+        // If we want the stackplots in a root file
+        /*
+        if (i==0) {v_ratio[i]->SetName("nh_ratio_depth1_DataMC"); }
+        if (i==1) {v_ratio[i]->SetName("nh_ratio_depth2_DataMC"); }
+        if (i==2) {v_ratio[i]->SetName("nh_ratio_depth3_DataMC"); }
+        if (i==3) {v_ratio[i]->SetName("nh_ratio_depth4_DataMC"); }
+        if (i==4) {v_ratio[i]->SetName("nh_ratio_depth5_DataMC"); }
+        if (i==5) {v_ratio[i]->SetName("nh_ratio_depth6_DataMC"); }
+        if (i==6) {v_ratio[i]->SetName("nh_ratio_depth7_DataMC"); }
+        */
+       //-------------------------//
       }
+
       v_ratio[depth1] ->SetMarkerColor(kBlue);
       v_ratio[depth2] ->SetMarkerColor(kViolet+2);
       v_ratio[depth3] ->SetMarkerColor(kGreen);
@@ -297,7 +355,17 @@ void offsetpT_stack_depth( TString mcName="SingleNeutrino_MC_R4.root", TString d
       v_ratio[depth6] ->SetAxisRange(-2.95,2.95);
       v_ratio[depth7] ->SetAxisRange(-2.95,2.95);
     }
-    c->Print("plots/stack_" + depths[depth] + "_" + bin_var + "_" + var + to_string(n1) + ".pdf");
+   c->Print("presentation_plots/stack_" + outfile_name + depths[depth] + "_" + bin_var + "_" + var + TString(to_string(n1)) + ".pdf");
+//-------------------------//
+
+// If we want the stackplots in a root file
+/*
+    outFile1->Write();
+    delete outFile1;
+    outFile1 = 0;
+*/
+//-------------------------//
+
     leg->Clear();
     leg2->Clear();
     top->Clear();
@@ -309,7 +377,19 @@ void offsetpT_stack_depth( TString mcName="SingleNeutrino_MC_R4.root", TString d
 
   if (depth != all_depths){
 
-    h1->GetYaxis()->SetRangeUser(0, 0.15);
+//-------------------------//
+
+// If we want the stackplots in a root file
+/*
+    TString outName1 = "stackplots_root_files/stack_mikko_depth_"+ outfile_name + depths[depth] + "_" + bin_var + TString(to_string(n1)) + ".root";
+    TFile* outFile1 = new TFile(outName1,"RECREATE");
+    TDirectory* dir1 = (TDirectory*) outFile1;
+
+    outFile1->cd();
+*/
+//-------------------------//
+
+    h1->GetYaxis()->SetRangeUser(0.0001, 0.22*100);
     h1->GetYaxis()->SetLabelSize(0.06);
 
     THStack* mcStack2 = new THStack();
@@ -331,6 +411,22 @@ void offsetpT_stack_depth( TString mcName="SingleNeutrino_MC_R4.root", TString d
     hist_Data->SetAxisRange(-2.95, 2.95);
     hist_Data->Draw("sameP");
 
+//-------------------------//
+// If we want the stackplots in a root file
+/*
+    if (depth==depth1) {hist_MC->SetName("nh_depth1_MC");    hist_Data->SetName("nh_depth1_Data");  }
+    if (depth==depth2) {hist_MC->SetName("nh_depth2_MC");    hist_Data->SetName("nh_depth2_Data");  }
+    if (depth==depth3) {hist_MC->SetName("nh_depth3_MC");    hist_Data->SetName("nh_depth3_Data");  }
+    if (depth==depth4) {hist_MC->SetName("nh_depth4_MC");    hist_Data->SetName("nh_depth4_Data");  }
+    if (depth==depth5) {hist_MC->SetName("nh_depth5_MC");    hist_Data->SetName("nh_depth5_Data");  }
+    if (depth==depth6) {hist_MC->SetName("nh_depth6_MC");    hist_Data->SetName("nh_depth6_Data");  }
+    if (depth==depth7) {hist_MC->SetName("nh_depth7_MC");    hist_Data->SetName("nh_depth7_Data");  }
+
+    hist_MC->Write();
+    hist_Data->Write();
+*/
+//-------------------------//
+
     TString title;
     title ="Neutral Hadrons";
     text.SetTextSize(0.045);
@@ -346,22 +442,30 @@ void offsetpT_stack_depth( TString mcName="SingleNeutrino_MC_R4.root", TString d
     text.DrawLatex(0.223, 0.78, Form("Depth %i",(depth+1)));
     text.DrawLatex(0.228, 0.71, Form("#mu = %i",n1));
     text.SetTextSize(0.045);
+    text.DrawLatex(0.65, 0.7, "#sigma_{MB} = 69.2 mb");
+    text.SetTextColor(2);
+//    text.DrawLatex(0.72, 0.63, "cut = baseline");
+    text.SetTextColor(1);
 
-    leg2->AddEntry(hist_Data,"Data","P");
-    leg2->AddEntry(hist_MC,"MC","F");
+//    leg2->AddEntry(hist_Data,"Data","P");     
+//    leg2->AddEntry(hist_MC,"MC","F");
+    leg2->AddEntry(hist_Data,"Run2025B","P");     //Change
+    leg2->AddEntry(hist_MC,"Winter25","F");
     leg2->Draw();
 
     text.SetTextSize(0.035);
     text.SetTextFont(42);
     if (ratio) text.SetTextSize(0.035);
     text.SetTextFont(42);
-    text.DrawLatex(0.6, 0.96, label);
+    text.DrawLatex(0.55, 0.96, label);
     
     gPad->RedrawAxis();
 
     if (ratio){
       bottom->cd();
-      h2->GetYaxis()->SetRangeUser(0,2.0);
+      //h2->GetYaxis()->SetRangeUser(0,5.0);
+      if (depth == depth1){ h2->GetYaxis()->SetRangeUser(0,2.0);}
+      else{ h2->GetYaxis()->SetRangeUser(0,2.0);}
       h2->Draw();
       TH1D* ratio_MC = (TH1D*) hist_MC->Clone("ratio_MC");
       TH1D* ratio_Data = (TH1D*) hist_Data->Clone("ratio_Data");
@@ -370,12 +474,38 @@ void offsetpT_stack_depth( TString mcName="SingleNeutrino_MC_R4.root", TString d
       ratio_Data->SetMarkerStyle(24);
       ratio_Data->SetMarkerColor(kBlack);
       ratio_Data->Draw("sameP");
+      //-------------------------//
+      // If we want the stackplots in a root file
+      /*
+      if (depth==depth1) {ratio_Data->SetName("ratio_depth1_DataMC");  }
+      if (depth==depth2) {ratio_Data->SetName("ratio_depth2_DataMC");  }
+      if (depth==depth3) {ratio_Data->SetName("ratio_depth3_DataMC");  }
+      if (depth==depth4) {ratio_Data->SetName("ratio_depth4_DataMC");  }
+      if (depth==depth5) {ratio_Data->SetName("ratio_depth5_DataMC");  }
+      if (depth==depth6) {ratio_Data->SetName("ratio_depth6_DataMC");  }
+      if (depth==depth7) {ratio_Data->SetName("ratio_depth7_DataMC");  }
+      ratio_Data->Write();
+      delete ratio_MC;
+      */
+      //-------------------------//
+
     }
   
-    c->Print("plots/stack_" + depths[depth] + "_" + bin_var +"_" + var + to_string(n1) + ".pdf");
+   c->Print("presentation_plots/stack_" + outfile_name + depths[depth] + "_" + bin_var +"_" + var + TString(to_string(n1)) + ".pdf");
+
+//-------------------------//
+// If we want the stackplots in a root file
+/*
+    outFile1->Write();
+    delete outFile1;
+    outFile1 = 0;
+*/
+//-------------------------//
+
     top->Clear();
     bottom->Clear();
     leg2->Clear();
+
   }
 
   //this next block of code gives us the enrgy depositions in HCAL, ECAL and HO for neutral hadrons.
@@ -436,9 +566,9 @@ void offsetpT_stack_depth( TString mcName="SingleNeutrino_MC_R4.root", TString d
       text.DrawLatex(0.22, 0.85, "CMS");
 
       TString depositionType,rawORcorrected;
-      if(i == 0 || i == 3) {depositionType = "#bf{HCAL Deposits}"; v_MC_nhDepo[i] ->SetFillColor(kBlue); h1->GetYaxis()->SetRangeUser( 0, 0.4 );}
-      if(i == 1 || i == 4) {depositionType = "#bf{ECAL Deposits}"; v_MC_nhDepo[i] ->SetFillColor(kRed); h1->GetYaxis()->SetRangeUser( 0, 0.025 );}
-      if(i == 2 || i == 5) {depositionType = "#bf{HO Deposits}"; v_MC_nhDepo[i] ->SetFillColor(kGreen); h1->GetYaxis()->SetRangeUser( 0, 0.012 );}
+      if(i == 0 || i == 3) {depositionType = "#bf{HCAL Deposits}"; v_MC_nhDepo[i] ->SetFillColor(kBlue); h1->GetYaxis()->SetRangeUser( 0, v_MC_nhDepo[i]->GetMaximum()*1.5);} //0.4 
+      if(i == 1 || i == 4) {depositionType = "#bf{ECAL Deposits}"; v_MC_nhDepo[i] ->SetFillColor(kRed); h1->GetYaxis()->SetRangeUser( 0, v_MC_nhDepo[i]->GetMaximum()*2.5 );} //0.025
+      if(i == 2 || i == 5) {depositionType = "#bf{HO Deposits}"; v_MC_nhDepo[i] ->SetFillColor(kGreen); h1->GetYaxis()->SetRangeUser( 0, v_MC_nhDepo[i]->GetMaximum()*1.5 );} //0.012
 
       text.SetTextSize(0.035);
       text.SetTextFont(42);
@@ -453,20 +583,22 @@ void offsetpT_stack_depth( TString mcName="SingleNeutrino_MC_R4.root", TString d
       text.DrawLatex(0.228, 0.71, Form("#mu = %i",n1));
       
       text.SetTextSize(0.045);
-      leg2->AddEntry(v_Data_nhDepo[i],"Data","P");
-      leg2->AddEntry(v_MC_nhDepo[i],"MC","F");
+//      leg2->AddEntry(v_Data_nhDepo[i],"Data","P");
+//      leg2->AddEntry(v_MC_nhDepo[i],"MC","F");
+      leg2->AddEntry(v_Data_nhDepo[i],"Run2025B","P");     //Change
+      leg2->AddEntry(v_MC_nhDepo[i],"Winter25","F");
       leg2->Draw();
 
       text.SetTextSize(0.035);
       text.SetTextFont(42);
-      text.DrawLatex(0.6, 0.96, label);
+      text.DrawLatex(0.55, 0.96, label);
       
       gPad->RedrawAxis();
 
       if(ratio){
         bottom->cd();
-        if(i == 2 || i == 5) {h2->GetYaxis()->SetRangeUser(0.,4.0);}
-        else h2->GetYaxis()->SetRangeUser(0,2.0);
+        if(i == 2 || i == 5) {h2->GetYaxis()->SetRangeUser(0.,5.0);}
+        else h2->GetYaxis()->SetRangeUser(0,5.0);
         h2->Draw();
 
         ratio_MC_nhDepo[i]   = (TH1D*) v_MC_nhDepo[i]->Clone("ratio_MC_nhDepo[i]");
@@ -478,7 +610,7 @@ void offsetpT_stack_depth( TString mcName="SingleNeutrino_MC_R4.root", TString d
         ratio_Data_nhDepo[i]->SetMarkerColor(kBlack);
         ratio_Data_nhDepo[i]->Draw("sameP");
       }
-      c->Print("plots/nh_" + HCALDepositions[i] + "_" + bin_var +"_" + var + to_string(n1) + ".pdf");
+      //c->Print("presentation_plots/nh_" + outfile_name + HCALDepositions[i] + "_" + bin_var +"_" + var + TString(to_string(n1)) + ".pdf");
       bottom->Clear();
     }
   }
